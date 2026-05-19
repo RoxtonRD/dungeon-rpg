@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "staff_runed"
+display_name = "Cajado Rúnico"
+slot = 0
+value = 120
+mod_mp = 4
+mod_mag = 7
+class_restriction = Array[String](["cleric", "mage"])

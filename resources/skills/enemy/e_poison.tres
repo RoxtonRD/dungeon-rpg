@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "e_poison"
+display_name = "Flecha Venenosa"
+skill_type = 0
+target = 0
+power = 0.6
+dot_damage = 4
+dot_duration = 3

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "revive"
+display_name = "Reviver"
+description = "Ressuscita um aliado caído com 30% do HP máximo."
+mp_cost = 20
+unlock_level = 5
+max_upgrade_level = 4
+skill_type = 6
+target = 5

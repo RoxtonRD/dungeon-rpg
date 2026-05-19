@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/mage_firebolt.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/mage_fireball.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/skills/mage_ice_spike.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/skills/mage_arcane_blast.tres" id="5"]
+
+[resource]
+script = ExtResource("1")
+id = "mage"
+display_name = "Mago"
+role = 1
+base_hp = 24
+base_mp = 28
+atk = 2
+def = 2
+mag = 8
+spd = 5
+hp_per_level = 5
+mp_per_level = 5
+atk_per_level = 1
+def_per_level = 1
+mag_per_level = 3
+spd_per_level = 1
+skills = Array[SkillData]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])

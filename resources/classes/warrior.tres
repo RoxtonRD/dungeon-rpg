@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/warrior_slash.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/warrior_cleave.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/skills/warrior_provoke.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/skills/warrior_execute.tres" id="5"]
+
+[resource]
+script = ExtResource("1")
+id = "warrior"
+display_name = "Guerreiro"
+role = 0
+base_hp = 38
+base_mp = 8
+atk = 7
+def = 5
+mag = 1
+spd = 4
+hp_per_level = 9
+mp_per_level = 1
+atk_per_level = 2
+def_per_level = 2
+mag_per_level = 0
+spd_per_level = 1
+skills = Array[SkillData]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])

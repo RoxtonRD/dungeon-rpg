@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "smite"
+display_name = "Punir"
+description = "Dano sagrado em 1 inimigo."
+mp_cost = 4
+unlock_level = 1
+max_upgrade_level = 3
+skill_type = 1
+target = 0
+power = 1.1

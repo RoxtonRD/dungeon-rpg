@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_shadow.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_curse.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = "cultist"
+display_name = "Cultista"
+role = 1
+max_hp = 25
+atk = 3
+def = 2
+mag = 7
+spd = 5
+xp_reward = 14
+gold_min = 6
+gold_max = 12
+skills = Array[SkillData]([ExtResource("2"), ExtResource("3")])

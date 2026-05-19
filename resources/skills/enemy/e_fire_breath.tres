@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "e_fire_breath"
+display_name = "Sopro Flamejante"
+skill_type = 1
+target = 1
+power = 0.9

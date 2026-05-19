@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sword_steel"
+display_name = "Lâmina de Aço"
+slot = 0
+value = 180
+mod_atk = 9
+mod_spd = 1
+class_restriction = Array[String](["warrior", "rogue"])

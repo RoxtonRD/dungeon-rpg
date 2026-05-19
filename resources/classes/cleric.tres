@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/cleric_smite.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/cleric_heal.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/skills/cleric_heal_all.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/skills/cleric_revive.tres" id="5"]
+
+[resource]
+script = ExtResource("1")
+id = "cleric"
+display_name = "Clérigo"
+role = 1
+base_hp = 28
+base_mp = 22
+atk = 3
+def = 3
+mag = 6
+spd = 4
+hp_per_level = 6
+mp_per_level = 4
+atk_per_level = 1
+def_per_level = 1
+mag_per_level = 2
+spd_per_level = 1
+skills = Array[SkillData]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])

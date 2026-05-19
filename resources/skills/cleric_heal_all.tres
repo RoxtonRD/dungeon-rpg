@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "heal_all"
+display_name = "Cura em Massa"
+description = "Cura todos os aliados simultaneamente."
+mp_cost = 16
+unlock_level = 3
+max_upgrade_level = 3
+skill_type = 2
+target = 4
+power = 1.0
