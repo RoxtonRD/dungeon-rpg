@@ -1,7 +1,7 @@
 # Design Doc — RPG Dungeon Crawler (estilo Monster's Den) — v1
 
 > Documento de planejamento para um RPG dungeon-crawler por turnos, mobile,
-> feito em Godot 4.x. Serve como ponto de partida para o desenvolvimento
+> feito em Godot 4.6. Serve como ponto de partida para o desenvolvimento
 > com o Claude Code. A v1 é deliberadamente enxuta: o objetivo é um jogo
 > **funcional e divertido** com o mínimo de sistemas.
 
@@ -13,7 +13,7 @@
 - **Referência principal:** Monster's Den — combate por turnos, party fixa,
   dungeon como mapa de nós, loot e progressão entre dungeons.
 - **Plataforma:** Android (mobile), orientação retrato.
-- **Engine:** Godot 4.x, GDScript.
+- **Engine:** Godot 4.6, GDScript.
 - **Arte:** retratos de personagens, itens e inimigos desenhados à mão pelo
   autor. Todo o resto da UI é construído com nós do Godot (sem texturas).
 - **Idioma da UI:** português (pt-BR).

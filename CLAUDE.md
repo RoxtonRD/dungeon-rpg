@@ -5,7 +5,7 @@ Project context for Claude Code. Read this before any task.
 ## What this is
 
 A turn-based tactical dungeon-crawler RPG for Android, inspired by
-Monster's Den. Built in Godot 4.x with GDScript. Portrait orientation.
+Monster's Den. Built in Godot 4.6 with GDScript. Portrait orientation.
 UI text is in Brazilian Portuguese (pt-BR).
 
 This is **version 1**: deliberately small in scope. The goal is a
@@ -20,7 +20,7 @@ Any system that does not directly serve this loop is out of scope for v1.
 
 ## Stack & conventions
 
-- Engine: Godot 4.x, GDScript only. No C#, no external build steps.
+- Engine: Godot 4.6, GDScript only. No C#, no external build steps.
 - Platform: Android, portrait orientation.
 - Game data is **data-driven**: defined as Godot Resources (`.tres`),
   never hardcoded. Resource types: `ClassData`, `SkillData`,
