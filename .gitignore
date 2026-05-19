@@ -1,0 +1,23 @@
+# Godot 4.x .gitignore
+
+# Godot editor cache and imported assets — regenerated automatically, never commit.
+.godot/
+
+# Exported builds
+/build/
+/export/
+*.apk
+*.aab
+
+# Godot 3-style import folder (harmless to keep)
+.import/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Keep the Android export template config tracked, but ignore generated Android build
+# (only relevant once you set up Android export — uncomment if needed)
+# /android/
