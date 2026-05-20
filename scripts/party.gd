@@ -1,0 +1,158 @@
+## Autoload singleton. Owns the player's party of four heroes and the
+## XP / level / Skill-Point logic. Registered as the "Party" autoload.
+extends Node
+
+## The v1 party is fixed: one hero per class, in this order. The order is
+## stable — formation (step 9) and combat rows depend on it.
+const CLASS_PATHS: Array[String] = [
+	"res://resources/classes/warrior.tres",
+	"res://resources/classes/cleric.tres",
+	"res://resources/classes/rogue.tres",
+	"res://resources/classes/mage.tres",
+]
+
+## Hard ceiling on hero level. The prototype had none; we cap at 10 because
+## a level-10 hero has earned exactly enough SP (10 total) to fully max all
+## four skills — 3 normals to tier 3 + the ultimate to tier 4 = 9 SP, plus
+## the starting SP.
+const LEVEL_CAP: int = 10
+
+var heroes: Array[Hero] = []
+
+
+# ── New game ──────────────────────────────────────────────────────────────────
+
+## Builds a fresh party for a new game: four level-1 heroes at full HP/MP.
+func start_new_game() -> void:
+	heroes.clear()
+	for path in CLASS_PATHS:
+		var class_data := load(path) as ClassData
+		heroes.append(Hero.create(class_data))
+
+
+# ── XP & leveling ─────────────────────────────────────────────────────────────
+
+## Verbatim from prototype party.js: floor(20 * level^1.5).
+func xp_for_next(level: int) -> int:
+	return floori(20.0 * pow(level, 1.5))
+
+
+## Adds XP and triggers level-ups while the threshold is met. Returns every
+## SkillData newly unlocked across the awarded XP (empty if no level gained).
+## Heroes already at LEVEL_CAP ignore further XP.
+func award_xp(hero: Hero, amount: int) -> Array[SkillData]:
+	var unlocked: Array[SkillData] = []
+	if hero.level >= LEVEL_CAP:
+		return unlocked
+	hero.xp += amount
+	while hero.level < LEVEL_CAP and hero.xp >= xp_for_next(hero.level):
+		hero.xp -= xp_for_next(hero.level)
+		unlocked.append_array(level_up(hero))
+	if hero.level >= LEVEL_CAP:
+		# Discard any leftover XP so the UI never shows "ready to level" at cap.
+		hero.xp = 0
+	return unlocked
+
+
+## Performs a single level-up: +1 level, +1 SP, full HP/MP restore.
+## Per-level stat growth is applied automatically because Hero's max_hp/atk/
+## etc. are derived from class_data + level. Returns SkillData entries whose
+## unlock_level matches the new level.
+func level_up(hero: Hero) -> Array[SkillData]:
+	hero.level += 1
+	hero.sp_available += 1
+	hero.hp = hero.max_hp()
+	hero.mp = hero.max_mp()
+	var newly: Array[SkillData] = []
+	for skill in hero.class_data.skills:
+		if skill.unlock_level == hero.level:
+			newly.append(skill)
+	return newly
+
+
+# ── Skill Points ──────────────────────────────────────────────────────────────
+
+## Stable key used inside Hero.sp_spent. The .tres filename without extension —
+## e.g. "warrior_slash" for res://resources/skills/warrior_slash.tres.
+func _skill_key(skill: SkillData) -> String:
+	return skill.resource_path.get_file().get_basename()
+
+
+## Current upgrade tier of a skill for this hero (base = 1, max = skill.max_upgrade_level).
+func get_skill_tier(hero: Hero, skill: SkillData) -> int:
+	return 1 + int(hero.sp_spent.get(_skill_key(skill), 0))
+
+
+func can_upgrade_skill(hero: Hero, skill: SkillData) -> bool:
+	if hero.level < skill.unlock_level:
+		return false
+	if get_skill_tier(hero, skill) >= skill.max_upgrade_level:
+		return false
+	return hero.sp_available >= 1
+
+
+## Spends 1 SP to raise the skill's tier by 1. Returns false if not allowed.
+func upgrade_skill(hero: Hero, skill: SkillData) -> bool:
+	if not can_upgrade_skill(hero, skill):
+		return false
+	var key := _skill_key(skill)
+	hero.sp_spent[key] = int(hero.sp_spent.get(key, 0)) + 1
+	hero.sp_available -= 1
+	return true
+
+
+## Returns a SkillData (duplicated and scaled) reflecting the hero's current
+## upgrade tier. At tier 1 returns the original SkillData unmodified. Formula
+## is carried verbatim from prototype party.js getUpgradedSkill — see the
+## inline note below for one comment-vs-code discrepancy in the source.
+func get_upgraded_skill(hero: Hero, skill: SkillData) -> SkillData:
+	var tier := get_skill_tier(hero, skill)
+	if tier <= 1:
+		return skill
+	var bonus := tier - 1            # 1, 2, or 3
+	var mult := 1.0 + 0.3 * bonus    # 1.3 / 1.6 / 2.0
+	var s: SkillData = skill.duplicate()
+	s.power = snappedf(s.power * mult, 0.01)
+	# Stat modifier — covers both buff and debuff in the unified SkillData.
+	if s.mod_atk != 0:
+		s.mod_atk = roundi(s.mod_atk * mult)
+	if s.mod_def != 0:
+		s.mod_def = roundi(s.mod_def * mult)
+	if s.mod_mag != 0:
+		s.mod_mag = roundi(s.mod_mag * mult)
+	if s.mod_spd != 0:
+		s.mod_spd = roundi(s.mod_spd * mult)
+	if s.mod_duration > 0 and s.mod_duration < 99:
+		s.mod_duration = mini(6, s.mod_duration + bonus)
+	# Damage-over-time scales like a debuff; duration only grows from tier 3.
+	if s.dot_damage > 0:
+		s.dot_damage = roundi(s.dot_damage * mult)
+		if tier >= 3:
+			s.dot_duration = mini(5, s.dot_duration + 1)
+	# Multi-hit: prototype adds `bonus` hits (+1/+2/+3 at tiers 2/3/4). Note:
+	# party.js's comment on this block disagrees with the code — code wins.
+	if s.skill_type == SkillData.SkillType.MULTI:
+		s.hits += bonus
+	# MP cost reduction kicks in only for skills costing ≥3 MP.
+	if s.mp_cost >= 3:
+		s.mp_cost = maxi(1, s.mp_cost - bonus * 2)
+	return s
+
+
+# ── Persistence ───────────────────────────────────────────────────────────────
+
+## Returns a plain Dictionary snapshot of the party. Step 8 (save) will wrap
+## this with versioning and write it to disk.
+func serialize() -> Dictionary:
+	var hero_dicts: Array = []
+	for h in heroes:
+		hero_dicts.append(h.to_dict())
+	return {"heroes": hero_dicts}
+
+
+## Restores the party from a Dictionary previously produced by serialize().
+func deserialize(data: Dictionary) -> void:
+	heroes.clear()
+	var arr: Array = data.get("heroes", [])
+	for hd in arr:
+		heroes.append(Hero.from_dict(hd))
