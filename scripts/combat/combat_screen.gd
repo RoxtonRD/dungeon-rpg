@@ -7,7 +7,12 @@
 ## (Party.start_new_game) plus three weak enemies. Step 5 (dungeon flow)
 ## will instantiate the scene and call `setup()` with the real party and
 ## encounter before _ready fires (use call_deferred or set state first).
+class_name CombatScreen
 extends Control
+
+## Emitted when the player dismisses the end panel. Carries the
+## CombatState.Result int so a host scene (the dungeon map) can react.
+signal combat_finished(result: int)
 
 const TEST_ENEMY_PATHS: Array[String] = [
 	"res://resources/enemies/goblin.tres",
@@ -59,6 +64,8 @@ func _bootstrap_if_needed() -> void:
 	for path in TEST_ENEMY_PATHS:
 		enemies.append(load(path) as EnemyData)
 	setup(Party.heroes, enemies)
+	# Standalone (F6) run: no host listening, so return to the title screen.
+	combat_finished.connect(_on_standalone_finished)
 
 
 ## External entry point. Call after add_child(combat_scene) and before
@@ -247,6 +254,10 @@ func _on_flee_pressed() -> void:
 
 
 func _on_continue_pressed() -> void:
+	combat_finished.emit(_pending_result)
+
+
+func _on_standalone_finished(_result: int) -> void:
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 
@@ -263,6 +274,7 @@ func _show_end_panel() -> void:
 	result_label.text = result_names[_pending_result]
 	if _pending_result == CombatState.Result.VICTORY:
 		rewards_label.text = "+%d XP   +%d ouro" % [_pending_rewards["xp"], _pending_rewards["gold"]]
+		GameState.gold += int(_pending_rewards["gold"])
 		for h in Party.heroes:
 			if h.is_alive():
 				Party.award_xp(h, int(_pending_rewards["xp"]))

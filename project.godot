@@ -22,6 +22,8 @@ config/features=PackedStringArray("4.6", "Mobile")
 [autoload]
 
 Party="*res://scripts/party.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
+GameState="*res://scripts/game_state.gd"
 
 [display]
 
@@ -30,6 +32,10 @@ window/size/viewport_height=1280
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
 [rendering]
 
