@@ -6,12 +6,14 @@ extends Control
 
 const COMBAT_SCENE := "res://scripts/combat/combat_screen.tscn"
 const MENU_SCENE := "res://scenes/main.tscn"
+const INVENTORY_SCENE := "res://scripts/inventory/inventory_screen.tscn"
 const ITEM_DIR := "res://resources/items/"
 
 @onready var title_label: Label = %TitleLabel
 @onready var gold_label: Label = %GoldLabel
 @onready var party_status: Label = %PartyStatus
 @onready var map_area: VBoxContainer = %MapArea
+@onready var inventory_button: Button = %InventoryButton
 @onready var menu_button: Button = %MenuButton
 @onready var end_panel: PanelContainer = %EndPanel
 @onready var end_label: Label = %EndLabel
@@ -44,6 +46,7 @@ var _current_event: Dictionary = {}
 
 
 func _ready() -> void:
+	inventory_button.pressed.connect(_on_inventory_pressed)
 	menu_button.pressed.connect(_on_menu_pressed)
 	end_menu_button.pressed.connect(_on_menu_pressed)
 	treasure_continue_button.pressed.connect(_on_treasure_continue)
@@ -236,6 +239,10 @@ func _end_run(victory: bool) -> void:
 	GameState.current_run = null
 	end_label.text = "Masmorra concluída!" if victory else "O grupo foi derrotado."
 	end_panel.visible = true
+
+
+func _on_inventory_pressed() -> void:
+	get_tree().change_scene_to_file(INVENTORY_SCENE)
 
 
 func _on_menu_pressed() -> void:
