@@ -64,6 +64,8 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 52)
 text = "Sair para o menu"
 
+;; ── End-of-run overlay ────────────────────────────────────────────────────
+
 [node name="EndPanel" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
@@ -102,3 +104,174 @@ unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 52)
 text = "Voltar ao menu"
+
+;; ── Treasure overlay ──────────────────────────────────────────────────────
+
+[node name="TreasurePanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -160.0
+offset_right = 220.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+
+[node name="TreasureMargin" type="MarginContainer" parent="TreasurePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="TreasureVBox" type="VBoxContainer" parent="TreasurePanel/TreasureMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TreasureTitleLabel" type="Label" parent="TreasurePanel/TreasureMargin/TreasureVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+text = "Tesouro"
+
+[node name="TreasureGoldLabel" type="Label" parent="TreasurePanel/TreasureMargin/TreasureVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
+
+[node name="TreasureItemLabel" type="Label" parent="TreasurePanel/TreasureMargin/TreasureVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+
+[node name="TreasureContinueButton" type="Button" parent="TreasurePanel/TreasureMargin/TreasureVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Continuar"
+
+;; ── Event overlay ─────────────────────────────────────────────────────────
+
+[node name="EventPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -240.0
+offset_right = 240.0
+offset_bottom = 240.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+
+[node name="EventMargin" type="MarginContainer" parent="EventPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="EventVBox" type="VBoxContainer" parent="EventPanel/EventMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="EventTitleLabel" type="Label" parent="EventPanel/EventMargin/EventVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="EventDescLabel" type="Label" parent="EventPanel/EventMargin/EventVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 2
+
+[node name="EventOption1Button" type="Button" parent="EventPanel/EventMargin/EventVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+autowrap_mode = 2
+
+[node name="EventOption2Button" type="Button" parent="EventPanel/EventMargin/EventVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+autowrap_mode = 2
+
+[node name="EventResultLabel" type="Label" parent="EventPanel/EventMargin/EventVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 2
+visible = false
+
+[node name="EventContinueButton" type="Button" parent="EventPanel/EventMargin/EventVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Continuar"
+visible = false
+
+;; ── Rest overlay ──────────────────────────────────────────────────────────
+
+[node name="RestPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -140.0
+offset_right = 220.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+
+[node name="RestMargin" type="MarginContainer" parent="RestPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="RestVBox" type="VBoxContainer" parent="RestPanel/RestMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="RestTitleLabel" type="Label" parent="RestPanel/RestMargin/RestVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+text = "Descanso"
+
+[node name="RestMessageLabel" type="Label" parent="RestPanel/RestMargin/RestVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 2
+text = "O grupo descansou e recuperou todas as forças."
+
+[node name="RestContinueButton" type="Button" parent="RestPanel/RestMargin/RestVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Continuar"
