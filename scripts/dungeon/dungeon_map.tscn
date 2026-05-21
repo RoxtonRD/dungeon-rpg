@@ -64,6 +64,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 52)
 text = "Inventário"
 
+[node name="ShopButton" type="Button" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Loja"
+
 [node name="MenuButton" type="Button" parent="VBox"]
 unique_name_in_owner = true
 layout_mode = 2
