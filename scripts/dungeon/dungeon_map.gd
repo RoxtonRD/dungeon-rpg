@@ -21,6 +21,7 @@ const ITEM_DIR := "res://resources/items/"
 @onready var menu_button: Button = %MenuButton
 @onready var end_panel: PanelContainer = %EndPanel
 @onready var end_label: Label = %EndLabel
+@onready var end_next_button: Button = %EndNextButton
 @onready var end_menu_button: Button = %EndMenuButton
 
 # Treasure popup
@@ -60,6 +61,7 @@ func _ready() -> void:
 	event_option2_button.pressed.connect(_on_event_option.bind(1))
 	event_continue_button.pressed.connect(_on_event_continue)
 	rest_continue_button.pressed.connect(_on_rest_continue)
+	end_next_button.pressed.connect(_on_next_dungeon_pressed)
 	end_panel.visible = false
 	treasure_panel.visible = false
 	event_panel.visible = false
@@ -71,10 +73,13 @@ func _ready() -> void:
 func _begin_run() -> void:
 	run = GameState.current_run as DungeonRun
 	if run == null:
-		# Safety net: allows this scene to be run directly for testing.
-		Party.start_new_game()
-		GameState.start_new_game()
-		run = DungeonRun.generate(1, 3)
+		if Party.heroes.is_empty():
+			# Safety net: allows this scene to be run directly via F6 for testing.
+			Party.start_new_game()
+			GameState.start_new_game()
+		# No active run (new game or returned from menu after victory/TPK):
+		# generate one at the current dungeon level.
+		run = DungeonRun.generate(GameState.dungeon_level, 3)
 		GameState.current_run = run
 	_build_map()
 	_refresh()
@@ -245,15 +250,27 @@ func _resolve_and_advance(node: DungeonNode) -> void:
 
 func _end_run(victory: bool) -> void:
 	if victory:
+		GameState.dungeon_level += 1
 		GameState.current_run = null
 		GameState.save_game()
 		end_label.text = "Masmorra concluída!"
+		end_next_button.visible = true
 	else:
 		# TPK rule: revive at 25 % HP, lose 20 % gold, then save and return.
 		GameState.apply_tpk_penalty()
 		GameState.save_game()
 		end_label.text = "O grupo foi derrotado.\nRevividos com 25%% HP.\n20%% do ouro perdido."
+		end_next_button.visible = false
 	end_panel.visible = true
+
+
+func _on_next_dungeon_pressed() -> void:
+	run = DungeonRun.generate(GameState.dungeon_level, 3)
+	GameState.current_run = run
+	GameState.save_game()
+	end_panel.visible = false
+	_build_map()
+	_refresh()
 
 
 func _on_inventory_pressed() -> void:

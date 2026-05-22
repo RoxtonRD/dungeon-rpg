@@ -15,6 +15,8 @@ var inventory: Array[String] = []
 ## dependency cycle (DungeonRun references the GameState autoload), which
 ## Godot resolves inconsistently across recompiles. Callers cast as needed.
 var current_run = null
+## Which dungeon the party is on. Increments on each victory; resets to 1 for new game.
+var dungeon_level: int = 1
 
 
 ## Resets gold and inventory for a new game. Party.start_new_game() handles heroes.
@@ -22,6 +24,7 @@ func start_new_game() -> void:
 	gold = STARTING_GOLD
 	inventory = STARTER_ITEMS.duplicate()
 	current_run = null
+	dungeon_level = 1
 
 
 func add_item(item_id: String) -> void:
@@ -57,6 +60,7 @@ func save_game() -> void:
 		"inventory": inventory.duplicate(),
 		"heroes": Party.serialize(),
 		"run": run_data,
+		"dungeon_level": dungeon_level,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -85,6 +89,7 @@ func load_game() -> bool:
 		push_warning("GameState.load_game: version mismatch — starting fresh")
 		return false
 	gold = int(data.get("gold", STARTING_GOLD))
+	dungeon_level = int(data.get("dungeon_level", 1))
 	var inv: Array = data.get("inventory", [])
 	inventory.clear()
 	for item_id in inv:

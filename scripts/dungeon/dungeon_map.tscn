@@ -131,6 +131,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 horizontal_alignment = 1
 
+[node name="EndNextButton" type="Button" parent="EndPanel/EndMargin/EndVBox" unique_id=1459687077]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Próxima Dungeon"
+
 [node name="EndMenuButton" type="Button" parent="EndPanel/EndMargin/EndVBox" unique_id=1459687076]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
