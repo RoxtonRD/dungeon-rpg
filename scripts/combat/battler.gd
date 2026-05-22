@@ -60,11 +60,12 @@ func display_name() -> String:
 	return hero.class_data.display_name if side == Battler.Side.PARTY else enemy_data.display_name
 
 
-## Default row from the underlying data. Step 9 (formation) will overlay
-## a player-chosen layout on top of this.
+## Returns true when this battler is in the front row.
+## For party members this reads hero.row (set by the formation screen);
+## for enemies it falls back to the EnemyData default role.
 func is_front_row() -> bool:
 	if side == Battler.Side.PARTY:
-		return hero.class_data.role == ClassData.Role.FRONT
+		return hero.row == 0   # 0 = ClassData.Role.FRONT
 	return enemy_data.role == EnemyData.Role.FRONT
 
 

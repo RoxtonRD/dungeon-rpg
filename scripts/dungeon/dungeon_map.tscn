@@ -70,6 +70,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 52)
 text = "Loja"
 
+[node name="FormationButton" type="Button" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+text = "Formação"
+
 [node name="MenuButton" type="Button" parent="VBox"]
 unique_name_in_owner = true
 layout_mode = 2

@@ -19,6 +19,10 @@ var sp_spent: Dictionary = {}
 var hp: int = 0
 var mp: int = 0
 
+## Formation row chosen by the player. 0 = front, 1 = back.
+## Initialised from class_data.role in create(); player can override it.
+var row: int = 0
+
 ## Equipped items, keyed by slot name. Null = empty slot.
 var equipment: Dictionary = {
 	"weapon": null,
@@ -35,6 +39,7 @@ static func create(from_class: ClassData) -> Hero:
 	h.xp = 0
 	# Level-1 heroes start with 1 SP (prototype: Party.makeChar).
 	h.sp_available = 1
+	h.row = int(from_class.role)   # default: warriors/rogues front, mages/clerics back
 	h.hp = h.max_hp()
 	h.mp = h.max_mp()
 	return h
@@ -95,6 +100,7 @@ func to_dict() -> Dictionary:
 		"sp_spent": sp_spent.duplicate(),
 		"hp": hp,
 		"mp": mp,
+		"row": row,
 		"equipment": equip,
 	}
 
@@ -110,6 +116,7 @@ static func from_dict(data: Dictionary) -> Hero:
 	h.sp_spent = spent_in.duplicate()
 	h.hp = int(data.get("hp", 0))
 	h.mp = int(data.get("mp", 0))
+	h.row = int(data.get("row", int(h.class_data.role)))
 	var equip_in: Dictionary = data.get("equipment", {})
 	for slot in ["weapon", "armor", "trinket"]:
 		var item_id: String = equip_in.get(slot, "")
