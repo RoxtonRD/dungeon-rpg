@@ -236,11 +236,20 @@ func _resolve_and_advance(node: DungeonNode) -> void:
 	_refresh()
 	if run.is_complete():
 		_end_run(true)
+	else:
+		GameState.save_game()
 
 
 func _end_run(victory: bool) -> void:
-	GameState.current_run = null
-	end_label.text = "Masmorra concluída!" if victory else "O grupo foi derrotado."
+	if victory:
+		GameState.current_run = null
+		GameState.save_game()
+		end_label.text = "Masmorra concluída!"
+	else:
+		# TPK rule: revive at 25 % HP, lose 20 % gold, then save and return.
+		GameState.apply_tpk_penalty()
+		GameState.save_game()
+		end_label.text = "O grupo foi derrotado.\nRevividos com 25%% HP.\n20%% do ouro perdido."
 	end_panel.visible = true
 
 

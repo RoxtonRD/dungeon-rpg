@@ -229,3 +229,32 @@ func _chest_force() -> String:
 
 func _chest_leave() -> String:
 	return "Melhor não arriscar."
+
+
+# ── Persistence ───────────────────────────────────────────────────────────────
+
+func to_dict() -> Dictionary:
+	var floors_data: Array = []
+	for floor_row in floors:
+		var row_data: Array = []
+		for node in floor_row:
+			row_data.append((node as DungeonNode).to_dict())
+		floors_data.append(row_data)
+	return {
+		"level": level,
+		"current_floor": current_floor,
+		"floors": floors_data,
+	}
+
+
+static func from_dict(d: Dictionary) -> DungeonRun:
+	var run := DungeonRun.new()
+	run.level = int(d.get("level", 1))
+	run.current_floor = int(d.get("current_floor", -1))
+	var floors_data: Array = d.get("floors", [])
+	for row_data in floors_data:
+		var row: Array[DungeonNode] = []
+		for nd in row_data:
+			row.append(DungeonNode.from_dict(nd))
+		run.floors.append(row)
+	return run

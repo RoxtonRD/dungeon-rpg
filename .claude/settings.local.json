@@ -26,7 +26,9 @@
       "mcp__godot-ai__editor_state",
       "Bash(Get-Content \"C:\\\\Users\\\\flank\\\\.claude\\\\projects\\\\C--Dev-dungeon-rpg\\\\1b9a1925-e79e-47b4-ba4f-e739d65b5ffd.jsonl\")",
       "Bash(Select-Object -Last 50)",
-      "mcp__godot-ai__script_manage"
+      "mcp__godot-ai__script_manage",
+      "mcp__godot-ai__session_manage",
+      "mcp__godot-ai__editor_reload_plugin"
     ]
   }
 }
