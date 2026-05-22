@@ -273,11 +273,18 @@ func _show_end_panel() -> void:
 	var result_names := ["—", "VITÓRIA", "DERROTA", "FUGA"]
 	result_label.text = result_names[_pending_result]
 	if _pending_result == CombatState.Result.VICTORY:
-		rewards_label.text = "+%d XP   +%d ouro" % [_pending_rewards["xp"], _pending_rewards["gold"]]
 		GameState.gold += int(_pending_rewards["gold"])
+		var lines: Array[String] = []
+		lines.append("+%d XP   +%d ouro" % [_pending_rewards["xp"], _pending_rewards["gold"]])
 		for h in Party.heroes:
 			if h.is_alive():
-				Party.award_xp(h, int(_pending_rewards["xp"]))
+				var prev_level := h.level
+				var unlocked: Array[SkillData] = Party.award_xp(h, int(_pending_rewards["xp"]))
+				if h.level > prev_level:
+					lines.append("%s subiu para Nv %d!" % [h.class_data.display_name, h.level])
+					for skill in unlocked:
+						lines.append("  ✦ Nova habilidade: %s" % skill.display_name)
+		rewards_label.text = "\n".join(lines)
 		_refresh_all_panels()
 	elif _pending_result == CombatState.Result.DEFEAT:
 		rewards_label.text = "O grupo foi derrotado."
