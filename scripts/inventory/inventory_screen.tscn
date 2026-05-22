@@ -49,27 +49,42 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 
-[node name="EquipSectionLabel" type="Label" parent="VBox"]
+[node name="MainScroll" type="ScrollContainer" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContentVBox" type="VBoxContainer" parent="VBox/MainScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="EquipSectionLabel" type="Label" parent="VBox/MainScroll/ContentVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Equipamentos"
 
-[node name="EquipmentRows" type="VBoxContainer" parent="VBox"]
+[node name="EquipmentRows" type="VBoxContainer" parent="VBox/MainScroll/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="InvSectionLabel" type="Label" parent="VBox"]
+[node name="SkillSectionLabel" type="Label" parent="VBox/MainScroll/ContentVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Habilidades"
+
+[node name="SkillRows" type="VBoxContainer" parent="VBox/MainScroll/ContentVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="InvSectionLabel" type="Label" parent="VBox/MainScroll/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Inventário"
 
-[node name="ItemScroll" type="ScrollContainer" parent="VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="ItemListVBox" type="VBoxContainer" parent="VBox/ItemScroll"]
+[node name="ItemListVBox" type="VBoxContainer" parent="VBox/MainScroll/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

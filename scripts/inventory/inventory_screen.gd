@@ -1,6 +1,6 @@
-## Inventory and equipment screen.
-## Shows each hero's equipment slots and the shared party inventory.
-## Players can equip / unequip gear and use consumables here.
+## Inventory, equipment, and skill screen.
+## Shows each hero's equipment slots, their skills (with SP upgrade buttons),
+## and the shared party inventory for equipping / using items.
 extends Control
 
 const ITEM_DIR := "res://resources/items/"
@@ -10,6 +10,7 @@ const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
 @onready var hero_info_label: Label = %HeroInfoLabel
 @onready var stats_label: Label = %StatsLabel
 @onready var equip_rows: VBoxContainer = %EquipmentRows
+@onready var skill_rows: VBoxContainer = %SkillRows
 @onready var inv_section_label: Label = %InvSectionLabel
 @onready var item_list_vbox: VBoxContainer = %ItemListVBox
 @onready var close_button: Button = %CloseButton
@@ -48,6 +49,7 @@ func _refresh() -> void:
 	var hero: Hero = Party.heroes[_selected_hero_idx]
 	_update_hero_info(hero)
 	_rebuild_equipment_rows(hero)
+	_rebuild_skill_rows(hero)
 	_rebuild_item_list(hero)
 
 
@@ -111,10 +113,52 @@ func _on_unequip(slot: String) -> void:
 		return
 	GameState.add_item(item.id)
 	hero.equipment[slot] = null
-	# Clamp current HP/MP in case the new maximum is lower
 	hero.hp = mini(hero.hp, hero.max_hp())
 	hero.mp = mini(hero.mp, hero.max_mp())
 	_refresh()
+
+
+# ── Skill rows ────────────────────────────────────────────────────────────────
+
+func _rebuild_skill_rows(hero: Hero) -> void:
+	for child in skill_rows.get_children():
+		child.queue_free()
+
+	for skill in hero.class_data.skills:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		row.custom_minimum_size = Vector2(0, 52)
+
+		# Skill name + tier
+		var tier := Party.get_skill_tier(hero, skill)
+		var locked := hero.level < skill.unlock_level
+		var name_lbl := Label.new()
+		if locked:
+			name_lbl.text = "%s  [Nv %d]" % [skill.display_name, skill.unlock_level]
+			name_lbl.modulate = Color(0.5, 0.5, 0.5, 1)
+		else:
+			name_lbl.text = "%s  T%d  ·  %d MP" % [skill.display_name, tier, skill.mp_cost]
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_lbl.add_theme_font_size_override("font_size", 15)
+		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		row.add_child(name_lbl)
+
+		# Upgrade button — only shown when the skill can ever be upgraded
+		if skill.max_upgrade_level > 1:
+			var up_btn := Button.new()
+			up_btn.text = "Evoluir"
+			up_btn.custom_minimum_size = Vector2(90, 0)
+			up_btn.disabled = not Party.can_upgrade_skill(hero, skill)
+			up_btn.pressed.connect(_on_upgrade_skill.bind(hero, skill))
+			row.add_child(up_btn)
+
+		skill_rows.add_child(row)
+
+
+func _on_upgrade_skill(hero: Hero, skill: SkillData) -> void:
+	if Party.upgrade_skill(hero, skill):
+		_refresh()
 
 
 # ── Inventory item list ───────────────────────────────────────────────────────
@@ -196,13 +240,9 @@ func _on_equip(inv_idx: int) -> void:
 		return
 	var hero: Hero = Party.heroes[_selected_hero_idx]
 	var slot: String = _slot_key_for(item)
-
-	# Return currently equipped item to shared inventory
 	var current: ItemData = hero.equipment[slot]
 	if current != null:
 		GameState.add_item(current.id)
-
-	# Equip new item and remove it from inventory
 	hero.equipment[slot] = item
 	GameState.inventory.remove_at(inv_idx)
 	_refresh()
@@ -214,7 +254,6 @@ func _on_use(inv_idx: int) -> void:
 	if item == null:
 		return
 	var hero: Hero = Party.heroes[_selected_hero_idx]
-
 	if item.use_heal > 0:
 		hero.hp = mini(hero.max_hp(), hero.hp + item.use_heal)
 	if item.use_mp > 0:
@@ -225,7 +264,6 @@ func _on_use(inv_idx: int) -> void:
 		for h in Party.heroes:
 			if not h.is_alive():
 				h.hp = maxi(1, roundi(h.max_hp() * item.use_revive_party))
-
 	GameState.inventory.remove_at(inv_idx)
 	_refresh()
 
