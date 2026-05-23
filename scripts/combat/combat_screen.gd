@@ -25,8 +25,10 @@ const ENEMY_TURN_DELAY: float = 0.6
 ## Delay after a turn begins before processing it (lets the highlight register).
 const TURN_LEAD_DELAY: float = 0.25
 
-@onready var enemy_row: HBoxContainer = %EnemyRow
-@onready var party_row: HBoxContainer = %PartyRow
+@onready var back_party_col: VBoxContainer = %BackPartyCol
+@onready var front_party_col: VBoxContainer = %FrontPartyCol
+@onready var front_enemy_col: VBoxContainer = %FrontEnemyCol
+@onready var back_enemy_col: VBoxContainer = %BackEnemyCol
 @onready var log_label: RichTextLabel = %LogLabel
 @onready var skill_grid: GridContainer = %SkillGrid
 @onready var target_prompt: Label = %TargetPrompt
@@ -91,13 +93,19 @@ func _populate_panels() -> void:
 		p.set_battler(state.party[i])
 		p.tapped.connect(_on_panel_tapped)
 		_party_panels.append(p)
-		party_row.add_child(p)
+		if state.party[i].is_front_row():
+			front_party_col.add_child(p)
+		else:
+			back_party_col.add_child(p)
 	for i in state.enemies.size():
 		var p := BattlerPanel.new()
 		p.set_battler(state.enemies[i])
 		p.tapped.connect(_on_panel_tapped)
 		_enemy_panels.append(p)
-		enemy_row.add_child(p)
+		if state.enemies[i].is_front_row():
+			front_enemy_col.add_child(p)
+		else:
+			back_enemy_col.add_child(p)
 
 
 func _panel_for(b: Battler) -> BattlerPanel:

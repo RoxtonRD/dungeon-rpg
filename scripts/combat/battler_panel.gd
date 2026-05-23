@@ -1,5 +1,6 @@
-## Reusable widget for one battler (party or enemy). Shows a placeholder
-## portrait (ColorRect), name, HP/MP bars and active status effects.
+## Reusable widget for one battler (party or enemy). Shows a portrait
+## (TextureRect when a Texture2D is assigned to ClassData/EnemyData, otherwise
+## a coloured ColorRect placeholder), name, HP/MP bars and active statuses.
 ## Tapping the panel emits `tapped` when the panel is in selectable mode.
 class_name BattlerPanel
 extends PanelContainer
@@ -9,7 +10,10 @@ signal tapped(battler: Battler)
 var battler: Battler = null
 
 var _vbox: VBoxContainer
-var _portrait: ColorRect
+## Placeholder portrait shown when no Texture2D portrait is available.
+var _portrait_bg: ColorRect
+## Real portrait, shown instead of _portrait_bg when a texture is assigned.
+var _portrait_tex: TextureRect
 var _name_label: Label
 var _hp_label: Label
 var _hp_bar: ProgressBar
@@ -21,7 +25,8 @@ var _selectable: bool = false
 
 
 func _init() -> void:
-	custom_minimum_size = Vector2(150, 220)
+	custom_minimum_size = Vector2(130, 185)
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_apply_style(false)
 	_vbox = VBoxContainer.new()
 	_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -30,10 +35,17 @@ func _init() -> void:
 
 	var portrait_box := CenterContainer.new()
 	_vbox.add_child(portrait_box)
-	_portrait = ColorRect.new()
-	_portrait.custom_minimum_size = Vector2(80, 80)
-	_portrait.color = Color(0.3, 0.3, 0.4)
-	portrait_box.add_child(_portrait)
+
+	_portrait_bg = ColorRect.new()
+	_portrait_bg.custom_minimum_size = Vector2(80, 80)
+	_portrait_bg.color = Color(0.3, 0.3, 0.4)
+	portrait_box.add_child(_portrait_bg)
+
+	_portrait_tex = TextureRect.new()
+	_portrait_tex.custom_minimum_size = Vector2(80, 80)
+	_portrait_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait_tex.visible = false
+	portrait_box.add_child(_portrait_tex)
 
 	_name_label = Label.new()
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -45,7 +57,8 @@ func _init() -> void:
 	_vbox.add_child(_hp_label)
 
 	_hp_bar = ProgressBar.new()
-	_hp_bar.custom_minimum_size = Vector2(130, 8)
+	_hp_bar.custom_minimum_size = Vector2(0, 8)
+	_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hp_bar.show_percentage = false
 	_vbox.add_child(_hp_bar)
 
@@ -55,7 +68,8 @@ func _init() -> void:
 	_vbox.add_child(_mp_label)
 
 	_mp_bar = ProgressBar.new()
-	_mp_bar.custom_minimum_size = Vector2(130, 8)
+	_mp_bar.custom_minimum_size = Vector2(0, 8)
+	_mp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_mp_bar.show_percentage = false
 	_vbox.add_child(_mp_bar)
 
@@ -81,8 +95,12 @@ func refresh() -> void:
 	_hp_label.text = "HP %d/%d" % [battler.get_hp(), battler.max_hp]
 	_hp_bar.max_value = max(1, battler.max_hp)
 	_hp_bar.value = battler.get_hp()
+
+	# Portrait — show Texture2D if one is assigned, otherwise placeholder.
+	var portrait_tex: Texture2D = null
 	if battler.side == Battler.Side.PARTY:
-		_portrait.color = _color_for_class(battler.hero.class_data.id)
+		_portrait_bg.color = _color_for_class(battler.hero.class_data.id)
+		portrait_tex = battler.hero.class_data.portrait
 		_mp_label.visible = true
 		_mp_bar.visible = true
 		var mp_max := battler.hero.max_mp()
@@ -90,9 +108,19 @@ func refresh() -> void:
 		_mp_bar.max_value = max(1, mp_max)
 		_mp_bar.value = battler.hero.mp
 	else:
-		_portrait.color = Color(0.45, 0.2, 0.2)
+		_portrait_bg.color = Color(0.45, 0.2, 0.2)
+		portrait_tex = battler.enemy_data.portrait
 		_mp_label.visible = false
 		_mp_bar.visible = false
+
+	if portrait_tex != null:
+		_portrait_tex.texture = portrait_tex
+		_portrait_tex.visible = true
+		_portrait_bg.visible = false
+	else:
+		_portrait_tex.visible = false
+		_portrait_bg.visible = true
+
 	_status_label.text = _format_statuses(battler)
 	# Dim dead battlers; reset modulate otherwise (selectable mode tints separately).
 	modulate = Color(0.4, 0.4, 0.4) if not battler.is_alive() else Color.WHITE

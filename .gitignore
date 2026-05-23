@@ -4,6 +4,7 @@
 .godot/
 
 # Exported builds
+/android/
 /build/
 /export/
 *.apk

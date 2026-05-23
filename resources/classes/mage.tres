@@ -1,8 +1,10 @@
-[gd_resource type="Resource" script_class="ClassData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://l3lleptvqb7p"]
 
-[ext_resource type="Script" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://wmnpc4ghypa4" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bokeorwr31aai" path="res://resources/portraits/Rox.png" id="1_h35sj"]
 [ext_resource type="Resource" path="res://resources/skills/mage_firebolt.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/mage_fireball.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_dgmy3"]
 [ext_resource type="Resource" path="res://resources/skills/mage_ice_spike.tres" id="4"]
 [ext_resource type="Resource" path="res://resources/skills/mage_arcane_blast.tres" id="5"]
 
@@ -23,4 +25,5 @@ atk_per_level = 1
 def_per_level = 1
 mag_per_level = 3
 spd_per_level = 1
-skills = Array[SkillData]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
+skills = Array[ExtResource("3_dgmy3")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
+portrait = ExtResource("1_h35sj")

@@ -1,16 +1,17 @@
-[gd_resource type="Resource" script_class="ClassData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://3wtvdy34rqx1"]
 
-[ext_resource type="Script" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://wmnpc4ghypa4" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bdrcow2okxuus" path="res://resources/portraits/Julie.png" id="1_v41cd"]
 [ext_resource type="Resource" path="res://resources/skills/rogue_stab.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/rogue_backstab.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_4gsvf"]
 [ext_resource type="Resource" path="res://resources/skills/rogue_relentless.tres" id="4"]
 [ext_resource type="Resource" path="res://resources/skills/rogue_assassinate.tres" id="5"]
 
 [resource]
 script = ExtResource("1")
 id = "rogue"
-display_name = "Ladino"
-role = 0
+display_name = "Ladina"
 base_hp = 30
 base_mp = 12
 atk = 6
@@ -21,6 +22,6 @@ hp_per_level = 7
 mp_per_level = 2
 atk_per_level = 2
 def_per_level = 1
-mag_per_level = 0
 spd_per_level = 2
-skills = Array[SkillData]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
+skills = Array[ExtResource("3_4gsvf")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
+portrait = ExtResource("1_v41cd")

@@ -22,8 +22,8 @@ config/features=PackedStringArray("4.6", "Mobile")
 [autoload]
 
 Party="*res://scripts/party.gd"
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 GameState="*res://scripts/game_state.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
@@ -40,3 +40,4 @@ enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 [rendering]
 
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
