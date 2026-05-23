@@ -1,7 +1,9 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://c1qlswx0vechy"]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://d15u6w6alimo6" path="res://resources/portraits/enemies/Bat.png" id="1_lupau"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_sqiwo"]
 
 [resource]
 script = ExtResource("1")
@@ -11,9 +13,9 @@ role = 1
 max_hp = 12
 atk = 4
 def = 1
-mag = 0
 spd = 8
 xp_reward = 7
 gold_min = 2
 gold_max = 6
-skills = Array[SkillData]([ExtResource("2")])
+skills = Array[ExtResource("3_sqiwo")]([ExtResource("2")])
+portrait = ExtResource("1_lupau")

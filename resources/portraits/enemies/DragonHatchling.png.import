@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cx0wlf8jb3hqk"
-path="res://.godot/imported/Van.png-b2a813ddb64d526546afed975f27b683.ctex"
+uid="uid://7ywc1wjhwm3w"
+path="res://.godot/imported/DragonHatchling.png-28293718e8fd817b462eb0b3b5d9bd96.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/Van.png"
-dest_files=["res://.godot/imported/Van.png-b2a813ddb64d526546afed975f27b683.ctex"]
+source_file="res://resources/portraits/enemies/DragonHatchling.png"
+dest_files=["res://.godot/imported/DragonHatchling.png-28293718e8fd817b462eb0b3b5d9bd96.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bdrcow2okxuus"
-path="res://.godot/imported/Julie.png-1d7ae142d1f78a594bb0dfaa6b6dec8a.ctex"
+uid="uid://bomuh4blgxbv6"
+path="res://.godot/imported/SkeletonFighter.png-51ad526a4613f284036a919ac2cedb4d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/Julie.png"
-dest_files=["res://.godot/imported/Julie.png-1d7ae142d1f78a594bb0dfaa6b6dec8a.ctex"]
+source_file="res://resources/portraits/enemies/SkeletonFighter.png"
+dest_files=["res://.godot/imported/SkeletonFighter.png-51ad526a4613f284036a919ac2cedb4d.ctex"]
 
 [params]
 

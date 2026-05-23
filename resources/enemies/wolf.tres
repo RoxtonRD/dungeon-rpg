@@ -1,20 +1,21 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://bcbsc3gde6x8k"]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cq02mpah6uihg" path="res://resources/portraits/enemies/Wolf.png" id="1_78dli"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_bite.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_oxm75"]
 
 [resource]
 script = ExtResource("1")
 id = "wolf"
 display_name = "Lobo"
-role = 0
 max_hp = 20
 atk = 6
 def = 2
-mag = 0
 spd = 8
 xp_reward = 10
 gold_min = 3
 gold_max = 7
-skills = Array[SkillData]([ExtResource("2"), ExtResource("3")])
+skills = Array[ExtResource("3_oxm75")]([ExtResource("2"), ExtResource("3")])
+portrait = ExtResource("1_78dli")

@@ -1,19 +1,20 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://bhc2f4ilbwnlr"]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cvh16n3peyrbe" path="res://resources/portraits/enemies/Goblin.png" id="1_eoums"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_3kmag"]
 
 [resource]
 script = ExtResource("1")
 id = "goblin"
 display_name = "Goblin"
-role = 0
 max_hp = 18
 atk = 5
 def = 2
-mag = 0
 spd = 5
 xp_reward = 8
 gold_min = 3
 gold_max = 8
-skills = Array[SkillData]([ExtResource("2")])
+skills = Array[ExtResource("3_3kmag")]([ExtResource("2")])
+portrait = ExtResource("1_eoums")

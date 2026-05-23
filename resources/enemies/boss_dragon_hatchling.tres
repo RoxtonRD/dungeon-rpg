@@ -1,15 +1,16 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://w11cpri6ahio"]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://7ywc1wjhwm3w" path="res://resources/portraits/enemies/DragonHatchling.png" id="1_1k5sk"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_fire_breath.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_d6xek"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_rage.tres" id="4"]
 
 [resource]
 script = ExtResource("1")
 id = "dragon_hatchling"
 display_name = "Dragão Filhote"
-role = 0
 max_hp = 90
 atk = 12
 def = 6
@@ -19,4 +20,5 @@ xp_reward = 70
 gold_min = 50
 gold_max = 80
 is_boss = true
-skills = Array[SkillData]([ExtResource("2"), ExtResource("3"), ExtResource("4")])
+skills = Array[ExtResource("3_d6xek")]([ExtResource("2"), ExtResource("3"), ExtResource("4")])
+portrait = ExtResource("1_1k5sk")

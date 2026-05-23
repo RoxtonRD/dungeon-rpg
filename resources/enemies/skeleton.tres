@@ -1,19 +1,20 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://bihiwpbawa18w"]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bomuh4blgxbv6" path="res://resources/portraits/enemies/SkeletonFighter.png" id="1_repbl"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_wp1rg"]
 
 [resource]
 script = ExtResource("1")
 id = "skeleton"
 display_name = "Esqueleto"
-role = 0
 max_hp = 22
 atk = 6
 def = 3
-mag = 0
 spd = 3
 xp_reward = 10
 gold_min = 4
 gold_max = 10
-skills = Array[SkillData]([ExtResource("2")])
+skills = Array[ExtResource("3_wp1rg")]([ExtResource("2")])
+portrait = ExtResource("1_repbl")

@@ -33,6 +33,7 @@ const TURN_LEAD_DELAY: float = 0.25
 @onready var skill_grid: GridContainer = %SkillGrid
 @onready var target_prompt: Label = %TargetPrompt
 @onready var flee_button: Button = %FleeButton
+@onready var cancel_button: Button = %CancelButton
 @onready var end_panel: PanelContainer = %EndPanel
 @onready var result_label: Label = %ResultLabel
 @onready var rewards_label: Label = %RewardsLabel
@@ -50,9 +51,11 @@ var _pending_rewards: Dictionary = {}
 
 func _ready() -> void:
 	flee_button.pressed.connect(_on_flee_pressed)
+	cancel_button.pressed.connect(_on_cancel_pressed)
 	continue_button.pressed.connect(_on_continue_pressed)
 	end_panel.visible = false
 	target_prompt.visible = false
+	cancel_button.visible = false
 	# Defer the default bootstrap so external callers can call setup() first.
 	call_deferred("_bootstrap_if_needed")
 
@@ -171,6 +174,8 @@ func _show_player_turn_ui() -> void:
 	_picking_target = false
 	_pending_skill = null
 	target_prompt.visible = false
+	cancel_button.visible = false
+	flee_button.visible = true
 	flee_button.disabled = false
 	_populate_skill_buttons()
 
@@ -220,6 +225,8 @@ func _on_skill_pressed(skill: SkillData) -> void:
 	_picking_target = true
 	target_prompt.visible = true
 	_clear_skill_buttons()
+	flee_button.visible = false
+	cancel_button.visible = true
 	for panel in _all_panels():
 		panel.set_selectable(targets.has(panel.battler))
 
@@ -241,6 +248,7 @@ func _on_panel_tapped(b: Battler) -> void:
 
 func _resolve_player_action(skill: SkillData, target: Battler) -> void:
 	_clear_skill_buttons()
+	cancel_button.visible = false
 	flee_button.disabled = true
 	state.player_action(skill, target)
 	_refresh_all_panels()
@@ -248,6 +256,13 @@ func _resolve_player_action(skill: SkillData, target: Battler) -> void:
 
 
 # ── Buttons ───────────────────────────────────────────────────────────────────
+
+func _on_cancel_pressed() -> void:
+	## Return to the skill grid without spending the turn.
+	for p in _all_panels():
+		p.set_selectable(false)
+	_show_player_turn_ui()
+
 
 func _on_flee_pressed() -> void:
 	if state.ended or state.current_actor == null:
@@ -277,6 +292,7 @@ func _show_end_panel() -> void:
 		p.set_selectable(false)
 		p.set_active(false)
 	target_prompt.visible = false
+	cancel_button.visible = false
 	flee_button.disabled = true
 	var result_names := ["—", "VITÓRIA", "DERROTA", "FUGA"]
 	result_label.text = result_names[_pending_result]

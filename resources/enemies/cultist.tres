@@ -1,8 +1,10 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://4i7gtxiljg6d"]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://b7wf8py1obyxg" path="res://resources/portraits/enemies/Cultist.png" id="1_ghjni"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_shadow.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_curse.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_xdivs"]
 
 [resource]
 script = ExtResource("1")
@@ -17,4 +19,5 @@ spd = 5
 xp_reward = 14
 gold_min = 6
 gold_max = 12
-skills = Array[SkillData]([ExtResource("2"), ExtResource("3")])
+skills = Array[ExtResource("3_xdivs")]([ExtResource("2"), ExtResource("3")])
+portrait = ExtResource("1_ghjni")

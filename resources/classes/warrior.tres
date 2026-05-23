@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://bksoqpn6t4qvu"]
 
 [ext_resource type="Script" uid="uid://wmnpc4ghypa4" path="res://scripts/data/class_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://cx0wlf8jb3hqk" path="res://resources/portraits/Van.png" id="1_2uuax"]
+[ext_resource type="Texture2D" uid="uid://du0caep74jk05" path="res://resources/portraits/heroes/Alchemist.png" id="1_2uuax"]
 [ext_resource type="Resource" path="res://resources/skills/warrior_slash.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/warrior_cleave.tres" id="3"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_jfbdk"]

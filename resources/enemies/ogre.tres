@@ -1,20 +1,21 @@
-[gd_resource type="Resource" script_class="EnemyData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://dhlluipg3v7b1"]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://b3ro7s5nrmu85" path="res://resources/portraits/enemies/Ogre.png" id="1_p7f16"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_crush.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_rage.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_o10hs"]
 
 [resource]
 script = ExtResource("1")
 id = "ogre"
 display_name = "Ogro"
-role = 0
 max_hp = 45
 atk = 12
 def = 5
-mag = 0
 spd = 3
 xp_reward = 18
 gold_min = 8
 gold_max = 15
-skills = Array[SkillData]([ExtResource("2"), ExtResource("3")])
+skills = Array[ExtResource("3_o10hs")]([ExtResource("2"), ExtResource("3")])
+portrait = ExtResource("1_p7f16")

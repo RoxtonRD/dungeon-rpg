@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bokeorwr31aai"
-path="res://.godot/imported/Rox.png-5e4cfd803b1e11634b20af9baa2940ae.ctex"
+uid="uid://2moaw1ikhu10"
+path="res://.godot/imported/DarkElf.png-124cdc41682f4f7ebf6c49c9f40c48d3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/Rox.png"
-dest_files=["res://.godot/imported/Rox.png-5e4cfd803b1e11634b20af9baa2940ae.ctex"]
+source_file="res://resources/portraits/enemies/DarkElf.png"
+dest_files=["res://.godot/imported/DarkElf.png-124cdc41682f4f7ebf6c49c9f40c48d3.ctex"]
 
 [params]
 
