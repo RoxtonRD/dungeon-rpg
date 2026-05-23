@@ -91,19 +91,38 @@ func roll_encounter(floor_index: int) -> Array[EnemyData]:
 	var count := randi_range(2, 4)
 	var out: Array[EnemyData] = []
 	for i in count:
-		out.append(_load_enemy(pool[randi() % pool.size()]))
+		out.append(_scale_enemy(_load_enemy(pool[randi() % pool.size()])))
 	return out
 
 
 func roll_boss() -> Array[EnemyData]:
 	var out: Array[EnemyData] = []
 	for id in BOSS_ENCOUNTER:
-		out.append(_load_enemy(id))
+		out.append(_scale_enemy(_load_enemy(id)))
 	return out
 
 
 func _load_enemy(id: String) -> EnemyData:
 	return load(ENEMY_DIR + id + ".tres") as EnemyData
+
+
+## Returns the enemy with stats multiplied for the current dungeon level.
+## Level 1 returns the base resource unchanged. Level 2+ duplicates it so
+## the original .tres asset is never mutated.
+func _scale_enemy(base: EnemyData) -> EnemyData:
+	if level <= 1:
+		return base
+	var scaled := base.duplicate() as EnemyData
+	var f := 1.0 + (level - 1) * 0.30  # +30 % per dungeon level above 1
+	scaled.max_hp    = roundi(base.max_hp    * f)
+	scaled.atk       = roundi(base.atk       * f)
+	scaled.def       = roundi(base.def       * f)
+	scaled.mag       = roundi(base.mag       * f)
+	scaled.spd       = roundi(base.spd       * f)
+	scaled.xp_reward = roundi(base.xp_reward * f)
+	scaled.gold_min  = roundi(base.gold_min  * f)
+	scaled.gold_max  = roundi(base.gold_max  * f)
+	return scaled
 
 
 # ── Treasure ──────────────────────────────────────────────────────────────────
