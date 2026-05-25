@@ -97,7 +97,7 @@ func _rebuild_buy_list() -> void:
 		buy_btn.pressed.connect(_on_buy.bind(item_id, item.value))
 		row.add_child(buy_btn)
 
-		item_list_vbox.add_child(row)
+		_add_entry(row, item.short_description())
 
 
 func _on_buy(item_id: String, price: int) -> void:
@@ -149,7 +149,7 @@ func _rebuild_sell_list() -> void:
 		sell_btn.pressed.connect(_on_sell.bind(idx))
 		row.add_child(sell_btn)
 
-		item_list_vbox.add_child(row)
+		_add_entry(row, item.short_description())
 
 
 func _on_sell(inv_idx: int) -> void:
@@ -172,8 +172,28 @@ func _clear_list() -> void:
 func _make_row() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	row.custom_minimum_size = Vector2(0, 52)
+	row.custom_minimum_size = Vector2(0, 44)
 	return row
+
+
+## Wraps a top row plus an always-visible description line into one list entry.
+func _add_entry(top_row: Control, desc: String) -> void:
+	var entry := VBoxContainer.new()
+	entry.add_theme_constant_override("separation", 2)
+	entry.add_child(top_row)
+	if not desc.is_empty():
+		entry.add_child(_make_desc_label(desc))
+	item_list_vbox.add_child(entry)
+
+
+## Small, dimmed description line shown under an item row.
+func _make_desc_label(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", Color(0.68, 0.70, 0.78))
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return lbl
 
 
 func _on_close() -> void:

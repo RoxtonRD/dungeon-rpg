@@ -78,9 +78,12 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 		"trinket": "Amuleto",
 	}
 	for slot in ["weapon", "armor", "trinket"]:
+		var entry := VBoxContainer.new()
+		entry.add_theme_constant_override("separation", 2)
+
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
-		row.custom_minimum_size = Vector2(0, 48)
+		row.custom_minimum_size = Vector2(0, 44)
 
 		var slot_lbl := Label.new()
 		slot_lbl.text = slot_labels[slot]
@@ -95,8 +98,6 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 		item_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		item_lbl.add_theme_font_size_override("font_size", 16)
 		item_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		if item != null:
-			item_lbl.tooltip_text = _item_description(item)
 		row.add_child(item_lbl)
 
 		if item != null:
@@ -106,7 +107,12 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 			unequip_btn.pressed.connect(_on_unequip.bind(slot))
 			row.add_child(unequip_btn)
 
-		equip_rows.add_child(row)
+		entry.add_child(row)
+		if item != null:
+			var desc := item.short_description()
+			if not desc.is_empty():
+				entry.add_child(_make_desc_label(desc))
+		equip_rows.add_child(entry)
 
 
 func _on_unequip(slot: String) -> void:
@@ -132,11 +138,14 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		if hero.level < skill.unlock_level:
 			continue
 
+		var entry := VBoxContainer.new()
+		entry.add_theme_constant_override("separation", 2)
+
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
-		row.custom_minimum_size = Vector2(0, 52)
+		row.custom_minimum_size = Vector2(0, 44)
 
-		# Skill name + tier. Long-press the name to read the description.
+		# Skill name + tier
 		var tier := Party.get_skill_tier(hero, skill)
 		var name_lbl := Label.new()
 		name_lbl.text = "%s  T%d  ·  %d MP" % [skill.display_name, tier, skill.mp_cost]
@@ -144,7 +153,6 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		name_lbl.add_theme_font_size_override("font_size", 15)
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		name_lbl.tooltip_text = skill.description
 		row.add_child(name_lbl)
 
 		# Upgrade button — only shown when the skill can ever be upgraded
@@ -156,7 +164,10 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 			up_btn.pressed.connect(_on_upgrade_skill.bind(hero, skill))
 			row.add_child(up_btn)
 
-		skill_rows.add_child(row)
+		entry.add_child(row)
+		if not skill.description.is_empty():
+			entry.add_child(_make_desc_label(skill.description))
+		skill_rows.add_child(entry)
 
 
 func _on_upgrade_skill(hero: Hero, skill: SkillData) -> void:
@@ -186,16 +197,18 @@ func _rebuild_item_list(hero: Hero) -> void:
 		if item == null:
 			continue
 
+		var entry := VBoxContainer.new()
+		entry.add_theme_constant_override("separation", 2)
+
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
-		row.custom_minimum_size = Vector2(0, 52)
+		row.custom_minimum_size = Vector2(0, 44)
 
 		var name_lbl := Label.new()
 		name_lbl.text = item.display_name
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 16)
-		name_lbl.tooltip_text = _item_description(item)
 		row.add_child(name_lbl)
 
 		var action_btn := Button.new()
@@ -211,7 +224,11 @@ func _rebuild_item_list(hero: Hero) -> void:
 			action_btn.pressed.connect(_on_equip.bind(idx))
 
 		row.add_child(action_btn)
-		item_list_vbox.add_child(row)
+		entry.add_child(row)
+		var desc := item.short_description()
+		if not desc.is_empty():
+			entry.add_child(_make_desc_label(desc))
+		item_list_vbox.add_child(entry)
 
 
 func _can_equip(hero: Hero, item: ItemData) -> bool:
@@ -237,50 +254,14 @@ func _can_use_consumable(hero: Hero, item: ItemData) -> bool:
 
 # ── Descriptions ──────────────────────────────────────────────────────────────
 
-## Builds a human-readable summary of an item from its stats / effects.
-## ItemData has no authored description field in v1, so this is generated.
-func _item_description(item: ItemData) -> String:
-	var parts: Array[String] = []
-	if item.slot == ItemData.Slot.CONSUMABLE:
-		if item.use_heal > 0:
-			parts.append("Cura %d HP" % item.use_heal)
-		if item.use_mp > 0:
-			parts.append("Restaura %d MP" % item.use_mp)
-		if item.use_sp > 0:
-			parts.append("+%d Ponto de Habilidade" % item.use_sp)
-		if item.use_revive_party > 0.0:
-			parts.append("Revive aliados caídos com %d%% HP" % roundi(item.use_revive_party * 100.0))
-	else:
-		var stats := _stat_mods_text(item)
-		if not stats.is_empty():
-			parts.append(stats)
-		if item.class_restriction.size() > 0:
-			var names: Array[String] = []
-			for cid in item.class_restriction:
-				names.append(_class_display_name(cid))
-			parts.append("Classe: %s" % ", ".join(names))
-	if parts.is_empty():
-		return item.display_name
-	return "\n".join(parts)
-
-
-func _stat_mods_text(item: ItemData) -> String:
-	var mods: Array[String] = []
-	if item.mod_hp != 0:  mods.append("HP %+d" % item.mod_hp)
-	if item.mod_mp != 0:  mods.append("MP %+d" % item.mod_mp)
-	if item.mod_atk != 0: mods.append("ATQ %+d" % item.mod_atk)
-	if item.mod_def != 0: mods.append("DEF %+d" % item.mod_def)
-	if item.mod_mag != 0: mods.append("MAG %+d" % item.mod_mag)
-	if item.mod_spd != 0: mods.append("VEL %+d" % item.mod_spd)
-	return ", ".join(mods)
-
-
-## Maps a class id to its display name using the live party (always has all 4).
-func _class_display_name(class_id: String) -> String:
-	for h in Party.heroes:
-		if h.class_data.id == class_id:
-			return h.class_data.display_name
-	return class_id
+## Small, dimmed, always-visible description line shown under a skill or item.
+func _make_desc_label(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", Color(0.68, 0.70, 0.78))
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return lbl
 
 
 # ── Actions ───────────────────────────────────────────────────────────────────
