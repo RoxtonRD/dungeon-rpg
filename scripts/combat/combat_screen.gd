@@ -24,6 +24,8 @@ const TEST_ENEMY_PATHS: Array[String] = [
 const ENEMY_TURN_DELAY: float = 0.6
 ## Delay after a turn begins before processing it (lets the highlight register).
 const TURN_LEAD_DELAY: float = 0.25
+## Chance for a boss kill to drop a Tomo de Maestria (tome_sp). FLAG: tune me.
+const BOSS_TOME_DROP_CHANCE: float = 0.25
 
 @onready var back_party_col: VBoxContainer = %BackPartyCol
 @onready var front_party_col: VBoxContainer = %FrontPartyCol
@@ -287,6 +289,19 @@ func _on_standalone_finished(_result: int) -> void:
 
 # ── End panel ─────────────────────────────────────────────────────────────────
 
+## True when any enemy in the current encounter was a boss.
+func _encounter_has_boss() -> bool:
+	for e in state.enemies:
+		if e.enemy_data != null and e.enemy_data.is_boss:
+			return true
+	return false
+
+
+func _tome_display_name() -> String:
+	var tome := load("res://resources/items/tome_sp.tres") as ItemData
+	return tome.display_name if tome != null else "Tomo de Maestria"
+
+
 func _show_end_panel() -> void:
 	_clear_skill_buttons()
 	for p in _all_panels():
@@ -304,11 +319,19 @@ func _show_end_panel() -> void:
 		for h in Party.heroes:
 			if h.is_alive():
 				var prev_level := h.level
+				var prev_bonus_mp := h.bonus_mp
 				var unlocked: Array[SkillData] = Party.award_xp(h, int(_pending_rewards["xp"]))
 				if h.level > prev_level:
 					lines.append("%s subiu para Nv %d!" % [h.class_data.display_name, h.level])
 					for skill in unlocked:
 						lines.append("  ✦ Nova habilidade: %s" % skill.display_name)
+				if h.bonus_mp > prev_bonus_mp:
+					lines.append("%s não tem habilidades para evoluir — +%d MP máximo!" % [
+						h.class_data.display_name, h.bonus_mp - prev_bonus_mp])
+		# Rare boss-only drop: a Tomo de Maestria.
+		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
+			GameState.add_item("tome_sp")
+			lines.append("  ✦ O chefe deixou um %s!" % _tome_display_name())
 		rewards_label.text = "\n".join(lines)
 		_refresh_all_panels()
 	elif _pending_result == CombatState.Result.DEFEAT:

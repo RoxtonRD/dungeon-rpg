@@ -14,6 +14,9 @@ var sp_available: int = 0
 ## SP spent per skill, keyed by the skill's .tres filename (no extension).
 ## A missing key means 0 SP spent, i.e. the skill is at upgrade tier 1.
 var sp_spent: Dictionary = {}
+## Permanent bonus to max MP, gained when Skill Points are converted because
+## the hero has no skill left to upgrade (see Party.award_sp).
+var bonus_mp: int = 0
 
 ## Current HP/MP. Maximums are derived from class_data + level + equipment.
 var hp: int = 0
@@ -60,7 +63,7 @@ func max_hp() -> int:
 
 
 func max_mp() -> int:
-	return class_data.base_mp + class_data.mp_per_level * (level - 1) + _equipment_mod("mod_mp")
+	return class_data.base_mp + class_data.mp_per_level * (level - 1) + _equipment_mod("mod_mp") + bonus_mp
 
 
 func atk() -> int:
@@ -98,6 +101,7 @@ func to_dict() -> Dictionary:
 		"xp": xp,
 		"sp_available": sp_available,
 		"sp_spent": sp_spent.duplicate(),
+		"bonus_mp": bonus_mp,
 		"hp": hp,
 		"mp": mp,
 		"row": row,
@@ -114,6 +118,7 @@ static func from_dict(data: Dictionary) -> Hero:
 	h.sp_available = int(data.get("sp_available", 0))
 	var spent_in: Dictionary = data.get("sp_spent", {})
 	h.sp_spent = spent_in.duplicate()
+	h.bonus_mp = int(data.get("bonus_mp", 0))
 	h.hp = int(data.get("hp", 0))
 	h.mp = int(data.get("mp", 0))
 	h.row = int(data.get("row", int(h.class_data.role)))

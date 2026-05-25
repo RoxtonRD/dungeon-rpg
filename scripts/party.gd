@@ -54,13 +54,13 @@ func award_xp(hero: Hero, amount: int) -> Array[SkillData]:
 	return unlocked
 
 
-## Performs a single level-up: +1 level, +1 SP, full HP/MP restore.
-## Per-level stat growth is applied automatically because Hero's max_hp/atk/
-## etc. are derived from class_data + level. Returns SkillData entries whose
-## unlock_level matches the new level.
+## Performs a single level-up: +1 level, +1 SP (or converted to MP), full
+## HP/MP restore. Per-level stat growth is applied automatically because
+## Hero's max_hp/atk/etc. are derived from class_data + level. Returns
+## SkillData entries whose unlock_level matches the new level.
 func level_up(hero: Hero) -> Array[SkillData]:
 	hero.level += 1
-	hero.sp_available += 1
+	award_sp(hero, 1)
 	hero.hp = hero.max_hp()
 	hero.mp = hero.max_mp()
 	var newly: Array[SkillData] = []
@@ -71,6 +71,35 @@ func level_up(hero: Hero) -> Array[SkillData]:
 
 
 # ── Skill Points ──────────────────────────────────────────────────────────────
+
+## Max MP granted per Skill Point when SP is converted (no skills to upgrade).
+const SP_TO_MP: int = 2
+
+
+## True while the hero still has a skill that can take more SP — i.e. any skill
+## below its max tier. Skills not yet unlocked count too, since they become
+## upgradable on level-up; SP is banked rather than converted in that case.
+func has_upgradable_skills(hero: Hero) -> bool:
+	for skill in hero.class_data.skills:
+		if get_skill_tier(hero, skill) < skill.max_upgrade_level:
+			return true
+	return false
+
+
+## Grants `points` Skill Points to a hero. When the hero has no skill left to
+## upgrade (now or in the future), the points are instead converted to permanent
+## max MP. Returns the MP gained (0 when the points were granted as SP), so
+## callers can surface a "converted" message.
+func award_sp(hero: Hero, points: int) -> int:
+	if points <= 0:
+		return 0
+	if has_upgradable_skills(hero):
+		hero.sp_available += points
+		return 0
+	var mp_gain := points * SP_TO_MP
+	hero.bonus_mp += mp_gain
+	hero.mp = mini(hero.max_mp(), hero.mp + mp_gain)
+	return mp_gain
 
 ## Stable key used inside Hero.sp_spent. The .tres filename without extension —
 ## e.g. "warrior_slash" for res://resources/skills/warrior_slash.tres.

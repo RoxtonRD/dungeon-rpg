@@ -311,7 +311,10 @@ func _on_use(inv_idx: int) -> void:
 	if item.use_mp > 0:
 		hero.mp = mini(hero.max_mp(), hero.mp + item.use_mp)
 	if item.use_sp > 0:
-		hero.sp_available += item.use_sp
+		var mp_gain := Party.award_sp(hero, item.use_sp)
+		if mp_gain > 0:
+			_flash_message("%s não tem habilidades para evoluir — +%d MP máximo!" % [
+				hero.class_data.display_name, mp_gain])
 	if item.use_revive_party > 0:
 		for h in Party.heroes:
 			if not h.is_alive():
@@ -326,6 +329,28 @@ func _slot_key_for(item: ItemData) -> String:
 		ItemData.Slot.ARMOR:   return "armor"
 		ItemData.Slot.TRINKET: return "trinket"
 	return "weapon"
+
+
+## Transient on-screen message (the Personagens screen has no combat log).
+## Used to report SP→MP conversion when a Tomo de Maestria is consumed.
+func _flash_message(text: String) -> void:
+	var toast := Label.new()
+	toast.text = text
+	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	toast.add_theme_font_size_override("font_size", 16)
+	toast.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+	toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	toast.offset_left = -220
+	toast.offset_right = 220
+	toast.offset_top = 90
+	toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(toast)
+	var tw := create_tween()
+	tw.tween_interval(1.8)
+	tw.tween_property(toast, "modulate:a", 0.0, 0.8)
+	tw.tween_callback(toast.queue_free)
 
 
 func _on_close() -> void:

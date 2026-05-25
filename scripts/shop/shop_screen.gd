@@ -12,7 +12,6 @@ const SHOP_ITEMS: Array[String] = [
 	"potion_mana",
 	"elixir_full",
 	"elixir_revival",
-	"tome_sp",
 	# Weapons
 	"sword_rusty",
 	"sword_iron",
