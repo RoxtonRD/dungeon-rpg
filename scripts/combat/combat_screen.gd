@@ -20,8 +20,10 @@ const TEST_ENEMY_PATHS: Array[String] = [
 	"res://resources/enemies/bat.tres",
 ]
 
-## Delay between consecutive enemy actions, in seconds.
-const ENEMY_TURN_DELAY: float = 0.6
+## Delay between consecutive enemy actions, in seconds. FLAG: tune me (0.6–0.8).
+const ENEMY_TURN_DELAY: float = 0.7
+## Pause after the player's own action resolves so they can read it. FLAG: tune me.
+const PLAYER_ACTION_DELAY: float = 0.4
 ## Delay after a turn begins before processing it (lets the highlight register).
 const TURN_LEAD_DELAY: float = 0.25
 ## Chance for a boss kill to drop a Tomo de Maestria (tome_sp). FLAG: tune me.
@@ -49,6 +51,8 @@ var _pending_skill: SkillData = null
 var _picking_target: bool = false
 var _pending_result: int = 0
 var _pending_rewards: Dictionary = {}
+## Last known HP per battler, so hp_changed can derive a damage delta.
+var _prev_hp: Dictionary = {}
 
 
 func _ready() -> void:
@@ -99,6 +103,7 @@ func _populate_panels() -> void:
 		p.set_battler(state.party[i])
 		p.tapped.connect(_on_panel_tapped)
 		_party_panels.append(p)
+		_prev_hp[state.party[i]] = state.party[i].get_hp()
 		if state.party[i].is_front_row():
 			front_party_col.add_child(p)
 		else:
@@ -108,6 +113,7 @@ func _populate_panels() -> void:
 		p.set_battler(state.enemies[i])
 		p.tapped.connect(_on_panel_tapped)
 		_enemy_panels.append(p)
+		_prev_hp[state.enemies[i]] = state.enemies[i].get_hp()
 		if state.enemies[i].is_front_row():
 			front_enemy_col.add_child(p)
 		else:
@@ -139,7 +145,13 @@ func _on_log_appended(line: String) -> void:
 
 
 func _on_hp_changed(b: Battler) -> void:
+	var prev: int = _prev_hp.get(b, b.get_hp())
+	var delta := b.get_hp() - prev
+	_prev_hp[b] = b.get_hp()
 	_panel_for(b).refresh()
+	# Floating number for damage only this round (heals come later, per-type).
+	if delta < 0:
+		_panel_for(b).show_damage(-delta)
 
 
 func _on_turn_started(b: Battler) -> void:
@@ -161,6 +173,7 @@ func _process_turn() -> void:
 	await get_tree().create_timer(TURN_LEAD_DELAY).timeout
 	while not state.ended and state.current_actor != null \
 			and state.current_actor.side == Battler.Side.ENEMY:
+		_panel_for(state.current_actor).flash_active()
 		state.step()
 		_refresh_all_panels()
 		await get_tree().create_timer(ENEMY_TURN_DELAY).timeout
@@ -253,8 +266,11 @@ func _resolve_player_action(skill: SkillData, target: Battler) -> void:
 	_clear_skill_buttons()
 	cancel_button.visible = false
 	flee_button.disabled = true
+	if state.current_actor != null:
+		_panel_for(state.current_actor).flash_active()
 	state.player_action(skill, target)
 	_refresh_all_panels()
+	await get_tree().create_timer(PLAYER_ACTION_DELAY).timeout
 	_process_turn()
 
 

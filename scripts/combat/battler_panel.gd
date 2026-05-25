@@ -20,6 +20,10 @@ var _hp_bar: ProgressBar
 var _mp_label: Label
 var _mp_bar: ProgressBar
 var _status_label: Label
+## Transient border glow shown while this battler is acting. Its own modulate
+## is animated independently, so panel refreshes don't interrupt the flash.
+var _glow: Panel
+var _flash_tween: Tween
 
 var _selectable: bool = false
 
@@ -82,6 +86,18 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	gui_input.connect(_on_gui_input)
 
+	# Acting-glow overlay (border only), transparent until flash_active().
+	_glow = Panel.new()
+	_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var glow_sb := StyleBoxFlat.new()
+	glow_sb.draw_center = false
+	glow_sb.set_border_width_all(4)
+	glow_sb.border_color = Color(1.0, 0.88, 0.45)
+	glow_sb.set_corner_radius_all(4)
+	_glow.add_theme_stylebox_override("panel", glow_sb)
+	_glow.modulate.a = 0.0
+	add_child(_glow)
+
 
 func set_battler(b: Battler) -> void:
 	battler = b
@@ -128,6 +144,36 @@ func refresh() -> void:
 
 func set_active(active: bool) -> void:
 	_apply_style(active)
+
+
+## Brief warm border glow on whoever is currently acting; fades on its own.
+func flash_active() -> void:
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
+	_glow.modulate.a = 1.0
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(_glow, "modulate:a", 0.0, 0.5)
+
+
+## Floating damage number that rises from the panel and fades out.
+## Single style this round; per-type colours come later.
+func show_damage(amount: int) -> void:
+	var lbl := Label.new()
+	lbl.text = str(amount)
+	lbl.add_theme_font_size_override("font_size", 30)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.55))
+	lbl.add_theme_color_override("font_outline_color", Color(0.1, 0.02, 0.02))
+	lbl.add_theme_constant_override("outline_size", 5)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.z_index = 100
+	add_child(lbl)
+	lbl.position = Vector2(size.x * 0.5 - 20.0, 28.0)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 48.0, 0.9)
+	tw.tween_property(lbl, "modulate:a", 0.0, 0.9).set_ease(Tween.EASE_IN)
+	tw.chain().tween_callback(lbl.queue_free)
 
 
 func set_selectable(selectable: bool) -> void:
