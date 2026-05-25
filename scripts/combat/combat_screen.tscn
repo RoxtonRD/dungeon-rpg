@@ -48,6 +48,11 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 24
+theme_override_font_sizes/bold_font_size = 24
+theme_override_font_sizes/bold_italics_font_size = 24
+theme_override_font_sizes/italics_font_size = 24
+theme_override_font_sizes/mono_font_size = 24
 bbcode_enabled = true
 fit_content = true
 scroll_following = true
@@ -64,6 +69,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="FrontPartyCol" type="VBoxContainer" parent="VBox/FormationRow" unique_id=535334079]
 unique_name_in_owner = true
@@ -71,6 +77,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="Container" type="Container" parent="VBox/FormationRow" unique_id=506708841]
 custom_minimum_size = Vector2(50, 0)
@@ -82,6 +89,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="BackEnemyCol" type="VBoxContainer" parent="VBox/FormationRow" unique_id=684126816]
 unique_name_in_owner = true
@@ -89,6 +97,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 6
+alignment = 1
 
 [node name="ActionBar" type="VBoxContainer" parent="VBox" unique_id=608938815]
 unique_name_in_owner = true

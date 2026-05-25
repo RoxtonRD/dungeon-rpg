@@ -11,6 +11,7 @@ const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
 
 
 func _ready() -> void:
+	SafeArea.apply($VBox)
 	# Safety net: allows this scene to be run directly for testing.
 	if Party.heroes.is_empty():
 		Party.start_new_game()
@@ -35,15 +36,54 @@ func _refresh() -> void:
 
 func _make_hero_button(hero: Hero) -> Button:
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(0, 72)
+	btn.custom_minimum_size = Vector2(0, 84)
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Two-line label: class name + HP/MP
+	btn.pressed.connect(_on_hero_pressed.bind(hero))
+
+	# Portrait + text laid over the button. Inner controls ignore the mouse so
+	# the whole button stays clickable.
+	var hbox := HBoxContainer.new()
+	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hbox.offset_left = 10
+	hbox.offset_right = -10
+	hbox.add_theme_constant_override("separation", 10)
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(hbox)
+
+	var portrait := _make_portrait(hero)
+	hbox.add_child(portrait)
+
+	var label := Label.new()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	var row_indicator := "→ Trás" if hero.row == 0 else "→ Frente"
-	btn.text = "%s\n%d/%d HP   %s" % [
+	label.text = "%s\n%d/%d HP   %s" % [
 		hero.class_data.display_name, hero.hp, hero.max_hp(), row_indicator
 	]
-	btn.pressed.connect(_on_hero_pressed.bind(hero))
+	hbox.add_child(label)
+
 	return btn
+
+
+## Builds a 56x56 portrait control: the class Texture2D if one is assigned,
+## otherwise a colour placeholder tinted per class (shared with combat panels).
+func _make_portrait(hero: Hero) -> Control:
+	var portrait_size := Vector2(56, 56)
+	if hero.class_data.portrait != null:
+		var tex := TextureRect.new()
+		tex.custom_minimum_size = portrait_size
+		tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex.texture = hero.class_data.portrait
+		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return tex
+	var rect := ColorRect.new()
+	rect.custom_minimum_size = portrait_size
+	rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rect.color = BattlerPanel.color_for_class(hero.class_data.id)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
 
 
 func _maybe_add_empty_label(container: VBoxContainer) -> void:

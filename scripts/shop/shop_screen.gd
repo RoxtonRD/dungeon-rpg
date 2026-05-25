@@ -40,6 +40,7 @@ var _mode: String = "buy"   # "buy" | "sell"
 
 
 func _ready() -> void:
+	SafeArea.apply($VBox)
 	# Safety net: allows this scene to be run directly for testing.
 	if Party.heroes.is_empty():
 		Party.start_new_game()

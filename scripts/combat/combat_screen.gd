@@ -50,6 +50,7 @@ var _pending_rewards: Dictionary = {}
 
 
 func _ready() -> void:
+	SafeArea.apply($VBox)
 	flee_button.pressed.connect(_on_flee_pressed)
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	continue_button.pressed.connect(_on_continue_pressed)

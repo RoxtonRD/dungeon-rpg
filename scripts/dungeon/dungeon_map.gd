@@ -51,6 +51,7 @@ var _current_event: Dictionary = {}
 
 
 func _ready() -> void:
+	SafeArea.apply($VBox)
 	inventory_button.pressed.connect(_on_inventory_pressed)
 	shop_button.pressed.connect(_on_shop_pressed)
 	formation_button.pressed.connect(_on_formation_pressed)

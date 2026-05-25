@@ -10,6 +10,7 @@ const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
 
 
 func _ready() -> void:
+	SafeArea.apply($CenterContainer)
 	continue_button.visible = GameState.has_save()
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)

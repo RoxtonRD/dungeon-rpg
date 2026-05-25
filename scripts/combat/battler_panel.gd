@@ -99,7 +99,7 @@ func refresh() -> void:
 	# Portrait — show Texture2D if one is assigned, otherwise placeholder.
 	var portrait_tex: Texture2D = null
 	if battler.side == Battler.Side.PARTY:
-		_portrait_bg.color = _color_for_class(battler.hero.class_data.id)
+		_portrait_bg.color = color_for_class(battler.hero.class_data.id)
 		portrait_tex = battler.hero.class_data.portrait
 		_mp_label.visible = true
 		_mp_bar.visible = true
@@ -158,8 +158,9 @@ func _apply_style(active: bool) -> void:
 	add_theme_stylebox_override("panel", sb)
 
 
-func _color_for_class(class_id: String) -> Color:
-	# Placeholder portrait tints — replaced by hand-drawn art later.
+## Placeholder portrait tints, keyed by class id. Static so other screens
+## (e.g. the formation screen) can reuse the same colours for their fallbacks.
+static func color_for_class(class_id: String) -> Color:
 	match class_id:
 		"warrior": return Color(0.65, 0.32, 0.32)
 		"cleric":  return Color(0.62, 0.58, 0.30)

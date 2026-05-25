@@ -23,6 +23,7 @@ config/features=PackedStringArray("4.6", "Mobile")
 
 Party="*res://scripts/party.gd"
 GameState="*res://scripts/game_state.gd"
+SafeArea="*res://scripts/safe_area.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
