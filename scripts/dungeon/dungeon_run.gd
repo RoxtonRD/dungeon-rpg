@@ -16,6 +16,12 @@ const ENCOUNTER_POOLS := [
 ## The single v1 dungeon boss: Necromante plus a skeleton minion.
 const BOSS_ENCOUNTER := ["boss_necromancer", "skeleton"]
 
+## Difficulty scaling per step. Enemy stats and rewards are multiplied by
+## 1 + (floor-1)*FLOOR_SCALE + (dungeon_level-1)*DUNGEON_SCALE.
+## Floor 1 of dungeon 1 is the 1.0 baseline.
+const FLOOR_SCALE := 0.15
+const DUNGEON_SCALE := 0.25
+
 var level: int = 1
 ## Array of floors; each element is an Array[DungeonNode].
 var floors: Array = []
@@ -91,14 +97,15 @@ func roll_encounter(floor_index: int) -> Array[EnemyData]:
 	var count := randi_range(2, 4)
 	var out: Array[EnemyData] = []
 	for i in count:
-		out.append(_scale_enemy(_load_enemy(pool[randi() % pool.size()])))
+		out.append(_scale_enemy(_load_enemy(pool[randi() % pool.size()]), floor_index + 1))
 	return out
 
 
 func roll_boss() -> Array[EnemyData]:
 	var out: Array[EnemyData] = []
+	var boss_floor := floors.size()  # the boss sits on the last floor (1-based)
 	for id in BOSS_ENCOUNTER:
-		out.append(_scale_enemy(_load_enemy(id)))
+		out.append(_scale_enemy(_load_enemy(id), boss_floor))
 	return out
 
 
@@ -106,22 +113,24 @@ func _load_enemy(id: String) -> EnemyData:
 	return load(ENEMY_DIR + id + ".tres") as EnemyData
 
 
-## Returns the enemy with stats multiplied for the current dungeon level.
-## Level 1 returns the base resource unchanged. Level 2+ duplicates it so
-## the original .tres asset is never mutated.
-func _scale_enemy(base: EnemyData) -> EnemyData:
-	if level <= 1:
+## Returns the enemy with stats and rewards scaled for the current step.
+## multiplier = 1 + (floor_num-1)*FLOOR_SCALE + (level-1)*DUNGEON_SCALE,
+## where floor_num is the 1-based floor and `level` is the dungeon number.
+## The baseline (floor 1, dungeon 1) returns the base resource unchanged;
+## any higher step duplicates it so the original .tres asset is never mutated.
+func _scale_enemy(base: EnemyData, floor_num: int) -> EnemyData:
+	var mult := 1.0 + (floor_num - 1) * FLOOR_SCALE + (level - 1) * DUNGEON_SCALE
+	if mult <= 1.0:
 		return base
 	var scaled := base.duplicate() as EnemyData
-	var f := 1.0 + (level - 1) * 0.30  # +30 % per dungeon level above 1
-	scaled.max_hp    = roundi(base.max_hp    * f)
-	scaled.atk       = roundi(base.atk       * f)
-	scaled.def       = roundi(base.def       * f)
-	scaled.mag       = roundi(base.mag       * f)
-	scaled.spd       = roundi(base.spd       * f)
-	scaled.xp_reward = roundi(base.xp_reward * f)
-	scaled.gold_min  = roundi(base.gold_min  * f)
-	scaled.gold_max  = roundi(base.gold_max  * f)
+	scaled.max_hp    = roundi(base.max_hp    * mult)
+	scaled.atk       = roundi(base.atk       * mult)
+	scaled.def       = roundi(base.def       * mult)
+	scaled.mag       = roundi(base.mag       * mult)
+	scaled.spd       = roundi(base.spd       * mult)
+	scaled.xp_reward = roundi(base.xp_reward * mult)
+	scaled.gold_min  = roundi(base.gold_min  * mult)
+	scaled.gold_max  = roundi(base.gold_max  * mult)
 	return scaled
 
 
