@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://csoc4fow8ojya"
-path="res://.godot/imported/Body_Priestess.png-0123cde9c9cda2978996a55bfb5008f3.ctex"
+uid="uid://20hl2luxfien"
+path="res://.godot/imported/Cleric.png-1b6b41f8162c83fcb5074f2ab06f490a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/heroes/Body_Priestess.png"
-dest_files=["res://.godot/imported/Body_Priestess.png-0123cde9c9cda2978996a55bfb5008f3.ctex"]
+source_file="res://assets/portraits/heroes/Cleric.png"
+dest_files=["res://.godot/imported/Cleric.png-1b6b41f8162c83fcb5074f2ab06f490a.ctex"]
 
 [params]
 

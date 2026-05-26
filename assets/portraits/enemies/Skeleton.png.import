@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://xt76wpwvh7eg"
-path="res://.godot/imported/Vampire.png-70884b2a1e89c05a581d21393271e0dd.ctex"
+uid="uid://bomuh4blgxbv6"
+path="res://.godot/imported/Skeleton.png-cd9426b097e824f7b69bdc79ca64206e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/Vampire.png"
-dest_files=["res://.godot/imported/Vampire.png-70884b2a1e89c05a581d21393271e0dd.ctex"]
+source_file="res://assets/portraits/enemies/Skeleton.png"
+dest_files=["res://.godot/imported/Skeleton.png-cd9426b097e824f7b69bdc79ca64206e.ctex"]
 
 [params]
 

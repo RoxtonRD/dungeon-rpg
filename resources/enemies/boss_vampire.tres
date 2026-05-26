@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://cpidir5ydgva4"]
 
 [ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://xt76wpwvh7eg" path="res://resources/portraits/enemies/Vampire.png" id="1_b0sgs"]
+[ext_resource type="Texture2D" uid="uid://xt76wpwvh7eg" path="res://assets/portraits/enemies/Vampire.png" id="1_b0sgs"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_bite.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_life_drain.tres" id="3"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_e3fyo"]

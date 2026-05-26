@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvh16n3peyrbe"
-path="res://.godot/imported/Goblin.png-5441ae16f2ad0f535fc7c7d8c5e62b21.ctex"
+uid="uid://cenb60c5hpuo8"
+path="res://.godot/imported/Mage.png-597be195b5df2c528a1f2b644df551a4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/Goblin.png"
-dest_files=["res://.godot/imported/Goblin.png-5441ae16f2ad0f535fc7c7d8c5e62b21.ctex"]
+source_file="res://assets/portraits/heroes/Mage.png"
+dest_files=["res://.godot/imported/Mage.png-597be195b5df2c528a1f2b644df551a4.ctex"]
 
 [params]
 

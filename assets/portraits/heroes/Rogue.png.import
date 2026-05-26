@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://du0caep74jk05"
-path="res://.godot/imported/Alchemist.png-0b933d7f8320ab9e1c2059a5bd12be5a.ctex"
+uid="uid://bwfi4p2h25hxc"
+path="res://.godot/imported/Rogue.png-aa2807d88c409fb7310e1550651a4a9e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/heroes/Alchemist.png"
-dest_files=["res://.godot/imported/Alchemist.png-0b933d7f8320ab9e1c2059a5bd12be5a.ctex"]
+source_file="res://assets/portraits/heroes/Rogue.png"
+dest_files=["res://.godot/imported/Rogue.png-aa2807d88c409fb7310e1550651a4a9e.ctex"]
 
 [params]
 

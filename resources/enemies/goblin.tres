@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="EnemyData" format=3 uid="uid://bhc2f4ilbwnlr"]
 
 [ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://cvh16n3peyrbe" path="res://resources/portraits/enemies/Goblin.png" id="1_eoums"]
+[ext_resource type="Texture2D" uid="uid://cvh16n3peyrbe" path="res://assets/portraits/enemies/Goblin.png" id="1_eoums"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_3kmag"]
 

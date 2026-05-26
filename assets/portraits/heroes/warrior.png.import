@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bgx5u75cs2jw6"
-path="res://.godot/imported/Necromancer.png-72cfbd0b1826a0ddb3925b97dbcfacaf.ctex"
+uid="uid://du0caep74jk05"
+path="res://.godot/imported/warrior.png-d09933bebb46ec5fe7462b9fd8cccde5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/Necromancer.png"
-dest_files=["res://.godot/imported/Necromancer.png-72cfbd0b1826a0ddb3925b97dbcfacaf.ctex"]
+source_file="res://assets/portraits/heroes/warrior.png"
+dest_files=["res://.godot/imported/warrior.png-d09933bebb46ec5fe7462b9fd8cccde5.ctex"]
 
 [params]
 

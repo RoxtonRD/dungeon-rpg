@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b20e5qwrgodnd"
-path="res://.godot/imported/Portrait_Priestess_Glamour.png-5876c966cda92bff52236aafc5afac6d.ctex"
+uid="uid://bgx5u75cs2jw6"
+path="res://.godot/imported/Necromancer.png-91635be0f578d3d638e4d19510acb632.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/heroes/Portrait_Priestess_Glamour.png"
-dest_files=["res://.godot/imported/Portrait_Priestess_Glamour.png-5876c966cda92bff52236aafc5afac6d.ctex"]
+source_file="res://assets/portraits/enemies/Necromancer.png"
+dest_files=["res://.godot/imported/Necromancer.png-91635be0f578d3d638e4d19510acb632.ctex"]
 
 [params]
 

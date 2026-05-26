@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cenb60c5hpuo8"
-path="res://.godot/imported/Battlemage.png-b82a236d34a4748d84edac723c3983a6.ctex"
+uid="uid://2moaw1ikhu10"
+path="res://.godot/imported/DarkElf.png-422927bd26d9bc00714643f8df92ef14.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/heroes/Battlemage.png"
-dest_files=["res://.godot/imported/Battlemage.png-b82a236d34a4748d84edac723c3983a6.ctex"]
+source_file="res://assets/portraits/enemies/DarkElf.png"
+dest_files=["res://.godot/imported/DarkElf.png-422927bd26d9bc00714643f8df92ef14.ctex"]
 
 [params]
 

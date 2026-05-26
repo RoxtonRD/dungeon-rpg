@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://2moaw1ikhu10"
-path="res://.godot/imported/DarkElf.png-124cdc41682f4f7ebf6c49c9f40c48d3.ctex"
+uid="uid://d15u6w6alimo6"
+path="res://.godot/imported/Bat.png-28efe9e3b135c8b4e053d1bf789a678b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/DarkElf.png"
-dest_files=["res://.godot/imported/DarkElf.png-124cdc41682f4f7ebf6c49c9f40c48d3.ctex"]
+source_file="res://assets/portraits/enemies/Bat.png"
+dest_files=["res://.godot/imported/Bat.png-28efe9e3b135c8b4e053d1bf789a678b.ctex"]
 
 [params]
 

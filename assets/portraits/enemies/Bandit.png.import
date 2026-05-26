@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bomuh4blgxbv6"
-path="res://.godot/imported/SkeletonFighter.png-51ad526a4613f284036a919ac2cedb4d.ctex"
+uid="uid://c3y3g6k82pgrd"
+path="res://.godot/imported/Bandit.png-601f38f6a3e602abeeb5aa5f945f6bbb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/SkeletonFighter.png"
-dest_files=["res://.godot/imported/SkeletonFighter.png-51ad526a4613f284036a919ac2cedb4d.ctex"]
+source_file="res://assets/portraits/enemies/Bandit.png"
+dest_files=["res://.godot/imported/Bandit.png-601f38f6a3e602abeeb5aa5f945f6bbb.ctex"]
 
 [params]
 

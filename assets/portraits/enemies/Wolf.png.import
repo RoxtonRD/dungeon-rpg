@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cq02mpah6uihg"
-path="res://.godot/imported/Wolf.png-39b9288cd0389d510e53d6d528a3c01c.ctex"
+path="res://.godot/imported/Wolf.png-19743aa6ab83ac2f8b8f8abb54db6506.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/Wolf.png"
-dest_files=["res://.godot/imported/Wolf.png-39b9288cd0389d510e53d6d528a3c01c.ctex"]
+source_file="res://assets/portraits/enemies/Wolf.png"
+dest_files=["res://.godot/imported/Wolf.png-19743aa6ab83ac2f8b8f8abb54db6506.ctex"]
 
 [params]
 

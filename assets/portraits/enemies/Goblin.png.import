@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b7wf8py1obyxg"
-path="res://.godot/imported/Cultist.png-f6ca0504941239f487bf4261b631abdc.ctex"
+uid="uid://cvh16n3peyrbe"
+path="res://.godot/imported/Goblin.png-7d6b651f992dc0f500a34839d31818e4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/Cultist.png"
-dest_files=["res://.godot/imported/Cultist.png-f6ca0504941239f487bf4261b631abdc.ctex"]
+source_file="res://assets/portraits/enemies/Goblin.png"
+dest_files=["res://.godot/imported/Goblin.png-7d6b651f992dc0f500a34839d31818e4.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c3y3g6k82pgrd"
-path="res://.godot/imported/Bandit.png-e3a4269ae2f1fcf733a71f509a726283.ctex"
+uid="uid://b3ro7s5nrmu85"
+path="res://.godot/imported/Ogre.png-33b2a76564c40c1ed4cdc8b19d8b2a04.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/enemies/Bandit.png"
-dest_files=["res://.godot/imported/Bandit.png-e3a4269ae2f1fcf733a71f509a726283.ctex"]
+source_file="res://assets/portraits/enemies/Ogre.png"
+dest_files=["res://.godot/imported/Ogre.png-33b2a76564c40c1ed4cdc8b19d8b2a04.ctex"]
 
 [params]
 

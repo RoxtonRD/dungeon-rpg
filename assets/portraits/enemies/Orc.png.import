@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bapcxsod15e18"
-path="res://.godot/imported/Body_Priestess_Glamour.png-0a95eaa16ac595cebef82762ac653466.ctex"
+uid="uid://dixlbgigf6f6c"
+path="res://.godot/imported/Orc.png-3fc7410e43e5a5d808dc9a5b0f665bd6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://resources/portraits/heroes/Body_Priestess_Glamour.png"
-dest_files=["res://.godot/imported/Body_Priestess_Glamour.png-0a95eaa16ac595cebef82762ac653466.ctex"]
+source_file="res://assets/portraits/enemies/Orc.png"
+dest_files=["res://.godot/imported/Orc.png-3fc7410e43e5a5d808dc9a5b0f665bd6.ctex"]
 
 [params]
 
