@@ -21,11 +21,11 @@ const TEST_ENEMY_PATHS: Array[String] = [
 ]
 
 ## Delay between consecutive enemy actions, in seconds. FLAG: tune me (0.6–0.8).
-const ENEMY_TURN_DELAY: float = 0.7
+const ENEMY_TURN_DELAY: float = 0.8
 ## Pause after the player's own action resolves so they can read it. FLAG: tune me.
-const PLAYER_ACTION_DELAY: float = 0.4
+const PLAYER_ACTION_DELAY: float = 0.5
 ## Delay after a turn begins before processing it (lets the highlight register).
-const TURN_LEAD_DELAY: float = 0.25
+const TURN_LEAD_DELAY: float = 0.6
 ## Chance for a boss kill to drop a Tomo de Maestria (tome_sp). FLAG: tune me.
 const BOSS_TOME_DROP_CHANCE: float = 0.25
 
@@ -51,8 +51,6 @@ var _pending_skill: SkillData = null
 var _picking_target: bool = false
 var _pending_result: int = 0
 var _pending_rewards: Dictionary = {}
-## Last known HP per battler, so hp_changed can derive a damage delta.
-var _prev_hp: Dictionary = {}
 
 
 func _ready() -> void:
@@ -89,6 +87,7 @@ func setup(heroes: Array[Hero], enemies: Array[EnemyData]) -> void:
 	_populate_panels()
 	state.log_appended.connect(_on_log_appended)
 	state.hp_changed.connect(_on_hp_changed)
+	state.damage_popup.connect(_on_damage_popup)
 	state.turn_started.connect(_on_turn_started)
 	state.combat_ended.connect(_on_combat_ended)
 	state.start()
@@ -103,7 +102,6 @@ func _populate_panels() -> void:
 		p.set_battler(state.party[i])
 		p.tapped.connect(_on_panel_tapped)
 		_party_panels.append(p)
-		_prev_hp[state.party[i]] = state.party[i].get_hp()
 		if state.party[i].is_front_row():
 			front_party_col.add_child(p)
 		else:
@@ -113,7 +111,6 @@ func _populate_panels() -> void:
 		p.set_battler(state.enemies[i])
 		p.tapped.connect(_on_panel_tapped)
 		_enemy_panels.append(p)
-		_prev_hp[state.enemies[i]] = state.enemies[i].get_hp()
 		if state.enemies[i].is_front_row():
 			front_enemy_col.add_child(p)
 		else:
@@ -145,13 +142,29 @@ func _on_log_appended(line: String) -> void:
 
 
 func _on_hp_changed(b: Battler) -> void:
-	var prev: int = _prev_hp.get(b, b.get_hp())
-	var delta := b.get_hp() - prev
-	_prev_hp[b] = b.get_hp()
 	_panel_for(b).refresh()
-	# Floating number for damage only this round (heals come later, per-type).
-	if delta < 0:
-		_panel_for(b).show_damage(-delta)
+
+
+func _on_damage_popup(b: Battler, amount: int, kind: CombatState.PopupKind) -> void:
+	var color: Color
+	var text: String
+	var tint: Color
+	match kind:
+		CombatState.PopupKind.HEAL:
+			color = Color(0.5, 1.0, 0.55)      # green number
+			text = "+%d" % amount
+			tint = Color(1.0, 1.0, 1.0, 0.40)  # white wash
+		CombatState.PopupKind.MAG:
+			color = Color(0.62, 0.7, 1.0)      # blue number
+			text = str(amount)
+			tint = Color(0.9, 0.15, 0.15, 0.5) # red wash
+		_:  # PHYS
+			color = Color(1.0, 0.85, 0.45)     # warm number
+			text = str(amount)
+			tint = Color(0.9, 0.15, 0.15, 0.5) # red wash
+	var panel := _panel_for(b)
+	panel.flash_hit(tint)
+	panel.show_popup(text, color)
 
 
 func _on_turn_started(b: Battler) -> void:
@@ -200,11 +213,14 @@ func _populate_skill_buttons() -> void:
 	_clear_skill_buttons()
 	var hero: Hero = state.current_actor.hero
 	for skill in hero.class_data.skills:
+		# Hide skills the hero hasn't unlocked yet (consistent with Personagens).
+		if hero.level < skill.unlock_level:
+			continue
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(0, 64)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.text = _label_for_skill(hero, skill)
-		btn.disabled = hero.level < skill.unlock_level or hero.mp < skill.mp_cost
+		btn.disabled = hero.mp < skill.mp_cost
 		btn.pressed.connect(_on_skill_pressed.bind(skill))
 		skill_grid.add_child(btn)
 

@@ -24,6 +24,9 @@ var _status_label: Label
 ## is animated independently, so panel refreshes don't interrupt the flash.
 var _glow: Panel
 var _flash_tween: Tween
+## Full-card colour wash on hit (red = damage, white = heal).
+var _hit_overlay: ColorRect
+var _hit_tween: Tween
 
 var _selectable: bool = false
 
@@ -86,6 +89,12 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	gui_input.connect(_on_gui_input)
 
+	# Hit-flash wash over the whole card; colour set per hit, hidden at rest.
+	_hit_overlay = ColorRect.new()
+	_hit_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hit_overlay.modulate.a = 0.0
+	add_child(_hit_overlay)
+
 	# Acting-glow overlay (border only), transparent until flash_active().
 	_glow = Panel.new()
 	_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -146,6 +155,17 @@ func set_active(active: bool) -> void:
 	_apply_style(active)
 
 
+## Brief full-card colour wash on hit. `tint` carries the base alpha (red for
+## damage, white for heal); this flashes it on and fades it out.
+func flash_hit(tint: Color) -> void:
+	if _hit_tween != null and _hit_tween.is_valid():
+		_hit_tween.kill()
+	_hit_overlay.color = tint
+	_hit_overlay.modulate.a = 1.0
+	_hit_tween = create_tween()
+	_hit_tween.tween_property(_hit_overlay, "modulate:a", 0.0, 0.35)
+
+
 ## Brief warm border glow on whoever is currently acting; fades on its own.
 func flash_active() -> void:
 	if _flash_tween != null and _flash_tween.is_valid():
@@ -155,24 +175,25 @@ func flash_active() -> void:
 	_flash_tween.tween_property(_glow, "modulate:a", 0.0, 0.5)
 
 
-## Floating damage number that rises from the panel and fades out.
-## Single style this round; per-type colours come later.
-func show_damage(amount: int) -> void:
+## Floating combat number that rises from the panel and fades out. `color`
+## distinguishes physical / magic damage and healing (set by the caller).
+func show_popup(text: String, color: Color) -> void:
 	var lbl := Label.new()
-	lbl.text = str(amount)
+	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", 30)
-	lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.55))
-	lbl.add_theme_color_override("font_outline_color", Color(0.1, 0.02, 0.02))
+	lbl.add_theme_color_override("font_color", color)
+	lbl.add_theme_color_override("font_outline_color", Color(0.08, 0.04, 0.02))
 	lbl.add_theme_constant_override("outline_size", 5)
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lbl.z_index = 100
 	add_child(lbl)
-	lbl.position = Vector2(size.x * 0.5 - 20.0, 28.0)
+	lbl.position = Vector2(size.x * 0.5 - 20.0, 30.0)
+	# Rise slowly, hold readable, then fade — keeps the number legible.
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(lbl, "position:y", lbl.position.y - 48.0, 0.9)
-	tw.tween_property(lbl, "modulate:a", 0.0, 0.9).set_ease(Tween.EASE_IN)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 56.0, 1.6).set_ease(Tween.EASE_OUT)
+	tw.tween_property(lbl, "modulate:a", 0.0, 0.7).set_delay(0.9)
 	tw.chain().tween_callback(lbl.queue_free)
 
 

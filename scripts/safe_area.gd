@@ -18,6 +18,11 @@ extends Node
 ## 16px margin the screens were originally authored with.
 const BASE_MARGIN := 16
 
+## Minimum insets (virtual px) enforced on mobile only, as insurance for
+## devices that under-report their notch / nav bar. Desktop/editor stays at 0.
+const MIN_TOP := 24
+const MIN_BOTTOM := 12
+
 
 ## Apply safe-area-aware margins to a full-rect content container. Call once
 ## from a screen's _ready(), passing the container that holds the visible UI.
@@ -54,4 +59,8 @@ func _insets(content: Control) -> Vector4:
 	var top := maxf(0.0, float(safe.position.y)) * sy
 	var right := maxf(0.0, float(win.x - safe.end.x)) * sx
 	var bottom := maxf(0.0, float(win.y - safe.end.y)) * sy
+	# On mobile, never go below the minimum cushion (covers under-reporting).
+	if OS.has_feature("mobile"):
+		top = maxf(top, MIN_TOP)
+		bottom = maxf(bottom, MIN_BOTTOM)
 	return Vector4(left, top, right, bottom)

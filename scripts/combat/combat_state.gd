@@ -17,9 +17,13 @@ class_name CombatState
 extends RefCounted
 
 enum Result { NONE, VICTORY, DEFEAT, FLEE }
+## Flavour of a floating combat number, so the UI can colour it.
+enum PopupKind { PHYS, MAG, HEAL }
 
 signal log_appended(line: String)
 signal hp_changed(battler: Battler)
+## Emitted alongside hp_changed when an amount should pop up on a battler.
+signal damage_popup(battler: Battler, amount: int, kind: PopupKind)
 signal turn_started(battler: Battler)
 signal combat_ended(result: Result, rewards: Dictionary)
 
@@ -208,6 +212,7 @@ func _tick_statuses() -> void:
 				b.set_hp(b.get_hp() - st.dot_damage)
 				_log("%s sofre %d de %s." % [b.display_name(), st.dot_damage, st.source_name])
 				hp_changed.emit(b)
+				damage_popup.emit(b, st.dot_damage, PopupKind.MAG)
 			st.duration -= 1
 			if st.duration <= 0:
 				b.statuses.remove_at(i)
@@ -315,6 +320,7 @@ func _apply_heal(caster: Battler, caster_stats: Dictionary, skill: SkillData, ta
 	target.set_hp(target.get_hp() + heal_amount)
 	_log("%s cura %s em %d." % [caster.display_name(), target.display_name(), heal_amount])
 	hp_changed.emit(target)
+	damage_popup.emit(target, heal_amount, PopupKind.HEAL)
 
 
 func _apply_revive(caster: Battler, target: Battler) -> void:
@@ -323,6 +329,7 @@ func _apply_revive(caster: Battler, target: Battler) -> void:
 	target.set_hp(amount)
 	_log("%s revive %s!" % [caster.display_name(), target.display_name()])
 	hp_changed.emit(target)
+	damage_popup.emit(target, amount, PopupKind.HEAL)
 
 
 func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillData, target: Battler, dmg_kind: SkillData.SkillType) -> void:
@@ -346,6 +353,7 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 	var dmg := maxi(1, int(floor(raw - t_def)))
 	target.set_hp(target.get_hp() - dmg)
 	hp_changed.emit(target)
+	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS)
 	var crit_label := " (CRÍTICO)" if crit else ""
 	_log("%s usa %s em %s causando %d%s." % [caster.display_name(), skill.display_name, target.display_name(), dmg, crit_label])
 	# DoT rider (prototype adds unconditionally — dead targets simply won't tick).
@@ -372,6 +380,7 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 		var healed := int(floor(dmg * 0.5))
 		caster.set_hp(caster.get_hp() + healed)
 		hp_changed.emit(caster)
+		damage_popup.emit(caster, healed, PopupKind.HEAL)
 
 
 # ── Enemy AI ──────────────────────────────────────────────────────────────────
@@ -407,6 +416,7 @@ func _enemy_take_turn() -> void:
 			e.set_hp(e.get_hp() + heal_amount)
 			_log("%s se regenera em %d." % [e.display_name(), heal_amount])
 			hp_changed.emit(e)
+			damage_popup.emit(e, heal_amount, PopupKind.HEAL)
 		return
 
 	# Pick a party target for ONE-target skills; taunt overrides front-first.

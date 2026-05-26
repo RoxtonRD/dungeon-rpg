@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://3v4bp6503db3"]
 
 [ext_resource type="Script" uid="uid://wmnpc4ghypa4" path="res://scripts/data/class_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://csoc4fow8ojya" path="res://resources/portraits/heroes/Body_Priestess.png" id="1_rmvkm"]
+[ext_resource type="Texture2D" uid="uid://20hl2luxfien" path="res://resources/portraits/heroes/Priestess.png" id="1_rmvkm"]
 [ext_resource type="Resource" uid="uid://4gx1ljsyt648" path="res://resources/skills/cleric_smite.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/cleric_heal.tres" id="3"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_t3wra"]
