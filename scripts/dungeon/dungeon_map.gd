@@ -11,6 +11,14 @@ const SHOP_SCENE := "res://scripts/shop/shop_screen.tscn"
 const FORMATION_SCENE := "res://scripts/formation/formation_screen.tscn"
 const ITEM_DIR := "res://resources/items/"
 
+# ── Per-node-type styling. Variation names match the theme.tres definitions.
+const NODE_VARIATION: Dictionary = {
+	DungeonNode.NodeType.COMBAT:   "CombatNodeButton",
+	DungeonNode.NodeType.TREASURE: "TreasureNodeButton",
+	DungeonNode.NodeType.EVENT:    "EventNodeButton",
+	DungeonNode.NodeType.REST:     "RestNodeButton",
+	DungeonNode.NodeType.BOSS:     "BossNodeButton",
+}
 # ── Popup backgrounds (treasure / rest / event). ──────────────────────────────
 const BG_TREASURE: Texture2D = preload("res://assets/backgrounds/bg_treasure.png")
 const BG_REST: Texture2D = preload("res://assets/backgrounds/bg_rest.png")
@@ -66,6 +74,7 @@ var _current_event: Dictionary = {}
 
 func _ready() -> void:
 	SafeArea.apply($VBox)
+	gold_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
 	inventory_button.pressed.connect(_on_inventory_pressed)
 	shop_button.pressed.connect(_on_shop_pressed)
 	formation_button.pressed.connect(_on_formation_pressed)
@@ -113,6 +122,7 @@ func _build_map() -> void:
 		for node in run.floors[f]:
 			var btn := Button.new()
 			btn.custom_minimum_size = Vector2(150, 70)
+			btn.theme_type_variation = NODE_VARIATION.get(node.kind, "")
 			btn.pressed.connect(_on_node_pressed.bind(node))
 			row.add_child(btn)
 			_node_buttons[node] = btn

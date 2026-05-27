@@ -67,6 +67,7 @@ func _init() -> void:
 	_hp_bar.custom_minimum_size = Vector2(0, 8)
 	_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hp_bar.show_percentage = false
+	_hp_bar.theme_type_variation = "HpBar"
 	_vbox.add_child(_hp_bar)
 
 	_mp_label = Label.new()
@@ -78,6 +79,7 @@ func _init() -> void:
 	_mp_bar.custom_minimum_size = Vector2(0, 8)
 	_mp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_mp_bar.show_percentage = false
+	_mp_bar.theme_type_variation = "MpBar"
 	_vbox.add_child(_mp_bar)
 
 	_status_label = Label.new()
