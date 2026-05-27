@@ -42,15 +42,18 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeroCard" type="HBoxContainer" parent="VBox"]
+[node name="HeroCardPanel" type="PanelContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="HeroCard" type="HBoxContainer" parent="VBox/HeroCardPanel"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="FullBodyBox" type="Control" parent="VBox/HeroCard"]
+[node name="FullBodyBox" type="Control" parent="VBox/HeroCardPanel/HeroCard"]
 custom_minimum_size = Vector2(128, 256)
 layout_mode = 2
 
-[node name="FullBodyBg" type="ColorRect" parent="VBox/HeroCard/FullBodyBox"]
+[node name="FullBodyBg" type="ColorRect" parent="VBox/HeroCardPanel/HeroCard/FullBodyBox"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -61,7 +64,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.3, 0.3, 0.4, 1)
 
-[node name="FullBodyTex" type="TextureRect" parent="VBox/HeroCard/FullBodyBox"]
+[node name="FullBodyTex" type="TextureRect" parent="VBox/HeroCardPanel/HeroCard/FullBodyBox"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -74,58 +77,61 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HeroTextCol" type="VBoxContainer" parent="VBox/HeroCard"]
+[node name="HeroTextCol" type="VBoxContainer" parent="VBox/HeroCardPanel/HeroCard"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="HeroInfoLabel" type="Label" parent="VBox/HeroCard/HeroTextCol"]
+[node name="HeroInfoLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 autowrap_mode = 2
 
-[node name="StatsLabel" type="Label" parent="VBox/HeroCard/HeroTextCol"]
+[node name="StatsLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 
-[node name="MainScroll" type="ScrollContainer" parent="VBox"]
+[node name="ScrollPanel" type="PanelContainer" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ContentVBox" type="VBoxContainer" parent="VBox/MainScroll"]
+[node name="MainScroll" type="ScrollContainer" parent="VBox/ScrollPanel"]
+layout_mode = 2
+
+[node name="ContentVBox" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="EquipSectionLabel" type="Label" parent="VBox/MainScroll/ContentVBox"]
+[node name="EquipSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Equipamentos"
 
-[node name="EquipmentRows" type="VBoxContainer" parent="VBox/MainScroll/ContentVBox"]
+[node name="EquipmentRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="SkillSectionLabel" type="Label" parent="VBox/MainScroll/ContentVBox"]
+[node name="SkillSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Habilidades"
 
-[node name="SkillRows" type="VBoxContainer" parent="VBox/MainScroll/ContentVBox"]
+[node name="SkillRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="InvSectionLabel" type="Label" parent="VBox/MainScroll/ContentVBox"]
+[node name="InvSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Inventário"
 
-[node name="ItemListVBox" type="VBoxContainer" parent="VBox/MainScroll/ContentVBox"]
+[node name="ItemListVBox" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

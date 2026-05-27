@@ -65,11 +65,14 @@ size_flags_horizontal = 3
 custom_minimum_size = Vector2(0, 48)
 text = "Vender"
 
-[node name="ItemScroll" type="ScrollContainer" parent="VBox"]
+[node name="ListPanel" type="PanelContainer" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ItemListVBox" type="VBoxContainer" parent="VBox/ItemScroll"]
+[node name="ItemScroll" type="ScrollContainer" parent="VBox/ListPanel"]
+layout_mode = 2
+
+[node name="ItemListVBox" type="VBoxContainer" parent="VBox/ListPanel/ItemScroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

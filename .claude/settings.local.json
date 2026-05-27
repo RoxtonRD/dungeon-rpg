@@ -31,7 +31,8 @@
       "mcp__godot-ai__editor_reload_plugin",
       "Bash(mv resources/portraits/heroes/* assets/portraits/heroes/)",
       "Bash(mv resources/portraits/enemies/* assets/portraits/enemies/)",
-      "Bash(sed -i 's|res://resources/portraits/|res://assets/portraits/|g' assets/portraits/heroes/*.import assets/portraits/enemies/*.import resources/enemies/*.tres resources/classes/*.tres)"
+      "Bash(sed -i 's|res://resources/portraits/|res://assets/portraits/|g' assets/portraits/heroes/*.import assets/portraits/enemies/*.import resources/enemies/*.tres resources/classes/*.tres)",
+      "WebSearch"
     ]
   }
 }
