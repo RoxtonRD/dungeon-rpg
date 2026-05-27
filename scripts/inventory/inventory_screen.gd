@@ -114,6 +114,8 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 		row.add_child(slot_lbl)
 
 		var item: ItemData = hero.equipment[slot]
+		if item != null:
+			row.add_child(_make_icon(item.icon_or_null()))
 		var item_lbl := Label.new()
 		item_lbl.text = item.display_name if item != null else "—"
 		item_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -165,6 +167,7 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		row.custom_minimum_size = Vector2(0, 44)
+		row.add_child(_make_icon(skill.icon_or_null()))
 
 		# Skill name + tier
 		var tier := Party.get_skill_tier(hero, skill)
@@ -224,6 +227,7 @@ func _rebuild_item_list(hero: Hero) -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
 		row.custom_minimum_size = Vector2(0, 44)
+		row.add_child(_make_icon(item.icon_or_null()))
 
 		var name_lbl := Label.new()
 		name_lbl.text = item.display_name
@@ -274,6 +278,26 @@ func _can_use_consumable(hero: Hero, item: ItemData) -> bool:
 
 
 # ── Descriptions ──────────────────────────────────────────────────────────────
+
+## Returns a square icon Control: a TextureRect when `tex` is non-null, else
+## a small neutral ColorRect placeholder. mouse_filter set to IGNORE so the
+## icon never absorbs row taps.
+func _make_icon(tex: Texture2D, size: int = 64) -> Control:
+	if tex != null:
+		var rect := TextureRect.new()
+		rect.texture = tex
+		rect.custom_minimum_size = Vector2(size, size)
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return rect
+	var bg := ColorRect.new()
+	bg.color = Color(0.25, 0.25, 0.32)
+	bg.custom_minimum_size = Vector2(size, size)
+	bg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return bg
+
 
 ## Small, dimmed, always-visible description line shown under a skill or item.
 func _make_desc_label(text: String) -> Label:

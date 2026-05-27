@@ -226,9 +226,29 @@ func _populate_skill_buttons() -> void:
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(0, 64)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.text = _label_for_skill(hero, skill)
 		btn.disabled = hero.mp < skill.mp_cost
 		btn.pressed.connect(_on_skill_pressed.bind(skill))
+
+		# Icon + label overlay. Children ignore the mouse so the button stays
+		# clickable as a whole.
+		var hbox := HBoxContainer.new()
+		hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		hbox.offset_left = 6
+		hbox.offset_right = -6
+		hbox.add_theme_constant_override("separation", 8)
+		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(hbox)
+		hbox.add_child(_make_icon(skill.icon_or_null(), 56))
+
+		var label := Label.new()
+		label.text = _label_for_skill(hero, skill)
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.add_theme_font_size_override("font_size", 14)
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hbox.add_child(label)
+
 		skill_grid.add_child(btn)
 
 
@@ -246,6 +266,25 @@ func _label_for_skill(hero: Hero, skill: SkillData) -> String:
 func _clear_skill_buttons() -> void:
 	for child in skill_grid.get_children():
 		child.queue_free()
+
+
+## Returns a square icon Control: a TextureRect when `tex` is non-null, else a
+## small neutral ColorRect placeholder. mouse_filter set to IGNORE.
+func _make_icon(tex: Texture2D, size: int = 64) -> Control:
+	if tex != null:
+		var rect := TextureRect.new()
+		rect.texture = tex
+		rect.custom_minimum_size = Vector2(size, size)
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return rect
+	var bg := ColorRect.new()
+	bg.color = Color(0.25, 0.25, 0.32)
+	bg.custom_minimum_size = Vector2(size, size)
+	bg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return bg
 
 
 # ── Targeting flow ────────────────────────────────────────────────────────────

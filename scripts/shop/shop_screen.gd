@@ -74,6 +74,7 @@ func _rebuild_buy_list() -> void:
 		if item == null:
 			continue
 		var row := _make_row()
+		row.add_child(_make_icon(item.icon_or_null()))
 
 		var name_lbl := Label.new()
 		name_lbl.text = item.display_name
@@ -127,6 +128,7 @@ func _rebuild_sell_list() -> void:
 			continue
 		var sell_price: int = maxi(1, item.value / 2)
 		var row := _make_row()
+		row.add_child(_make_icon(item.icon_or_null()))
 
 		var name_lbl := Label.new()
 		name_lbl.text = item.display_name
@@ -184,6 +186,25 @@ func _add_entry(top_row: Control, desc: String) -> void:
 	if not desc.is_empty():
 		entry.add_child(_make_desc_label(desc))
 	item_list_vbox.add_child(entry)
+
+
+## Returns a square icon Control: a TextureRect when `tex` is non-null, else
+## a small neutral ColorRect placeholder. mouse_filter set to IGNORE.
+func _make_icon(tex: Texture2D, size: int = 64) -> Control:
+	if tex != null:
+		var rect := TextureRect.new()
+		rect.texture = tex
+		rect.custom_minimum_size = Vector2(size, size)
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return rect
+	var bg := ColorRect.new()
+	bg.color = Color(0.25, 0.25, 0.32)
+	bg.custom_minimum_size = Vector2(size, size)
+	bg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return bg
 
 
 ## Small, dimmed description line shown under an item row.

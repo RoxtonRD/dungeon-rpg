@@ -63,3 +63,16 @@ enum UseCondition { NONE, LOW_HP, NOT_LOW_HP }
 
 @export_group("Enemy AI")
 @export var use_condition: UseCondition = UseCondition.NONE
+
+
+## Returns the per-skill icon at assets/icons/skills/{filename}.png, or null
+## if the file is missing. Uses the .tres filename basename to stay aligned
+## with Party._skill_key (the canonical id used elsewhere).
+func icon_or_null() -> Texture2D:
+	if resource_path.is_empty():
+		return null
+	var key := resource_path.get_file().get_basename()
+	var path := "res://assets/icons/skills/%s.png" % key
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null

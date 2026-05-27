@@ -37,6 +37,15 @@ enum Slot { WEAPON, ARMOR, TRINKET, CONSUMABLE }
 @export var icon: Texture2D
 
 
+## Returns the per-item icon Texture2D at assets/icons/items/{id}.png, or null
+## if the file is missing. UI screens fall back to a placeholder ColorRect.
+func icon_or_null() -> Texture2D:
+	var path := "res://assets/icons/items/%s.png" % id
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+
 ## Short, single-line summary built from the item's stats / effects. Shown as
 ## an always-visible description on the Personagens and Loja screens. v1 has no
 ## authored description field, so this is generated.
