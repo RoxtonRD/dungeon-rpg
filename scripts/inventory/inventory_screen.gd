@@ -7,6 +7,8 @@ const ITEM_DIR := "res://resources/items/"
 const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
 
 @onready var hero_tab_bar: HBoxContainer = %HeroTabBar
+@onready var full_body_tex: TextureRect = %FullBodyTex
+@onready var full_body_bg: ColorRect = %FullBodyBg
 @onready var hero_info_label: Label = %HeroInfoLabel
 @onready var stats_label: Label = %StatsLabel
 @onready var equip_rows: VBoxContainer = %EquipmentRows
@@ -48,10 +50,29 @@ func _on_hero_tab(idx: int) -> void:
 
 func _refresh() -> void:
 	var hero: Hero = Party.heroes[_selected_hero_idx]
+	_refresh_full_body(hero)
 	_update_hero_info(hero)
 	_rebuild_equipment_rows(hero)
 	_rebuild_skill_rows(hero)
 	_rebuild_item_list(hero)
+
+
+## Shows the hero's full-body Texture2D if present; otherwise falls back to a
+## class-tinted ColorRect placeholder (same pattern as combat portraits).
+func _refresh_full_body(hero: Hero) -> void:
+	var class_id := hero.class_data.id
+	var path := "res://assets/full_body/%s.png" % class_id
+	var tex: Texture2D = null
+	if ResourceLoader.exists(path):
+		tex = load(path) as Texture2D
+	if tex != null:
+		full_body_tex.texture = tex
+		full_body_tex.visible = true
+		full_body_bg.visible = false
+	else:
+		full_body_tex.visible = false
+		full_body_bg.color = BattlerPanel.color_for_class(class_id)
+		full_body_bg.visible = true
 
 
 func _update_hero_info(hero: Hero) -> void:
