@@ -11,6 +11,17 @@ const SHOP_SCENE := "res://scripts/shop/shop_screen.tscn"
 const FORMATION_SCENE := "res://scripts/formation/formation_screen.tscn"
 const ITEM_DIR := "res://resources/items/"
 
+# ── Popup backgrounds (treasure / rest / event). ──────────────────────────────
+const BG_TREASURE: Texture2D = preload("res://assets/backgrounds/bg_treasure.png")
+const BG_REST: Texture2D = preload("res://assets/backgrounds/bg_rest.png")
+## Event id → background. Keys match the "id" field set in DungeonRun events.
+const EVENT_BG: Dictionary = {
+	"fountain": preload("res://assets/backgrounds/bg_event_fountain.png"),
+	"merchant": preload("res://assets/backgrounds/bg_event_merchant.png"),
+	"altar":    preload("res://assets/backgrounds/bg_event_altar.png"),
+	"chest":    preload("res://assets/backgrounds/bg_event_chest.png"),
+}
+
 @onready var title_label: Label = %TitleLabel
 @onready var gold_label: Label = %GoldLabel
 @onready var party_status: Label = %PartyStatus
@@ -43,6 +54,9 @@ const ITEM_DIR := "res://resources/items/"
 @onready var rest_panel: PanelContainer = %RestPanel
 @onready var rest_continue_button: Button = %RestContinueButton
 
+# Shared themed background shown behind whichever popup is open.
+@onready var popup_bg: TextureRect = %PopupBg
+
 var run: DungeonRun
 var _pending_node: DungeonNode = null
 var _combat_overlay: CombatScreen = null
@@ -67,6 +81,7 @@ func _ready() -> void:
 	treasure_panel.visible = false
 	event_panel.visible = false
 	rest_panel.visible = false
+	popup_bg.visible = false
 	# Defer setup so the scene tree is fully ready before building the map.
 	call_deferred("_begin_run")
 
@@ -181,11 +196,14 @@ func _show_treasure_popup() -> void:
 		var item_name: String = item.display_name if item != null else item_id
 		treasure_item_label.text = "Item encontrado: %s" % item_name
 		treasure_item_label.visible = true
+	popup_bg.texture = BG_TREASURE
+	popup_bg.visible = true
 	treasure_panel.visible = true
 
 
 func _on_treasure_continue() -> void:
 	treasure_panel.visible = false
+	popup_bg.visible = false
 	_resolve_and_advance(_pending_node)
 
 
@@ -202,6 +220,8 @@ func _show_event_popup() -> void:
 	event_continue_button.visible = false
 	event_option1_button.visible = true
 	event_option2_button.visible = true
+	popup_bg.texture = EVENT_BG.get(_current_event.get("id", ""), null)
+	popup_bg.visible = popup_bg.texture != null
 	event_panel.visible = true
 
 
@@ -222,6 +242,7 @@ func _on_event_option(index: int) -> void:
 
 func _on_event_continue() -> void:
 	event_panel.visible = false
+	popup_bg.visible = false
 	_resolve_and_advance(_pending_node)
 
 
@@ -229,11 +250,14 @@ func _on_event_continue() -> void:
 
 func _show_rest_popup() -> void:
 	run.resolve_rest()
+	popup_bg.texture = BG_REST
+	popup_bg.visible = true
 	rest_panel.visible = true
 
 
 func _on_rest_continue() -> void:
 	rest_panel.visible = false
+	popup_bg.visible = false
 	_resolve_and_advance(_pending_node)
 
 

@@ -29,6 +29,10 @@ const TURN_LEAD_DELAY: float = 0.6
 ## Chance for a boss kill to drop a Tomo de Maestria (tome_sp). FLAG: tune me.
 const BOSS_TOME_DROP_CHANCE: float = 0.25
 
+## Boss background; the default combat background is set in the .tscn.
+const BG_BOSS: Texture2D = preload("res://assets/backgrounds/bg_boss.png")
+
+@onready var background: TextureRect = $Background
 @onready var back_party_col: VBoxContainer = %BackPartyCol
 @onready var front_party_col: VBoxContainer = %FrontPartyCol
 @onready var front_enemy_col: VBoxContainer = %FrontEnemyCol
@@ -84,6 +88,9 @@ func setup(heroes: Array[Hero], enemies: Array[EnemyData]) -> void:
 	if state != null:
 		return
 	state = CombatState.build(heroes, enemies)
+	# Swap to the boss background when the encounter contains a boss.
+	if _encounter_has_boss():
+		background.texture = BG_BOSS
 	_populate_panels()
 	state.log_appended.connect(_on_log_appended)
 	state.hp_changed.connect(_on_hp_changed)

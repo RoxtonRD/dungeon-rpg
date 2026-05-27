@@ -175,6 +175,7 @@ func roll_event() -> Dictionary:
 
 func _event_fountain() -> Dictionary:
 	return {
+		"id": "fountain",
 		"title": "Fonte Antiga",
 		"desc": "Uma fonte cristalina brilha com luz suave. Beber dela?",
 		"options": [
@@ -186,6 +187,7 @@ func _event_fountain() -> Dictionary:
 
 func _event_merchant() -> Dictionary:
 	return {
+		"id": "merchant",
 		"title": "Mercador Errante",
 		"desc": "Um velho mercador oferece uma poção de cura por 30 ouro.",
 		"options": [
@@ -197,6 +199,7 @@ func _event_merchant() -> Dictionary:
 
 func _event_altar() -> Dictionary:
 	return {
+		"id": "altar",
 		"title": "Altar Sombrio",
 		"desc": "Um altar sussurra promessas de poder em troca de sangue.",
 		"options": [
@@ -208,6 +211,7 @@ func _event_altar() -> Dictionary:
 
 func _event_chest() -> Dictionary:
 	return {
+		"id": "chest",
 		"title": "Baú Suspeito",
 		"desc": "Um baú trancado pulsa com energia.",
 		"options": [
