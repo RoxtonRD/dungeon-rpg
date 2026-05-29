@@ -34,11 +34,17 @@ func _ready() -> void:
 func _build_hero_tabs() -> void:
 	for child in hero_tab_bar.get_children():
 		child.queue_free()
+	# Toggle buttons in a shared group act as a radio: the selected tab keeps
+	# the theme's "pressed" (gold) style so the active hero is obvious.
+	var group := ButtonGroup.new()
 	for i in Party.heroes.size():
 		var h: Hero = Party.heroes[i]
 		var btn := Button.new()
 		btn.text = h.class_data.display_name
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.toggle_mode = true
+		btn.button_group = group
+		btn.button_pressed = (i == _selected_hero_idx)
 		btn.pressed.connect(_on_hero_tab.bind(i))
 		hero_tab_bar.add_child(btn)
 

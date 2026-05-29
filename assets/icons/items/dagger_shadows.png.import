@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://5rg2no0qxuk2"
-path="res://.godot/imported/cleric.png-ebc84c4fef140ac5561398b9ab788bf5.ctex"
+uid="uid://cappkulsydjg8"
+path="res://.godot/imported/dagger_shadows.png-1040b0d2dac080b7e0fa2e35d8f216f8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/portraits/heroes/cleric.png"
-dest_files=["res://.godot/imported/cleric.png-ebc84c4fef140ac5561398b9ab788bf5.ctex"]
+source_file="res://assets/icons/items/dagger_shadows.png"
+dest_files=["res://.godot/imported/dagger_shadows.png-1040b0d2dac080b7e0fa2e35d8f216f8.ctex"]
 
 [params]
 

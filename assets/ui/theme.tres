@@ -1,70 +1,16 @@
-; Project-wide UI theme. Wired via project.godot gui/theme/custom.
-;
-; Palette intent: a warm dungeon-cozy look — dark scrim panels with a subtle
-; gold border, cream text, gold accents on hover / pressed buttons. Individual
-; nodes can still override styles with add_theme_*_override for special cases
-; (e.g. combat BattlerPanel keeps its own panel stylebox).
-[gd_resource type="Theme" load_steps=15 format=3]
+[gd_resource type="Theme" format=3 uid="uid://bmxq1te4lchcf"]
 
-[sub_resource type="StyleBoxFlat" id="panel_default"]
-content_margin_left = 10.0
-content_margin_top = 10.0
-content_margin_right = 10.0
-content_margin_bottom = 10.0
-bg_color = Color(0.1, 0.08, 0.14, 0.85)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.55, 0.42, 0.22, 0.5)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[sub_resource type="StyleBoxFlat" id="btn_normal"]
+[sub_resource type="StyleBoxFlat" id="boss_btn"]
 content_margin_left = 8.0
 content_margin_top = 6.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
-bg_color = Color(0.16, 0.13, 0.18, 0.92)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.55, 0.42, 0.22, 0.4)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
-[sub_resource type="StyleBoxFlat" id="btn_hover"]
-content_margin_left = 8.0
-content_margin_top = 6.0
-content_margin_right = 8.0
-content_margin_bottom = 6.0
-bg_color = Color(0.22, 0.18, 0.24, 1.0)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.75, 0.6, 0.32, 0.7)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
-[sub_resource type="StyleBoxFlat" id="btn_pressed"]
-content_margin_left = 8.0
-content_margin_top = 6.0
-content_margin_right = 8.0
-content_margin_bottom = 6.0
-bg_color = Color(0.32, 0.24, 0.16, 1.0)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1.0, 0.82, 0.35, 0.85)
+bg_color = Color(0.55, 0.13, 0.08, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.55, 0.25, 0.85)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
@@ -86,37 +32,54 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="bar_bg"]
-bg_color = Color(0.05, 0.04, 0.07, 0.85)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.22, 0.18, 0.24, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.75, 0.6, 0.32, 0.7)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="bar_fill"]
-bg_color = Color(0.55, 0.55, 0.62, 1.0)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.16, 0.13, 0.18, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.42, 0.22, 0.4)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
-; ── Per-bar fills (HP / MP) used via theme type variations on ProgressBar ──
-[sub_resource type="StyleBoxFlat" id="bar_fill_hp"]
-bg_color = Color(0.75, 0.2, 0.2, 1.0)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
+[sub_resource type="StyleBoxFlat" id="btn_pressed"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.32, 0.24, 0.16, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.82, 0.35, 0.85)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="bar_fill_mp"]
-bg_color = Color(0.25, 0.45, 0.85, 1.0)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-; ── Dungeon-map node-button fills per node type. Hover/pressed/disabled
-;    inherit from the base Button styles defined above.
 [sub_resource type="StyleBoxFlat" id="combat_btn"]
 content_margin_left = 8.0
 content_margin_top = 6.0
@@ -128,22 +91,6 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.75, 0.3, 0.2, 0.6)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
-
-[sub_resource type="StyleBoxFlat" id="treasure_btn"]
-content_margin_left = 8.0
-content_margin_top = 6.0
-content_margin_right = 8.0
-content_margin_bottom = 6.0
-bg_color = Color(0.45, 0.32, 0.08, 0.92)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1.0, 0.78, 0.32, 0.7)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
@@ -165,6 +112,50 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
+[sub_resource type="StyleBoxFlat" id="bar_fill_hp"]
+bg_color = Color(0.75, 0.2, 0.2, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="bar_fill_mp"]
+bg_color = Color(0.25, 0.45, 0.85, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="panel_default"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.1, 0.08, 0.14, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.42, 0.22, 0.5)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="bar_bg"]
+bg_color = Color(0.05, 0.04, 0.07, 0.85)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="bar_fill"]
+bg_color = Color(0.55, 0.55, 0.62, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
 [sub_resource type="StyleBoxFlat" id="rest_btn"]
 content_margin_left = 8.0
 content_margin_top = 6.0
@@ -181,23 +172,25 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[sub_resource type="StyleBoxFlat" id="boss_btn"]
+[sub_resource type="StyleBoxFlat" id="treasure_btn"]
 content_margin_left = 8.0
 content_margin_top = 6.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
-bg_color = Color(0.55, 0.13, 0.08, 0.95)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1.0, 0.55, 0.25, 0.85)
+bg_color = Color(0.45, 0.32, 0.08, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.78, 0.32, 0.7)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
 [resource]
+BossNodeButton/base_type = &"Button"
+BossNodeButton/styles/normal = SubResource("boss_btn")
 Button/colors/font_color = Color(0.92, 0.88, 0.78, 1)
 Button/colors/font_disabled_color = Color(0.45, 0.42, 0.4, 1)
 Button/colors/font_hover_color = Color(1, 0.94, 0.78, 1)
@@ -206,21 +199,19 @@ Button/styles/disabled = SubResource("btn_disabled")
 Button/styles/hover = SubResource("btn_hover")
 Button/styles/normal = SubResource("btn_normal")
 Button/styles/pressed = SubResource("btn_pressed")
+CombatNodeButton/base_type = &"Button"
+CombatNodeButton/styles/normal = SubResource("combat_btn")
+EventNodeButton/base_type = &"Button"
+EventNodeButton/styles/normal = SubResource("event_btn")
+HpBar/base_type = &"ProgressBar"
+HpBar/styles/fill = SubResource("bar_fill_hp")
 Label/colors/font_color = Color(0.92, 0.88, 0.78, 1)
+MpBar/base_type = &"ProgressBar"
+MpBar/styles/fill = SubResource("bar_fill_mp")
 PanelContainer/styles/panel = SubResource("panel_default")
 ProgressBar/styles/background = SubResource("bar_bg")
 ProgressBar/styles/fill = SubResource("bar_fill")
-CombatNodeButton/base_type = &"Button"
-CombatNodeButton/styles/normal = SubResource("combat_btn")
-TreasureNodeButton/base_type = &"Button"
-TreasureNodeButton/styles/normal = SubResource("treasure_btn")
-EventNodeButton/base_type = &"Button"
-EventNodeButton/styles/normal = SubResource("event_btn")
 RestNodeButton/base_type = &"Button"
 RestNodeButton/styles/normal = SubResource("rest_btn")
-BossNodeButton/base_type = &"Button"
-BossNodeButton/styles/normal = SubResource("boss_btn")
-HpBar/base_type = &"ProgressBar"
-HpBar/styles/fill = SubResource("bar_fill_hp")
-MpBar/base_type = &"ProgressBar"
-MpBar/styles/fill = SubResource("bar_fill_mp")
+TreasureNodeButton/base_type = &"Button"
+TreasureNodeButton/styles/normal = SubResource("treasure_btn")

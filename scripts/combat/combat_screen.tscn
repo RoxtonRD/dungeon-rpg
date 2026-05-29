@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cnnyeiyis0udg"]
 
 [ext_resource type="Script" uid="uid://b8ym8h2d2mnsv" path="res://scripts/combat/combat_screen.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/bg_combat.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://j32l1gm0kd17" path="res://assets/backgrounds/bg_combat.png" id="2"]
 
 [node name="CombatScreen" type="Control" unique_id=680446906]
 layout_mode = 3
