@@ -224,7 +224,7 @@ func _populate_skill_buttons() -> void:
 		if hero.level < skill.unlock_level:
 			continue
 		var btn := Button.new()
-		btn.custom_minimum_size = Vector2(0, 64)
+		btn.custom_minimum_size = Vector2(0, 96)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.disabled = hero.mp < skill.mp_cost
 		btn.pressed.connect(_on_skill_pressed.bind(skill))
@@ -238,7 +238,11 @@ func _populate_skill_buttons() -> void:
 		hbox.add_theme_constant_override("separation", 8)
 		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(hbox)
-		hbox.add_child(_make_icon(skill.icon_or_null(), 56))
+		
+		if hero.mp < skill.mp_cost:
+			hbox.add_child(_make_icon(skill.icon_or_null(), 96,0.25))
+		else:
+			hbox.add_child(_make_icon(skill.icon_or_null(), 96,1.0))
 
 		var label := Label.new()
 		label.text = _label_for_skill(hero, skill)
@@ -270,7 +274,8 @@ func _clear_skill_buttons() -> void:
 
 ## Returns a square icon Control: a TextureRect when `tex` is non-null, else a
 ## small neutral ColorRect placeholder. mouse_filter set to IGNORE.
-func _make_icon(tex: Texture2D, size: int = 64) -> Control:
+func _make_icon(tex: Texture2D, size: int = 64, alpha: float = 1) -> Control:
+	
 	if tex != null:
 		var rect := TextureRect.new()
 		rect.texture = tex
@@ -278,6 +283,7 @@ func _make_icon(tex: Texture2D, size: int = 64) -> Control:
 		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rect.self_modulate.a = alpha
 		return rect
 	var bg := ColorRect.new()
 	bg.color = Color(0.25, 0.25, 0.32)

@@ -36,17 +36,19 @@ func _refresh() -> void:
 
 func _make_hero_button(hero: Hero) -> Button:
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(0, 84)
+	btn.custom_minimum_size = Vector2(0, 150)
 	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	btn.pressed.connect(_on_hero_pressed.bind(hero))
 
 	# Portrait + text laid over the button. Inner controls ignore the mouse so
 	# the whole button stays clickable.
 	var hbox := HBoxContainer.new()
 	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	hbox.offset_left = 10
-	hbox.offset_right = -10
-	hbox.add_theme_constant_override("separation", 10)
+	hbox.offset_left = 12
+	hbox.offset_right = -12
+	hbox.add_theme_constant_override("separation", 12)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(hbox)
 
@@ -57,8 +59,10 @@ func _make_hero_button(hero: Hero) -> Button:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# Autowrap so the row indicator never clips, regardless of column width.
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var row_indicator := "→ Trás" if hero.row == 0 else "→ Frente"
-	label.text = "%s\n%d/%d HP   %s" % [
+	label.text = "%s\n%d/%d HP\n%s" % [
 		hero.class_data.display_name, hero.hp, hero.max_hp(), row_indicator
 	]
 	hbox.add_child(label)
@@ -66,10 +70,10 @@ func _make_hero_button(hero: Hero) -> Button:
 	return btn
 
 
-## Builds a 56x56 portrait control: the class Texture2D if one is assigned,
+## Builds a square portrait control: the class Texture2D if one is assigned,
 ## otherwise a colour placeholder tinted per class (shared with combat panels).
 func _make_portrait(hero: Hero) -> Control:
-	var portrait_size := Vector2(56, 56)
+	var portrait_size := Vector2(110, 110)
 	if hero.class_data.portrait != null:
 		var tex := TextureRect.new()
 		tex.custom_minimum_size = portrait_size

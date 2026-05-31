@@ -46,12 +46,13 @@ modulate = Color(0.7, 0.7, 0.7, 1)
 
 [node name="GridRow" type="HBoxContainer" parent="VBox"]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 12
 
 [node name="FrontPanel" type="PanelContainer" parent="VBox/GridRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 0
+size_flags_vertical = 3
 
 [node name="FrontColumn" type="VBoxContainer" parent="VBox/GridRow/FrontPanel"]
 unique_name_in_owner = true
@@ -67,12 +68,13 @@ text = "Frente"
 [node name="FrontSlots" type="VBoxContainer" parent="VBox/GridRow/FrontPanel/FrontColumn"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 8
 
 [node name="BackPanel" type="PanelContainer" parent="VBox/GridRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 0
+size_flags_vertical = 3
 
 [node name="BackColumn" type="VBoxContainer" parent="VBox/GridRow/BackPanel"]
 unique_name_in_owner = true
@@ -88,11 +90,8 @@ text = "Trás"
 [node name="BackSlots" type="VBoxContainer" parent="VBox/GridRow/BackPanel/BackColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Spacer" type="Control" parent="VBox"]
-layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 8
 
 [node name="ConfirmButton" type="Button" parent="VBox"]
 unique_name_in_owner = true
