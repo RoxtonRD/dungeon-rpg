@@ -32,8 +32,9 @@ const EVENT_BG: Dictionary = {
 
 @onready var title_label: Label = %TitleLabel
 @onready var gold_label: Label = %GoldLabel
-@onready var party_status: Label = %PartyStatus
+@onready var party_status: HBoxContainer = %PartyStatus
 @onready var map_area: VBoxContainer = %MapArea
+@onready var map_lines: Control = %MapLines
 @onready var inventory_button: Button = %InventoryButton
 @onready var shop_button: Button = %ShopButton
 @onready var formation_button: Button = %FormationButton
@@ -75,6 +76,9 @@ var _current_event: Dictionary = {}
 func _ready() -> void:
 	SafeArea.apply($VBox)
 	gold_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
+	# Redraw the floor-connection lines whenever the map area re-lays-out.
+	map_lines.draw.connect(_draw_map_lines)
+	map_area.resized.connect(map_lines.queue_redraw)
 	inventory_button.pressed.connect(_on_inventory_pressed)
 	shop_button.pressed.connect(_on_shop_pressed)
 	formation_button.pressed.connect(_on_formation_pressed)
@@ -131,7 +135,7 @@ func _build_map() -> void:
 func _refresh() -> void:
 	title_label.text = "Masmorra — Nível %d" % run.level
 	gold_label.text = "Ouro: %d" % GameState.gold
-	party_status.text = _party_summary()
+	_rebuild_party_bar()
 	var reachable_floor := run.current_floor + 1
 	for node in _node_buttons:
 		var btn: Button = _node_buttons[node]
@@ -140,15 +144,66 @@ func _refresh() -> void:
 			label = "✓ " + label
 		btn.text = label
 		btn.disabled = node.floor_index != reachable_floor
+	map_lines.queue_redraw.call_deferred()
 
 
-func _party_summary() -> String:
-	var s := ""
+## Builds one compact entry per hero: class name + a red HP bar + HP text.
+func _rebuild_party_bar() -> void:
+	for child in party_status.get_children():
+		child.queue_free()
 	for h in Party.heroes:
-		if not s.is_empty():
-			s += "    "
-		s += "%s %d/%d" % [h.class_data.display_name, h.hp, h.max_hp()]
-	return s
+		var col := VBoxContainer.new()
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 2)
+
+		var name_lbl := Label.new()
+		name_lbl.text = h.class_data.display_name
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.add_theme_font_size_override("font_size", 12)
+		col.add_child(name_lbl)
+
+		var bar := ProgressBar.new()
+		bar.theme_type_variation = "HpBar"
+		bar.custom_minimum_size = Vector2(0, 10)
+		bar.show_percentage = false
+		bar.max_value = maxi(1, h.max_hp())
+		bar.value = h.hp
+		col.add_child(bar)
+
+		var hp_lbl := Label.new()
+		hp_lbl.text = "%d/%d" % [h.hp, h.max_hp()]
+		hp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hp_lbl.add_theme_font_size_override("font_size", 11)
+		hp_lbl.modulate = Color(0.8, 0.8, 0.85)
+		col.add_child(hp_lbl)
+
+		party_status.add_child(col)
+
+
+## Draws connecting lines between every node and the nodes on the next floor
+## (reachability is "any node in the next floor"). Lines feeding the currently
+## reachable floor are drawn brighter. Runs on MapLines' draw signal.
+func _draw_map_lines() -> void:
+	if run == null or _node_buttons.is_empty():
+		return
+	var reachable_floor := run.current_floor + 1
+	var dim := Color(0.6, 0.5, 0.3, 0.45)
+	var bright := Color(1.0, 0.82, 0.35, 0.8)
+	for f in range(run.floors.size() - 1):
+		for a in run.floors[f]:
+			var btn_a: Button = _node_buttons.get(a)
+			if btn_a == null or btn_a.size == Vector2.ZERO:
+				return  # Not laid out yet; resized signal will redraw.
+			var pa: Vector2 = btn_a.get_global_rect().get_center() - map_lines.global_position
+			for b in run.floors[f + 1]:
+				var btn_b: Button = _node_buttons.get(b)
+				if btn_b == null:
+					continue
+				var pb: Vector2 = btn_b.get_global_rect().get_center() - map_lines.global_position
+				var to_reachable := (f + 1) == reachable_floor
+				map_lines.draw_line(pa, pb,
+					bright if to_reachable else dim,
+					3.0 if to_reachable else 2.0, true)
 
 
 func _on_node_pressed(node: DungeonNode) -> void:
