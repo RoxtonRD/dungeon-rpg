@@ -39,6 +39,7 @@ const MIN_PORT := 1024
 const MAX_PORT := 65535
 const SETTING_WS_PORT := "godot_ai/ws_port"
 const SETTING_STARTUP_TRACE := "godot_ai/log_startup_timing"
+const _DISCOVERY_TIMEOUT_MS := 3000
 
 
 ## Active HTTP port: user override (if in range) or `DEFAULT_HTTP_PORT`.
@@ -206,7 +207,11 @@ static func check_status_details_for_url_with_cli_path(id: String, url: String, 
 	var client := ClientRegistry.get_by_id(id)
 	if client == null:
 		return {"status": Client.Status.NOT_CONFIGURED, "error_msg": ""}
-	if client.config_type == "cli" and cli_path.is_empty():
+	# A cli client with no resolved binary normally reads as NOT_CONFIGURED.
+	# Skip that shortcut when the client has a JSON fallback (#463): the
+	# dispatch below reads its config file directly so the status dot reflects
+	# a fallback-configured entry instead of always showing red.
+	if client.config_type == "cli" and cli_path.is_empty() and not client.has_json_fallback():
 		return {"status": Client.Status.NOT_CONFIGURED, "error_msg": ""}
 	return _dispatch_check_status_with_cli_path_details(client, url, cli_path)
 
@@ -219,7 +224,9 @@ static func client_status_probe_snapshot(id: String) -> Dictionary:
 	var installed := false
 	if client.config_type == "cli":
 		cli_path = CliStrategy.resolve_cli_path(client)
-		installed = not cli_path.is_empty()
+		# #463: a JSON-fallback cli client (Claude Code as a VS Code extension)
+		# is "installed" when its fallback config exists, even with no binary.
+		installed = not cli_path.is_empty() or client.is_installed()
 	else:
 		installed = client.is_installed()
 	return {"id": id, "cli_path": cli_path, "installed": installed}
@@ -247,6 +254,10 @@ static func _dispatch_configure(client: Client, url: String) -> Dictionary:
 		"toml":
 			return TomlStrategy.configure(client, SERVER_NAME, url)
 		"cli":
+			# #463: fall back to writing the config file directly when the CLI
+			# binary isn't on PATH (Claude Code as a VS Code/Cursor extension).
+			if client.has_json_fallback() and CliStrategy.resolve_cli_path(client).is_empty():
+				return JsonStrategy.configure(client, SERVER_NAME, url)
 			return CliStrategy.configure(client, SERVER_NAME, url)
 	return {"status": "error", "message": "Unknown config_type for %s: %s" % [client.id, client.config_type]}
 
@@ -258,6 +269,10 @@ static func _dispatch_remove(client: Client) -> Dictionary:
 		"toml":
 			return TomlStrategy.remove(client, SERVER_NAME)
 		"cli":
+			# #463: mirror the configure fallback so Remove also works without
+			# the CLI binary — otherwise a fallback-written entry is unremovable.
+			if client.has_json_fallback() and CliStrategy.resolve_cli_path(client).is_empty():
+				return JsonStrategy.remove(client, SERVER_NAME)
 			return CliStrategy.remove(client, SERVER_NAME)
 	return {"status": "error", "message": "Unknown config_type for %s: %s" % [client.id, client.config_type]}
 
@@ -277,9 +292,12 @@ static func _dispatch_check_status_with_cli_path_details(client: Client, url: St
 		"toml":
 			return {"status": TomlStrategy.check_status(client, SERVER_NAME, url), "error_msg": ""}
 		"cli":
-			if cli_path.is_empty():
-				return CliStrategy.check_status_details(client, SERVER_NAME, url, CliStrategy.resolve_cli_path(client))
-			return CliStrategy.check_status_details(client, SERVER_NAME, url, cli_path)
+			var resolved_cli := cli_path if not cli_path.is_empty() else CliStrategy.resolve_cli_path(client)
+			# #463: with no CLI binary, read the JSON fallback config so a
+			# fallback-configured entry reports CONFIGURED instead of red.
+			if resolved_cli.is_empty() and client.has_json_fallback():
+				return {"status": JsonStrategy.check_status(client, SERVER_NAME, url), "error_msg": ""}
+			return CliStrategy.check_status_details(client, SERVER_NAME, url, resolved_cli)
 	return {"status": Client.Status.NOT_CONFIGURED, "error_msg": ""}
 
 
@@ -492,8 +510,8 @@ static func invalidate_uvx_cli_cache() -> void:
 ## Thread safety: `CliFinder.invalidate()` guards `_cache` / `_searched`
 ## with a mutex so it can race safely against worker threads calling
 ## `find()` from `_run_client_action_worker`. The mutex is held only
-## across the dictionary clear, never across `OS.execute`, so this call
-## can never block the main thread on a subprocess.
+## across the dictionary clear, never across the bounded subprocess lookup,
+## so this call can never block the main thread on a subprocess.
 static func invalidate_cli_cache() -> void:
 	CliFinder.invalidate()
 
@@ -504,10 +522,9 @@ static var _uv_version_searched: bool = false
 
 ## Cached for the editor session. The dock's `_refresh_setup_status`
 ## (called via `call_deferred` from `_build_ui`) calls this on the
-## main thread in user mode, so a single cold `OS.execute(uvx,
-## ["--version"])` adds ~80 ms to the dock's first paint on Linux and
-## more on Windows. Subsequent calls (focus-in refresh, manual Refresh
-## clicks) reuse the cached string.
+## main thread in user mode, so the cold `uvx --version` probe is
+## wall-clock bounded and cached. Subsequent calls (focus-in refresh,
+## manual Refresh clicks) reuse the cached string.
 ##
 ## Invalidate via `invalidate_uv_version_cache()` when the user
 ## installs / reinstalls uv via the dock so the next refresh reflects
@@ -522,9 +539,10 @@ static func check_uv_version() -> String:
 		_uv_version_searched = true
 		_uv_version_cache = ""
 		return ""
-	var output: Array = []
-	if OS.execute(uvx, ["--version"], output, true) == 0 and output.size() > 0:
-		_uv_version_cache = output[0].strip_edges()
+	var result := McpCliExec.run(uvx, ["--version"], _DISCOVERY_TIMEOUT_MS, false)
+	if int(result.get("exit_code", -1)) == 0:
+		var lines := PackedStringArray(str(result.get("stdout", "")).split("\n"))
+		_uv_version_cache = lines[0].strip_edges() if lines.size() > 0 else ""
 	else:
 		_uv_version_cache = ""
 	_uv_version_searched = true
@@ -595,9 +613,12 @@ static func find_worktree_src_dir(start_dir: String) -> String:
 
 static func _find_system_install() -> String:
 	var cmd := "which" if OS.get_name() != "Windows" else "where"
-	var output: Array = []
-	if OS.execute(cmd, ["godot-ai"], output, true) == 0 and output.size() > 0:
-		var found: String = output[0].strip_edges()
+	var result := McpCliExec.run(cmd, ["godot-ai"], _DISCOVERY_TIMEOUT_MS, false)
+	if int(result.get("exit_code", -1)) == 0:
+		var lines := PackedStringArray(str(result.get("stdout", "")).split("\n"))
+		if lines.is_empty():
+			return ""
+		var found := CliFinder._pick_best_path(lines) if OS.get_name() == "Windows" else lines[0].strip_edges()
 		if not found.is_empty():
 			return found
 	return ""

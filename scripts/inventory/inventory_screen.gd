@@ -41,6 +41,7 @@ func _build_hero_tabs() -> void:
 		var h: Hero = Party.heroes[i]
 		var btn := Button.new()
 		btn.text = h.class_data.display_name
+		btn.custom_minimum_size = Vector2(0, 48)  # 48dp minimum touch target
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.toggle_mode = true
 		btn.button_group = group
@@ -67,7 +68,7 @@ func _refresh() -> void:
 ## class-tinted ColorRect placeholder (same pattern as combat portraits).
 func _refresh_full_body(hero: Hero) -> void:
 	var class_id := hero.class_data.id
-	var path := "res://assets/full_body/%s.png" % class_id
+	var path := "res://assets/portraits/heroes/%s.png" % class_id
 	var tex: Texture2D = null
 	if ResourceLoader.exists(path):
 		tex = load(path) as Texture2D
@@ -386,4 +387,4 @@ func _flash_message(text: String) -> void:
 
 
 func _on_close() -> void:
-	get_tree().change_scene_to_file(DUNGEON_SCENE)
+	Fade.change_scene(DUNGEON_SCENE)

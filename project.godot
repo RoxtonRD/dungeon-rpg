@@ -17,13 +17,14 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="Dungeons of Praesidium"
 config/description="Turn-based tactical dungeon-crawler RPG (v1)."
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.6", "Mobile")
+config/features=PackedStringArray("4.7", "Mobile")
 
 [autoload]
 
 Party="*res://scripts/party.gd"
 GameState="*res://scripts/game_state.gd"
 SafeArea="*res://scripts/safe_area.gd"
+Fade="*res://scripts/scene_fade.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]

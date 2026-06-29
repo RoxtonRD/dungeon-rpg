@@ -18,7 +18,7 @@ func _ready() -> void:
 
 func _on_continue_pressed() -> void:
 	if GameState.load_game():
-		get_tree().change_scene_to_file(DUNGEON_SCENE)
+		Fade.change_scene(DUNGEON_SCENE)
 	else:
 		# Corrupt / incompatible save — fall back to new game.
 		_on_new_game_pressed()
@@ -29,4 +29,4 @@ func _on_new_game_pressed() -> void:
 	GameState.start_new_game()
 	GameState.current_run = DungeonRun.generate(1, 3)
 	GameState.save_game()
-	get_tree().change_scene_to_file(DUNGEON_SCENE)
+	Fade.change_scene(DUNGEON_SCENE)

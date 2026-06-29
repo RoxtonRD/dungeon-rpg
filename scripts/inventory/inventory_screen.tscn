@@ -1,26 +1,31 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://mllrnek0vsvu"]
 
-[ext_resource type="Script" path="res://scripts/inventory/inventory_screen.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/bg_characters.png" id="2"]
+[ext_resource type="Script" uid="uid://c0qnfbry4mii8" path="res://scripts/inventory/inventory_screen.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://b3kikw5agac6j" path="res://assets/backgrounds/bg_characters.png" id="2"]
 
-[node name="InventoryScreen" type="Control"]
+[node name="InventoryScreen" type="Control" unique_id=1409639027]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=1766076806]
+modulate = Color(0.21568628, 0.21568628, 0.21568628, 1)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("2")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="." unique_id=1139882355]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,31 +34,33 @@ offset_left = 16.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="VBox"]
+[node name="TitleLabel" type="Label" parent="VBox" unique_id=1941787553]
 layout_mode = 2
-horizontal_alignment = 1
 theme_override_font_sizes/font_size = 26
 text = "Personagens"
+horizontal_alignment = 1
 
-[node name="HeroTabBar" type="HBoxContainer" parent="VBox"]
+[node name="HeroTabBar" type="HBoxContainer" parent="VBox" unique_id=680559333]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeroCardPanel" type="PanelContainer" parent="VBox"]
+[node name="HeroCardPanel" type="PanelContainer" parent="VBox" unique_id=1750380821]
 layout_mode = 2
 
-[node name="HeroCard" type="HBoxContainer" parent="VBox/HeroCardPanel"]
+[node name="HeroCard" type="HBoxContainer" parent="VBox/HeroCardPanel" unique_id=1324243430]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="FullBodyBox" type="Control" parent="VBox/HeroCardPanel/HeroCard"]
-custom_minimum_size = Vector2(128, 256)
+[node name="FullBodyBox" type="Control" parent="VBox/HeroCardPanel/HeroCard" unique_id=1857115542]
+custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 
-[node name="FullBodyBg" type="ColorRect" parent="VBox/HeroCardPanel/HeroCard/FullBodyBox"]
+[node name="FullBodyBg" type="ColorRect" parent="VBox/HeroCardPanel/HeroCard/FullBodyBox" unique_id=141607442]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -64,7 +71,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.3, 0.3, 0.4, 1)
 
-[node name="FullBodyTex" type="TextureRect" parent="VBox/HeroCardPanel/HeroCard/FullBodyBox"]
+[node name="FullBodyTex" type="TextureRect" parent="VBox/HeroCardPanel/HeroCard/FullBodyBox" unique_id=757003169]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -77,71 +84,71 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="HeroTextCol" type="VBoxContainer" parent="VBox/HeroCardPanel/HeroCard"]
+[node name="HeroTextCol" type="VBoxContainer" parent="VBox/HeroCardPanel/HeroCard" unique_id=735453346]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
-[node name="HeroInfoLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
+[node name="HeroInfoLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol" unique_id=1907381440]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 autowrap_mode = 2
 
-[node name="StatsLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
+[node name="StatsLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol" unique_id=7742766]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 
-[node name="ScrollPanel" type="PanelContainer" parent="VBox"]
+[node name="ScrollPanel" type="PanelContainer" parent="VBox" unique_id=569195016]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="MainScroll" type="ScrollContainer" parent="VBox/ScrollPanel"]
+[node name="MainScroll" type="ScrollContainer" parent="VBox/ScrollPanel" unique_id=1132750920]
 layout_mode = 2
 
-[node name="ContentVBox" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll"]
+[node name="ContentVBox" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll" unique_id=328036005]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="EquipSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
+[node name="EquipSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=71528632]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
 text = "Equipamentos"
 
-[node name="EquipmentRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
+[node name="EquipmentRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=1003526158]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="SkillSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
+[node name="SkillSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=529837589]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
 text = "Habilidades"
 
-[node name="SkillRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
+[node name="SkillRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=1144797677]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="InvSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
+[node name="InvSectionLabel" type="Label" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=603073524]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
 text = "Inventário"
 
-[node name="ItemListVBox" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox"]
+[node name="ItemListVBox" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=1671274915]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="CloseButton" type="Button" parent="VBox"]
+[node name="CloseButton" type="Button" parent="VBox" unique_id=1969835921]
 unique_name_in_owner = true
-layout_mode = 2
 custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
 text = "Fechar"

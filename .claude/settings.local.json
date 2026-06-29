@@ -32,7 +32,13 @@
       "Bash(mv resources/portraits/heroes/* assets/portraits/heroes/)",
       "Bash(mv resources/portraits/enemies/* assets/portraits/enemies/)",
       "Bash(sed -i 's|res://resources/portraits/|res://assets/portraits/|g' assets/portraits/heroes/*.import assets/portraits/enemies/*.import resources/enemies/*.tres resources/classes/*.tres)",
-      "WebSearch"
+      "WebSearch",
+      "mcp__godot-ai__game_manage",
+      "Bash(echo -n '__TRACKED_VAR__.png -> ')",
+      "Bash(grep ^uid= assets/portraits/heroes/__TRACKED_VAR__.png.import)",
+      "Bash(git checkout *)",
+      "Bash(git commit *)",
+      "Bash(git add *)"
     ]
   }
 }

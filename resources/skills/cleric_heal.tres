@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="SkillData" format=3 uid="uid://bkmaoe3wj06l6"]
 
-[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
@@ -8,8 +8,6 @@ id = "heal"
 display_name = "Curar"
 description = "Restaura HP de 1 aliado."
 mp_cost = 6
-unlock_level = 1
-max_upgrade_level = 3
 skill_type = 2
 target = 3
 power = 1.6

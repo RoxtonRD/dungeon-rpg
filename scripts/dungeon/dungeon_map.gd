@@ -34,7 +34,6 @@ const EVENT_BG: Dictionary = {
 @onready var gold_label: Label = %GoldLabel
 @onready var party_status: HBoxContainer = %PartyStatus
 @onready var map_area: VBoxContainer = %MapArea
-@onready var map_lines: Control = %MapLines
 @onready var inventory_button: Button = %InventoryButton
 @onready var shop_button: Button = %ShopButton
 @onready var formation_button: Button = %FormationButton
@@ -76,9 +75,6 @@ var _current_event: Dictionary = {}
 func _ready() -> void:
 	SafeArea.apply($VBox)
 	gold_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
-	# Redraw the floor-connection lines whenever the map area re-lays-out.
-	map_lines.draw.connect(_draw_map_lines)
-	map_area.resized.connect(map_lines.queue_redraw)
 	inventory_button.pressed.connect(_on_inventory_pressed)
 	shop_button.pressed.connect(_on_shop_pressed)
 	formation_button.pressed.connect(_on_formation_pressed)
@@ -144,7 +140,6 @@ func _refresh() -> void:
 			label = "✓ " + label
 		btn.text = label
 		btn.disabled = node.floor_index != reachable_floor
-	map_lines.queue_redraw.call_deferred()
 
 
 ## Builds one compact entry per hero: class name + a red HP bar + HP text.
@@ -178,32 +173,6 @@ func _rebuild_party_bar() -> void:
 		col.add_child(hp_lbl)
 
 		party_status.add_child(col)
-
-
-## Draws connecting lines between every node and the nodes on the next floor
-## (reachability is "any node in the next floor"). Lines feeding the currently
-## reachable floor are drawn brighter. Runs on MapLines' draw signal.
-func _draw_map_lines() -> void:
-	if run == null or _node_buttons.is_empty():
-		return
-	var reachable_floor := run.current_floor + 1
-	var dim := Color(0.6, 0.5, 0.3, 0.45)
-	var bright := Color(1.0, 0.82, 0.35, 0.8)
-	for f in range(run.floors.size() - 1):
-		for a in run.floors[f]:
-			var btn_a: Button = _node_buttons.get(a)
-			if btn_a == null or btn_a.size == Vector2.ZERO:
-				return  # Not laid out yet; resized signal will redraw.
-			var pa: Vector2 = btn_a.get_global_rect().get_center() - map_lines.global_position
-			for b in run.floors[f + 1]:
-				var btn_b: Button = _node_buttons.get(b)
-				if btn_b == null:
-					continue
-				var pb: Vector2 = btn_b.get_global_rect().get_center() - map_lines.global_position
-				var to_reachable := (f + 1) == reachable_floor
-				map_lines.draw_line(pa, pb,
-					bright if to_reachable else dim,
-					3.0 if to_reachable else 2.0, true)
 
 
 func _on_node_pressed(node: DungeonNode) -> void:
@@ -364,16 +333,16 @@ func _on_next_dungeon_pressed() -> void:
 
 
 func _on_inventory_pressed() -> void:
-	get_tree().change_scene_to_file(INVENTORY_SCENE)
+	Fade.change_scene(INVENTORY_SCENE)
 
 
 func _on_shop_pressed() -> void:
-	get_tree().change_scene_to_file(SHOP_SCENE)
+	Fade.change_scene(SHOP_SCENE)
 
 
 func _on_formation_pressed() -> void:
-	get_tree().change_scene_to_file(FORMATION_SCENE)
+	Fade.change_scene(FORMATION_SCENE)
 
 
 func _on_menu_pressed() -> void:
-	get_tree().change_scene_to_file(MENU_SCENE)
+	Fade.change_scene(MENU_SCENE)

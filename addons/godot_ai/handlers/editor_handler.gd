@@ -13,18 +13,22 @@ var _connection: McpConnection
 var _debugger_plugin: McpDebuggerPlugin
 var _game_log_buffer: McpGameLogBuffer
 var _editor_log_buffer: McpEditorLogBuffer
+var _debugger_errors_root: Node
+var _debugger_search_root_cache: Node
 
 
-func _init(log_buffer: McpLogBuffer, connection: McpConnection = null, debugger_plugin: McpDebuggerPlugin = null, game_log_buffer: McpGameLogBuffer = null, editor_log_buffer: McpEditorLogBuffer = null) -> void:
+func _init(log_buffer: McpLogBuffer, connection: McpConnection = null, debugger_plugin: McpDebuggerPlugin = null, game_log_buffer: McpGameLogBuffer = null, editor_log_buffer: McpEditorLogBuffer = null, debugger_errors_root: Node = null) -> void:
 	_log_buffer = log_buffer
 	_connection = connection
 	_debugger_plugin = debugger_plugin
 	_game_log_buffer = game_log_buffer
 	_editor_log_buffer = editor_log_buffer
+	_debugger_errors_root = debugger_errors_root
 
 
 func get_editor_state(_params: Dictionary) -> Dictionary:
 	var scene_root := EditorInterface.get_edited_scene_root()
+	var game_status := _current_game_status()
 	var data := {
 		"godot_version": Engine.get_version_info().get("string", "unknown"),
 		"project_name": ProjectSettings.get_setting("application/config/name", ""),
@@ -35,6 +39,9 @@ func get_editor_state(_params: Dictionary) -> Dictionary:
 		## false between Play→Stop cycles. Lets capture-source=game callers
 		## poll for a real ready signal instead of guessing with sleep().
 		"game_capture_ready": _debugger_plugin != null and _debugger_plugin.is_game_capture_ready(),
+		"game_status": game_status,
+		"helper_live": bool(game_status.get("helper_live", false)),
+		"session_active": bool(game_status.get("session_active", false)),
 	}
 	## Half-installed addon tree from a failed self-update rollback. When
 	## non-empty, the agent / dock paint the operator-facing recovery copy
@@ -66,6 +73,10 @@ func get_logs(params: Dictionary) -> Dictionary:
 	var count: int = maxi(0, int(params.get("count", 50)))
 	var offset: int = maxi(0, int(params.get("offset", 0)))
 	var source: String = str(params.get("source", "plugin"))
+	var include_details: bool = bool(params.get("include_details", false))
+	var has_since_cursor := params.has("since_cursor") and params.get("since_cursor") != null
+	var since_cursor: int = maxi(0, int(params.get("since_cursor", 0)))
+	var since_run_id := "" if params.get("since_run_id", null) == null else str(params.get("since_run_id", ""))
 	if not source in VALID_LOG_SOURCES:
 		return ErrorCodes.make(
 			ErrorCodes.VALUE_OUT_OF_RANGE,
@@ -76,12 +87,23 @@ func get_logs(params: Dictionary) -> Dictionary:
 		"plugin":
 			return _get_plugin_logs(count, offset)
 		"game":
-			return _get_game_logs(count, offset)
+			return _get_game_logs(count, offset, include_details, since_run_id)
 		"editor":
-			return _get_editor_logs(count, offset)
+			return _get_editor_logs(count, offset, include_details, has_since_cursor, since_cursor)
 		"all":
-			return _get_all_logs(count, offset)
+			return _get_all_logs(count, offset, include_details)
 	return ErrorCodes.make(ErrorCodes.INTERNAL_ERROR, "Unreachable")
+
+
+func _current_game_status() -> Dictionary:
+	if _debugger_plugin == null:
+		return McpDebuggerPlugin.with_liveness_flags({
+			"status": "stopped",
+			"active": false,
+			"ready": false,
+			"helper_expected": true,
+		})
+	return _debugger_plugin.get_game_status()
 
 
 func _get_plugin_logs(count: int, offset: int) -> Dictionary:
@@ -101,7 +123,10 @@ func _get_plugin_logs(count: int, offset: int) -> Dictionary:
 	}
 
 
-func _get_game_logs(count: int, offset: int) -> Dictionary:
+func _get_game_logs(count: int, offset: int, include_details: bool, since_run_id: String = "") -> Dictionary:
+	var game_status := _current_game_status()
+	var helper_live := bool(game_status.get("helper_live", false))
+	var session_active := bool(game_status.get("session_active", false))
 	if _game_log_buffer == null:
 		return {
 			"data": {
@@ -111,56 +136,103 @@ func _get_game_logs(count: int, offset: int) -> Dictionary:
 				"returned_count": 0,
 				"offset": offset,
 				"run_id": "",
-				"is_running": false,
+				"current_run_id": "",
+				"is_running": session_active,
+				"helper_live": helper_live,
+				"session_active": session_active,
+				"game_status": game_status,
 				"dropped_count": 0,
+				"stale_run_id": false,
 			}
 		}
-	var page := _game_log_buffer.get_range(offset, count)
+	var current_run_id := _game_log_buffer.run_id()
+	var target_run_id := since_run_id if not since_run_id.is_empty() else current_run_id
+	var stale_run_id := not since_run_id.is_empty() and since_run_id != current_run_id
+	var run_page := _game_log_buffer.get_run_page(target_run_id, offset, count)
+	var page := _entries_for_response(run_page.get("entries", []), include_details)
 	return {
 		"data": {
 			"source": "game",
 			"lines": page,
-			"total_count": _game_log_buffer.total_count(),
+			"total_count": int(run_page.get("total_count", 0)),
 			"returned_count": page.size(),
 			"offset": offset,
-			"run_id": _game_log_buffer.run_id(),
-			"is_running": EditorInterface.is_playing_scene(),
+			"run_id": target_run_id,
+			"current_run_id": current_run_id,
+			"is_running": session_active,
+			"helper_live": helper_live,
+			"session_active": session_active,
+			"game_status": game_status,
 			"dropped_count": _game_log_buffer.dropped_count(),
+			"stale_run_id": stale_run_id,
 		}
 	}
 
 
-func _get_editor_logs(count: int, offset: int) -> Dictionary:
+func _get_editor_logs(count: int, offset: int, include_details: bool, has_since_cursor: bool = false, since_cursor: int = 0) -> Dictionary:
 	## Editor-process script errors (parse errors, @tool runtime errors,
 	## EditorPlugin errors, push_error/push_warning). Captured by
 	## editor_logger.gd via OS.add_logger and gated on Godot 4.5+; on older
-	## engines or before plugin enable the buffer is null/empty and we
-	## return an empty page so callers can poll unconditionally.
-	if _editor_log_buffer == null:
-		return {
-			"data": {
-				"source": "editor",
-				"lines": [],
-				"total_count": 0,
-				"returned_count": 0,
-				"offset": offset,
-				"dropped_count": 0,
-			}
-		}
-	var page := _editor_log_buffer.get_range(offset, count)
+	## engines the buffer can be null. Godot also sends GDScript reload
+	## warnings/errors straight to the Debugger dock's Errors tab; those do
+	## not flow through OS.add_logger, so merge the visible tree rows here.
+	if has_since_cursor:
+		return _get_editor_logs_since(count, since_cursor, include_details)
+	var all_entries := _collect_editor_log_entries()
+	var page := _entries_for_response(_slice_entries(all_entries, offset, count), include_details)
+	var appended_total := _editor_log_buffer.appended_total() if _editor_log_buffer != null else 0
 	return {
 		"data": {
 			"source": "editor",
 			"lines": page,
-			"total_count": _editor_log_buffer.total_count(),
+			"total_count": all_entries.size(),
 			"returned_count": page.size(),
 			"offset": offset,
-			"dropped_count": _editor_log_buffer.dropped_count(),
+			"dropped_count": _editor_log_buffer.dropped_count() if _editor_log_buffer != null else 0,
+			"next_cursor": appended_total,
+			"appended_total": appended_total,
 		}
 	}
 
 
-func _get_all_logs(count: int, offset: int) -> Dictionary:
+func _get_editor_logs_since(count: int, since_cursor: int, include_details: bool) -> Dictionary:
+	## Cursor reads are defined over the monotonic editor logger ring only.
+	## Visible Debugger Errors-tab rows are live UI state, not ring entries,
+	## so regular offset reads still merge them while since_cursor polling
+	## reports only Logger-backed entries.
+	var captured := {
+		"cursor": since_cursor,
+		"oldest_cursor": 0,
+		"next_cursor": 0,
+		"appended_total": 0,
+		"truncated": false,
+		"has_more": false,
+		"entries": [],
+	}
+	var dropped := 0
+	if _editor_log_buffer != null:
+		captured = _editor_log_buffer.get_since(since_cursor, count)
+		dropped = _editor_log_buffer.dropped_count()
+	var page := _entries_for_response(captured.get("entries", []), include_details)
+	return {
+		"data": {
+			"source": "editor",
+			"lines": page,
+			"total_count": int(captured.get("appended_total", 0)),
+			"returned_count": page.size(),
+			"offset": 0,
+			"dropped_count": dropped,
+			"cursor": int(captured.get("cursor", since_cursor)),
+			"oldest_cursor": int(captured.get("oldest_cursor", 0)),
+			"next_cursor": int(captured.get("next_cursor", 0)),
+			"appended_total": int(captured.get("appended_total", 0)),
+			"truncated": bool(captured.get("truncated", false)),
+			"has_more": bool(captured.get("has_more", false)),
+		}
+	}
+
+
+func _get_all_logs(count: int, offset: int, include_details: bool) -> Dictionary:
 	## Plugin lines have no timestamp, so we can't merge chronologically.
 	## Concatenate plugin → editor → game and apply the offset/count window
 	## over the combined list. The per-line `source` field tells callers
@@ -170,23 +242,26 @@ func _get_all_logs(count: int, offset: int) -> Dictionary:
 	var combined: Array[Dictionary] = []
 	for line in _log_buffer.get_recent(_log_buffer.total_count()):
 		combined.append({"source": "plugin", "level": "info", "text": line})
-	if _editor_log_buffer != null:
-		for entry in _editor_log_buffer.get_range(0, _editor_log_buffer.total_count()):
-			combined.append(entry)
+	for entry in _collect_editor_log_entries():
+		combined.append(entry)
+	var run_id := ""
+	var current_run_id := ""
+	var dropped := 0
 	if _game_log_buffer != null:
-		for entry in _game_log_buffer.get_range(0, _game_log_buffer.total_count()):
+		run_id = _game_log_buffer.run_id()
+		current_run_id = run_id
+		dropped = _game_log_buffer.dropped_count()
+		var run_page := _game_log_buffer.get_run_page(run_id, 0, McpGameLogBuffer.MAX_LINES)
+		for entry in run_page.get("entries", []):
 			combined.append(entry)
 	var stop := mini(combined.size(), offset + count)
 	var page: Array[Dictionary] = []
 	for i in range(mini(offset, combined.size()), stop):
 		page.append(combined[i])
-	var run_id := ""
-	var dropped := 0
-	if _game_log_buffer != null:
-		run_id = _game_log_buffer.run_id()
-		dropped = _game_log_buffer.dropped_count()
+	page = _entries_for_response(page, include_details)
 	if _editor_log_buffer != null:
 		dropped += _editor_log_buffer.dropped_count()
+	var game_status := _current_game_status()
 	return {
 		"data": {
 			"source": "all",
@@ -195,10 +270,259 @@ func _get_all_logs(count: int, offset: int) -> Dictionary:
 			"returned_count": page.size(),
 			"offset": offset,
 			"run_id": run_id,
-			"is_running": EditorInterface.is_playing_scene(),
+			"current_run_id": current_run_id,
+			"is_running": bool(game_status.get("session_active", false)),
+			"helper_live": bool(game_status.get("helper_live", false)),
+			"session_active": bool(game_status.get("session_active", false)),
+			"game_status": game_status,
 			"dropped_count": dropped,
 		}
 	}
+
+
+func _entries_for_response(entries: Array[Dictionary], include_details: bool) -> Array[Dictionary]:
+	## Compact responses only drop the top-level "details" key, so a shallow
+	## copy is enough; the deep copy is reserved for the opt-in details path
+	## where nested dicts leave the buffer.
+	var out: Array[Dictionary] = []
+	for entry in entries:
+		if include_details:
+			out.append(entry.duplicate(true))
+		else:
+			var copy: Dictionary = entry.duplicate(false)
+			copy.erase("details")
+			out.append(copy)
+	return out
+
+
+func _collect_editor_log_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	if _editor_log_buffer != null:
+		for entry in _editor_log_buffer.get_range(0, _editor_log_buffer.total_count()):
+			entries.append(entry)
+	for entry in _read_debugger_error_entries():
+		if not _has_equivalent_log_entry(entries, entry):
+			entries.append(entry)
+	return entries
+
+
+func _read_debugger_error_entries() -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	for tree in _locate_debugger_error_trees():
+		for entry in _entries_from_debugger_error_tree(tree):
+			if not _has_equivalent_log_entry(entries, entry):
+				entries.append(entry)
+	return entries
+
+
+func _locate_debugger_error_trees() -> Array[Tree]:
+	var trees: Array[Tree] = []
+	if _debugger_plugin == null and _debugger_errors_root == null:
+		return trees
+	var root: Node = _debugger_errors_root
+	if root == null:
+		root = _debugger_search_root()
+	if root == null:
+		return trees
+	_collect_debugger_error_trees(root, trees)
+	return trees
+
+
+func _debugger_search_root() -> Node:
+	## logs_read is a polling tool, so per-call discovery must not recurse the
+	## entire editor UI. EditorDebuggerNode is the bottom-panel container that
+	## owns every ScriptEditorDebugger session tab and lives for the editor's
+	## lifetime — find it once from the base control, then scan only its
+	## subtree on later calls. The error Trees themselves can't be cached:
+	## they are identified by their content, and an emptied tree is
+	## indistinguishable from any other Tree.
+	if is_instance_valid(_debugger_search_root_cache):
+		return _debugger_search_root_cache
+	_debugger_search_root_cache = null
+	var base := EditorInterface.get_base_control()
+	if base == null:
+		return null
+	_debugger_search_root_cache = _find_first_of_class(base, "EditorDebuggerNode")
+	if _debugger_search_root_cache == null:
+		return base
+	return _debugger_search_root_cache
+
+
+static func _find_first_of_class(node: Node, klass: String) -> Node:
+	if node.get_class() == klass:
+		return node
+	for child in node.get_children():
+		var found := _find_first_of_class(child, klass)
+		if found != null:
+			return found
+	return null
+
+
+static func _collect_debugger_error_trees(node: Node, out: Array[Tree]) -> void:
+	if node is Tree and _tree_has_debugger_errors(node as Tree):
+		out.append(node as Tree)
+	for child in node.get_children():
+		if child is Node:
+			_collect_debugger_error_trees(child as Node, out)
+
+
+static func _tree_has_debugger_errors(tree: Tree) -> bool:
+	var root := tree.get_root()
+	if root == null:
+		return false
+	var item := root.get_first_child()
+	while item != null:
+		if _is_debugger_error_item(item):
+			return true
+		item = item.get_next()
+	return false
+
+
+static func _entries_from_debugger_error_tree(tree: Tree) -> Array[Dictionary]:
+	var entries: Array[Dictionary] = []
+	var root := tree.get_root()
+	if root == null:
+		return entries
+	var item := root.get_first_child()
+	while item != null:
+		if _is_debugger_error_item(item):
+			entries.append(_entry_from_debugger_error_item(item))
+		item = item.get_next()
+	return entries
+
+
+static func _entry_from_debugger_error_item(item: TreeItem) -> Dictionary:
+	var title := item.get_text(1)
+	var loc := _location_from_metadata(item.get_metadata(0))
+	var function := _function_from_title(title)
+	return {
+		"source": "editor",
+		"level": "warn" if item.has_meta("_is_warning") else "error",
+		"text": title,
+		"path": str(loc.get("path", "")),
+		"line": int(loc.get("line", 0)),
+		"function": function,
+		"details": _details_from_debugger_error_item(item, loc, function),
+	}
+
+
+static func _details_from_debugger_error_item(item: TreeItem, loc: Dictionary, function: String) -> Dictionary:
+	var children: Array[Dictionary] = []
+	var child := item.get_first_child()
+	while child != null:
+		var child_loc := _location_from_metadata(child.get_metadata(0))
+		children.append({
+			"label": child.get_text(0),
+			"text": child.get_text(1),
+			"path": str(child_loc.get("path", "")),
+			"line": int(child_loc.get("line", 0)),
+		})
+		child = child.get_next()
+	return {
+		"debugger_tab": "Errors",
+		"time": item.get_text(0),
+		"message": item.get_text(1),
+		"error_type_name": "warning" if item.has_meta("_is_warning") else "error",
+		"source": {
+			"path": str(loc.get("path", "")),
+			"line": int(loc.get("line", 0)),
+			"function": function,
+		},
+		"resolved": {
+			"path": str(loc.get("path", "")),
+			"line": int(loc.get("line", 0)),
+			"function": function,
+		},
+		"children": children,
+		"frames": _frames_from_error_children(children),
+	}
+
+
+static func _is_debugger_error_item(item: TreeItem) -> bool:
+	return item.has_meta("_is_warning") or item.has_meta("_is_error")
+
+
+## ScriptEditorDebugger lays out an error item's children flat, in order: an
+## optional "<X Error>" row, one "<X Source>" row, then one row per stack
+## frame. Only frame 0 carries the "<Stack Trace>" label (TTR-translated);
+## later frames have an empty label. Every frame row carries [path, line]
+## metadata, but so can the Error/Source rows, so metadata alone can't
+## identify frames — the frame run has to be found first.
+static func _frames_from_error_children(children: Array[Dictionary]) -> Array[Dictionary]:
+	var start := -1
+	for i in children.size():
+		if str(children[i].label).contains("Stack Trace"):
+			start = i
+			break
+	if start < 0:
+		## Non-English editor locale: the "<Stack Trace>" label is translated.
+		## Frames past the first are the only rows with an empty label and a
+		## real location; back up one row to recover the labeled first frame
+		## (rows before the frame run always have a non-empty label).
+		for i in children.size():
+			if str(children[i].label).is_empty() and not str(children[i].path).is_empty():
+				start = maxi(i - 1, 0)
+				break
+	if start < 0:
+		return []
+	var frames: Array[Dictionary] = []
+	for i in range(start, children.size()):
+		if str(children[i].path).is_empty():
+			continue
+		frames.append({
+			"path": children[i].path,
+			"line": children[i].line,
+			"function": _function_from_frame_text(children[i].text),
+		})
+	return frames
+
+
+static func _location_from_metadata(meta: Variant) -> Dictionary:
+	if meta is Array and meta.size() >= 2:
+		return {"path": str(meta[0]), "line": int(meta[1])}
+	return {"path": "", "line": 0}
+
+
+static func _function_from_title(title: String) -> String:
+	var colon := title.find(": ")
+	if colon <= 0:
+		return ""
+	return title.substr(0, colon)
+
+
+static func _function_from_frame_text(text: String) -> String:
+	var marker := text.find(" @ ")
+	if marker < 0:
+		return ""
+	var fn := text.substr(marker + 3).strip_edges()
+	if fn.ends_with("()"):
+		fn = fn.substr(0, fn.length() - 2)
+	return fn
+
+
+static func _slice_entries(entries: Array[Dictionary], offset: int, count: int) -> Array[Dictionary]:
+	var page: Array[Dictionary] = []
+	var stop := mini(entries.size(), offset + count)
+	for i in range(mini(offset, entries.size()), stop):
+		page.append(entries[i])
+	return page
+
+
+static func _has_equivalent_log_entry(entries: Array[Dictionary], candidate: Dictionary) -> bool:
+	var key := _log_entry_key(candidate)
+	for entry in entries:
+		if _log_entry_key(entry) == key:
+			return true
+	return false
+
+
+static func _log_entry_key(entry: Dictionary) -> String:
+	return "%s|%s|%s|%s" % [
+		str(entry.get("level", "")),
+		str(entry.get("text", "")),
+		str(entry.get("path", "")),
+		str(entry.get("line", 0)),
+	]
 
 
 ## Map of human-readable monitor names to Performance.Monitor enum values.
@@ -733,14 +1057,49 @@ func get_performance_monitors(params: Dictionary) -> Dictionary:
 	}
 
 
-func clear_logs(_params: Dictionary) -> Dictionary:
+func clear_logs(params: Dictionary) -> Dictionary:
 	var count := _log_buffer.total_count()
 	_log_buffer.clear()
-	return {
-		"data": {
-			"cleared_count": count,
-		}
-	}
+	var data := {"cleared_count": count}
+	## The Debugger Errors panel is user-visible editor UI, not an MCP-owned
+	## buffer — wiping it stays behind an explicit opt-in.
+	if bool(params.get("clear_debugger_errors", false)):
+		data["debugger_errors_cleared"] = _clear_debugger_error_trees()
+	return {"data": data}
+
+
+func _clear_debugger_error_trees() -> int:
+	var cleared := 0
+	for tree in _locate_debugger_error_trees():
+		cleared += _entries_from_debugger_error_tree(tree).size()
+		if not _press_debugger_clear_button(tree):
+			## No Clear button near this tree (synthetic roots in tests).
+			## A raw clear is acceptable there; the real panel always routes
+			## through the button below.
+			tree.clear()
+	return cleared
+
+
+## Clear via ScriptEditorDebugger's own Clear button so the engine runs
+## _clear_errors_list() — clearing the Tree directly leaves error_count/
+## warning_count, the "Errors (N)" tab badge, the errors_cleared signal, and
+## the toolbar button states out of sync with the emptied tree. The button is
+## identified by its pressed-connection target, not its (translated) label.
+static func _press_debugger_clear_button(tree: Tree) -> bool:
+	var parent := tree.get_parent()
+	if parent == null:
+		return false
+	var stack: Array[Node] = [parent]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is BaseButton:
+			for conn in node.get_signal_connection_list("pressed"):
+				if str(conn.get("callable", "")).contains("_clear_errors_list"):
+					node.emit_signal("pressed")
+					return true
+		for child in node.get_children():
+			stack.push_back(child)
+	return false
 
 
 func reload_plugin(_params: Dictionary) -> Dictionary:

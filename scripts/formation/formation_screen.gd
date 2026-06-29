@@ -128,4 +128,4 @@ func _clear(container: VBoxContainer) -> void:
 
 func _on_confirm() -> void:
 	GameState.save_game()
-	get_tree().change_scene_to_file(DUNGEON_SCENE)
+	Fade.change_scene(DUNGEON_SCENE)

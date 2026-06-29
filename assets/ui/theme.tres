@@ -1,5 +1,21 @@
 [gd_resource type="Theme" format=3 uid="uid://bmxq1te4lchcf"]
 
+[sub_resource type="StyleBoxFlat" id="boss_btn_dis"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.38, 0.1, 0.07, 0.65)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.75, 0.4, 0.2, 0.45)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
 [sub_resource type="StyleBoxFlat" id="boss_btn"]
 content_margin_left = 8.0
 content_margin_top = 6.0
@@ -80,6 +96,22 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
+[sub_resource type="StyleBoxFlat" id="combat_btn_dis"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.28, 0.11, 0.11, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.25, 0.18, 0.35)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
 [sub_resource type="StyleBoxFlat" id="combat_btn"]
 content_margin_left = 8.0
 content_margin_top = 6.0
@@ -91,6 +123,22 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.75, 0.3, 0.2, 0.6)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="event_btn_dis"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.22, 0.11, 0.29, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.5, 0.3, 0.6, 0.35)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
@@ -156,6 +204,22 @@ corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
+[sub_resource type="StyleBoxFlat" id="rest_btn_dis"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.1, 0.25, 0.16, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.6, 0.4, 0.35)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
 [sub_resource type="StyleBoxFlat" id="rest_btn"]
 content_margin_left = 8.0
 content_margin_top = 6.0
@@ -167,6 +231,22 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.4, 0.85, 0.55, 0.55)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="treasure_btn_dis"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.3, 0.22, 0.07, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.7, 0.55, 0.25, 0.4)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_right = 5
@@ -190,6 +270,7 @@ corner_radius_bottom_left = 5
 
 [resource]
 BossNodeButton/base_type = &"Button"
+BossNodeButton/styles/disabled = SubResource("boss_btn_dis")
 BossNodeButton/styles/normal = SubResource("boss_btn")
 Button/colors/font_color = Color(0.92, 0.88, 0.78, 1)
 Button/colors/font_disabled_color = Color(0.45, 0.42, 0.4, 1)
@@ -200,8 +281,10 @@ Button/styles/hover = SubResource("btn_hover")
 Button/styles/normal = SubResource("btn_normal")
 Button/styles/pressed = SubResource("btn_pressed")
 CombatNodeButton/base_type = &"Button"
+CombatNodeButton/styles/disabled = SubResource("combat_btn_dis")
 CombatNodeButton/styles/normal = SubResource("combat_btn")
 EventNodeButton/base_type = &"Button"
+EventNodeButton/styles/disabled = SubResource("event_btn_dis")
 EventNodeButton/styles/normal = SubResource("event_btn")
 HpBar/base_type = &"ProgressBar"
 HpBar/styles/fill = SubResource("bar_fill_hp")
@@ -212,6 +295,8 @@ PanelContainer/styles/panel = SubResource("panel_default")
 ProgressBar/styles/background = SubResource("bar_bg")
 ProgressBar/styles/fill = SubResource("bar_fill")
 RestNodeButton/base_type = &"Button"
+RestNodeButton/styles/disabled = SubResource("rest_btn_dis")
 RestNodeButton/styles/normal = SubResource("rest_btn")
 TreasureNodeButton/base_type = &"Button"
+TreasureNodeButton/styles/disabled = SubResource("treasure_btn_dis")
 TreasureNodeButton/styles/normal = SubResource("treasure_btn")

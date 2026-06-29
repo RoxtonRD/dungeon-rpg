@@ -145,7 +145,22 @@ func _refresh_all_panels() -> void:
 # ── State signals ─────────────────────────────────────────────────────────────
 
 func _on_log_appended(line: String) -> void:
-	log_label.append_text(line + "\n")
+	log_label.append_text(_colorize_log_line(line) + "\n")
+
+
+## Wraps a log line in a bbcode color matching its content, mirroring the
+## floating-number palette: crits gold, damage warm red, heals green,
+## barriers blue. Unmatched lines keep the theme's default color.
+func _colorize_log_line(line: String) -> String:
+	if line.contains("CRÍTICO"):
+		return "[color=#ffd159]%s[/color]" % line
+	if line.contains("cura") or line.contains("regenera") or line.contains("revive"):
+		return "[color=#80ff8c]%s[/color]" % line
+	if line.contains("barreira") or line.contains("absorveu"):
+		return "[color=#9eb3ff]%s[/color]" % line
+	if line.contains("causando") or line.contains("sofre"):
+		return "[color=#ff9d80]%s[/color]" % line
+	return line
 
 
 func _on_hp_changed(b: Battler) -> void:
@@ -368,7 +383,7 @@ func _on_continue_pressed() -> void:
 
 
 func _on_standalone_finished(_result: int) -> void:
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	Fade.change_scene("res://scenes/main.tscn")
 
 
 # ── End panel ─────────────────────────────────────────────────────────────────

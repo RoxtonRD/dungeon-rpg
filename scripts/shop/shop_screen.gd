@@ -219,4 +219,4 @@ func _make_desc_label(text: String) -> Label:
 
 
 func _on_close() -> void:
-	get_tree().change_scene_to_file(DUNGEON_SCENE)
+	Fade.change_scene(DUNGEON_SCENE)
