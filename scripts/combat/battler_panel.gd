@@ -51,6 +51,8 @@ func _init() -> void:
 	_portrait_tex = TextureRect.new()
 	_portrait_tex.custom_minimum_size = Vector2(80, 80)
 	_portrait_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	# Pixel art: keep portraits crisp at small sizes (no linear-filter blur).
+	_portrait_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_portrait_tex.visible = false
 	portrait_box.add_child(_portrait_tex)
 

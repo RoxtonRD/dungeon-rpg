@@ -22,6 +22,8 @@ var _selected_hero_idx: int = 0
 
 func _ready() -> void:
 	SafeArea.apply($VBox)
+	# Pixel art: render the full-body image without linear-filter blur.
+	full_body_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	close_button.pressed.connect(_on_close)
 	# Safety net: allows this scene to be run directly for testing.
 	if Party.heroes.is_empty():
@@ -66,9 +68,11 @@ func _refresh() -> void:
 
 ## Shows the hero's full-body Texture2D if present; otherwise falls back to a
 ## class-tinted ColorRect placeholder (same pattern as combat portraits).
+## Loads from assets/full_body — the single source hero image; portraits are
+## AtlasTexture head-crops of this same file.
 func _refresh_full_body(hero: Hero) -> void:
 	var class_id := hero.class_data.id
-	var path := "res://assets/portraits/heroes/%s.png" % class_id
+	var path := "res://assets/full_body/%s.png" % class_id
 	var tex: Texture2D = null
 	if ResourceLoader.exists(path):
 		tex = load(path) as Texture2D

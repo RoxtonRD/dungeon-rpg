@@ -79,6 +79,8 @@ func _make_portrait(hero: Hero) -> Control:
 		tex.custom_minimum_size = portrait_size
 		tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		# Pixel art: keep portraits crisp at small sizes.
+		tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		tex.texture = hero.class_data.portrait
 		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return tex

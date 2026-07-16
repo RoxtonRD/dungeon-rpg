@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ClassData" format=3 uid="uid://l3lleptvqb7p"]
 
 [ext_resource type="Script" uid="uid://wmnpc4ghypa4" path="res://scripts/data/class_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://ds1oco11budjj" path="res://assets/portraits/heroes/mage.png" id="1_h35sj"]
+[ext_resource type="Texture2D" path="res://assets/portraits/heroes/mage_portrait.tres" id="1_h35sj"]
 [ext_resource type="Resource" uid="uid://carumy5uk6iqt" path="res://resources/skills/mage_firebolt.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/mage_fireball.tres" id="3"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_dgmy3"]
