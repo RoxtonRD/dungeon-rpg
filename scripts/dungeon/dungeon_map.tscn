@@ -60,12 +60,10 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="MapArea" type="VBoxContainer" parent="VBox" unique_id=1938838337]
+[node name="MapArea" type="Control" parent="VBox" unique_id=1938838337]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 24
-alignment = 1
 
 [node name="NavGrid" type="GridContainer" parent="VBox" unique_id=1920716130]
 layout_mode = 2
@@ -134,17 +132,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 30
 horizontal_alignment = 1
 
-[node name="EndNextButton" type="Button" parent="EndPanel/EndMargin/EndVBox" unique_id=1459687077]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-text = "Próxima Dungeon"
-
 [node name="EndMenuButton" type="Button" parent="EndPanel/EndMargin/EndVBox" unique_id=1459687076]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Voltar ao menu"
+text = "Voltar"
 
 [node name="PopupBg" type="TextureRect" parent="." unique_id=1357924680]
 unique_name_in_owner = true
@@ -323,3 +315,56 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 text = "Continuar"
+
+[node name="StairsPanel" type="PanelContainer" parent="." unique_id=2011804908]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -150.0
+offset_right = 220.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StairsMargin" type="MarginContainer" parent="StairsPanel" unique_id=902217573]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="StairsVBox" type="VBoxContainer" parent="StairsPanel/StairsMargin" unique_id=1712263792]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="StairsTitleLabel" type="Label" parent="StairsPanel/StairsMargin/StairsVBox" unique_id=397339599]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Escada"
+horizontal_alignment = 1
+
+[node name="StairsMessageLabel" type="Label" parent="StairsPanel/StairsMargin/StairsVBox" unique_id=963693083]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Uma escada desce para a escuridão."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="DescendButton" type="Button" parent="StairsPanel/StairsMargin/StairsVBox" unique_id=917704302]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Descer"
+
+[node name="StayButton" type="Button" parent="StairsPanel/StairsMargin/StairsVBox" unique_id=917704303]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Continuar explorando"

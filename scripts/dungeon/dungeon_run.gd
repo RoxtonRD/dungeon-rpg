@@ -1,8 +1,9 @@
-## One dungeon run: a procedural branching node map plus the helpers that
-## resolve each node type. Generation, encounter pools, events, treasure and
-## rest logic are adapted from the prototype dungeon.js, trimmed to the v1
-## enemy/item roster and 3 floors. A "floor" is one column of the map; with
-## 3 floors that's: start combat -> one branch of 2-3 nodes -> boss.
+## One dungeon run (v2 Fase 1): four floors of orthogonally connected square
+## rooms on a grid, plus the helpers that resolve room content. Generation
+## grows each floor as a connected tree with extra loop passages; content
+## types are rolled per room with per-floor weights. Encounters, events,
+## treasure, rest and the difficulty formula are carried over from v1
+## unchanged — the map changed, not the game.
 class_name DungeonRun
 extends RefCounted
 
@@ -13,7 +14,7 @@ const ENCOUNTER_POOLS := [
 	["goblin", "bat", "wolf", "skeleton"],
 	["bandit", "dark_elf", "orc", "skeleton", "wolf"],
 ]
-## The single v1 dungeon boss: Necromante plus a skeleton minion.
+## The dungeon boss: Necromante plus a skeleton minion.
 const BOSS_ENCOUNTER := ["boss_necromancer", "skeleton"]
 
 ## Difficulty scaling per step. Enemy stats and rewards are multiplied by
@@ -22,72 +23,221 @@ const BOSS_ENCOUNTER := ["boss_necromancer", "skeleton"]
 const FLOOR_SCALE := 0.15
 const DUNGEON_SCALE := 0.25
 
+## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
+## boss room appended after generation.
+const ROOM_BASE_COUNTS := [5, 7, 9, 6]
+const NUM_FLOORS := 4
+## Chance of opening an extra passage between two adjacent rooms that the
+## growth tree left unconnected (checked once per pair).
+const LOOP_CHANCE := 0.35
+
+## Content weights per floor: COMBAT, TREASURE, EVENT, REST, EMPTY.
+## Deeper floors lean harder into combat and events (design-doc-v2).
+const KIND_WEIGHTS := [
+	[0.35, 0.20, 0.15, 0.10, 0.20],
+	[0.40, 0.18, 0.17, 0.10, 0.15],
+	[0.45, 0.15, 0.20, 0.10, 0.10],
+	[0.50, 0.12, 0.18, 0.10, 0.10],
+]
+## Kinds matching KIND_WEIGHTS columns.
+const KIND_ORDER := [
+	DungeonRoom.RoomType.COMBAT,
+	DungeonRoom.RoomType.TREASURE,
+	DungeonRoom.RoomType.EVENT,
+	DungeonRoom.RoomType.REST,
+	DungeonRoom.RoomType.EMPTY,
+]
+
 var level: int = 1
-## Array of floors; each element is an Array[DungeonNode].
+## One Dictionary per floor: Vector2i grid position -> DungeonRoom.
 var floors: Array = []
-## Highest floor fully resolved; -1 = nothing entered yet.
-var current_floor: int = -1
+## 0-based floor the player is on (0..NUM_FLOORS-1).
+var current_floor: int = 0
+## Grid position of the room the player currently occupies.
+var player_pos: Vector2i = Vector2i.ZERO
 
 
 # ── Generation ────────────────────────────────────────────────────────────────
 
-static func generate(p_level: int = 1, num_floors: int = 3) -> DungeonRun:
+static func generate(p_level: int = 1) -> DungeonRun:
 	var run := DungeonRun.new()
 	run.level = p_level
-	for f in num_floors:
-		var is_last := f == num_floors - 1
-		var width: int
-		if is_last or f == 0:
-			width = 1
-		else:
-			width = 2 + (1 if randf() < 0.5 else 0)
-		var row: Array[DungeonNode] = []
-		for i in width:
-			var node := DungeonNode.new()
-			node.floor_index = f
-			node.slot_index = i
-			if is_last:
-				node.kind = DungeonNode.NodeType.BOSS
-			elif f == 0:
-				node.kind = DungeonNode.NodeType.COMBAT
-			else:
-				node.kind = _random_kind()
-			row.append(node)
-		run.floors.append(row)
+	for f in NUM_FLOORS:
+		run.floors.append(_generate_floor(f))
+	run.current_floor = 0
+	run.player_pos = Vector2i.ZERO
+	run.current_room().explored = true
+	run._mark_adjacent_seen()
 	return run
 
 
-static func _random_kind() -> DungeonNode.NodeType:
+## Builds one floor: connected room tree grown from (0,0), loop passages,
+## rolled content, then the stairs room (floors 1-3) or boss room (floor 4).
+static func _generate_floor(floor_index: int) -> Dictionary:
+	var rooms: Dictionary = {}
+	var start := DungeonRoom.new()
+	start.pos = Vector2i.ZERO
+	rooms[Vector2i.ZERO] = start
+
+	var target: int = maxi(3, ROOM_BASE_COUNTS[floor_index] + randi_range(-1, 1))
+	while rooms.size() < target:
+		var origin: DungeonRoom = rooms.values()[randi() % rooms.size()]
+		var dir: Dictionary = DungeonRoom.DIRS[randi() % 4]
+		var npos: Vector2i = origin.pos + dir["vec"]
+		if rooms.has(npos):
+			continue
+		var room := DungeonRoom.new()
+		room.pos = npos
+		rooms[npos] = room
+		origin.connections |= dir["bit"]
+		room.connections |= dir["opposite"]
+
+	# Extra loop passages so floors aren't pure trees. Checking only the
+	# NORTH/EAST directions visits each adjacent pair exactly once.
+	for room in rooms.values():
+		for dir in DungeonRoom.DIRS:
+			if dir["bit"] != DungeonRoom.NORTH and dir["bit"] != DungeonRoom.EAST:
+				continue
+			var npos: Vector2i = room.pos + dir["vec"]
+			if rooms.has(npos) and (room.connections & dir["bit"]) == 0 and randf() < LOOP_CHANCE:
+				room.connections |= dir["bit"]
+				(rooms[npos] as DungeonRoom).connections |= dir["opposite"]
+
+	# Content. The start room is always a safe, pre-explorable landing.
+	for room in rooms.values():
+		if room.pos == Vector2i.ZERO:
+			room.kind = DungeonRoom.RoomType.EMPTY
+		else:
+			room.kind = _roll_kind(floor_index)
+
+	if floor_index < NUM_FLOORS - 1:
+		_place_stairs(rooms)
+	else:
+		_place_boss(rooms)
+	return rooms
+
+
+static func _roll_kind(floor_index: int) -> DungeonRoom.RoomType:
+	var weights: Array = KIND_WEIGHTS[floor_index]
 	var r := randf()
-	if r < 0.55:
-		return DungeonNode.NodeType.COMBAT
-	if r < 0.78:
-		return DungeonNode.NodeType.TREASURE
-	if r < 0.90:
-		return DungeonNode.NodeType.EVENT
-	return DungeonNode.NodeType.REST
+	var acc := 0.0
+	for i in weights.size():
+		acc += weights[i]
+		if r < acc:
+			return KIND_ORDER[i]
+	return DungeonRoom.RoomType.EMPTY
+
+
+## Converts a random room into the stairs room. Never the start room;
+## prefers rooms at least 2 passages away from it.
+static func _place_stairs(rooms: Dictionary) -> void:
+	var dist := _distances(rooms)
+	var far: Array = []
+	var fallback: Array = []
+	for room in rooms.values():
+		if room.pos == Vector2i.ZERO:
+			continue
+		fallback.append(room)
+		if int(dist.get(room.pos, 0)) >= 2:
+			far.append(room)
+	var pool: Array = far if not far.is_empty() else fallback
+	var stairs: DungeonRoom = pool[randi() % pool.size()]
+	stairs.kind = DungeonRoom.RoomType.STAIRS
+
+
+## Appends the boss room adjacent to the farthest room from the start
+## (falling back through closer rooms if the farthest has no free side).
+static func _place_boss(rooms: Dictionary) -> void:
+	var dist := _distances(rooms)
+	var by_distance: Array = rooms.values()
+	by_distance.sort_custom(
+		func(a, b): return int(dist.get(a.pos, 0)) > int(dist.get(b.pos, 0)))
+	for anchor in by_distance:
+		for dir in DungeonRoom.DIRS:
+			var npos: Vector2i = anchor.pos + dir["vec"]
+			if rooms.has(npos):
+				continue
+			var boss := DungeonRoom.new()
+			boss.pos = npos
+			boss.kind = DungeonRoom.RoomType.BOSS
+			rooms[npos] = boss
+			anchor.connections |= dir["bit"]
+			boss.connections |= dir["opposite"]
+			return
+
+
+## BFS passage-distance of every room from the floor's start room.
+static func _distances(rooms: Dictionary) -> Dictionary:
+	var dist: Dictionary = {Vector2i.ZERO: 0}
+	var queue: Array = [Vector2i.ZERO]
+	while not queue.is_empty():
+		var pos: Vector2i = queue.pop_front()
+		var room: DungeonRoom = rooms[pos]
+		for dir in DungeonRoom.DIRS:
+			var npos: Vector2i = pos + dir["vec"]
+			if (room.connections & dir["bit"]) != 0 and rooms.has(npos) and not dist.has(npos):
+				dist[npos] = int(dist[pos]) + 1
+				queue.append(npos)
+	return dist
 
 
 # ── Navigation ────────────────────────────────────────────────────────────────
 
-## Nodes the player may move to next (all nodes in the next floor).
-func reachable_nodes() -> Array[DungeonNode]:
-	var out: Array[DungeonNode] = []
-	var next := current_floor + 1
-	if next < floors.size():
-		for node in floors[next]:
-			out.append(node)
+func rooms_on_floor() -> Dictionary:
+	return floors[current_floor]
+
+
+func current_room() -> DungeonRoom:
+	return rooms_on_floor()[player_pos]
+
+
+## True when `pos` is an adjacent room connected to the player's room.
+func can_move_to(pos: Vector2i) -> bool:
+	var rooms: Dictionary = rooms_on_floor()
+	if not rooms.has(pos):
+		return false
+	return current_room().connects_to(pos)
+
+
+func move_to(pos: Vector2i) -> void:
+	player_pos = pos
+	current_room().explored = true
+	_mark_adjacent_seen()
+
+
+## Flags every room connected to the player's room as seen. Once seen, a
+## room stays on the map permanently — the fog only hides the never-glimpsed.
+func _mark_adjacent_seen() -> void:
+	var rooms: Dictionary = rooms_on_floor()
+	var cur := current_room()
+	for dir in DungeonRoom.DIRS:
+		var npos: Vector2i = player_pos + dir["vec"]
+		if (cur.connections & dir["bit"]) != 0 and rooms.has(npos):
+			(rooms[npos] as DungeonRoom).seen = true
+
+
+## Rooms the map may draw: explored or previously seen ones, the current
+## room, and rooms one connected passage away (covers saves from before the
+## seen flag existed). Everything else is fog — simply not rendered.
+func visible_rooms() -> Array[DungeonRoom]:
+	var out: Array[DungeonRoom] = []
+	var cur := current_room()
+	for room in rooms_on_floor().values():
+		if room.explored or room.seen or room.pos == player_pos or cur.connects_to(room.pos):
+			out.append(room)
 	return out
 
 
-## Marks a node resolved and advances the run to its floor.
-func advance_to(node: DungeonNode) -> void:
-	node.visited = true
-	current_floor = node.floor_index
+func is_boss_floor() -> bool:
+	return current_floor == NUM_FLOORS - 1
 
 
-func is_complete() -> bool:
-	return current_floor >= floors.size() - 1
+## One-way descent to the next floor's start room.
+func descend() -> void:
+	current_floor += 1
+	player_pos = Vector2i.ZERO
+	current_room().explored = true
+	_mark_adjacent_seen()
 
 
 # ── Encounters ────────────────────────────────────────────────────────────────
@@ -267,14 +417,16 @@ func _chest_leave() -> String:
 
 func to_dict() -> Dictionary:
 	var floors_data: Array = []
-	for floor_row in floors:
-		var row_data: Array = []
-		for node in floor_row:
-			row_data.append((node as DungeonNode).to_dict())
-		floors_data.append(row_data)
+	for rooms in floors:
+		var arr: Array = []
+		for room in rooms.values():
+			arr.append((room as DungeonRoom).to_dict())
+		floors_data.append(arr)
 	return {
 		"level": level,
 		"current_floor": current_floor,
+		"px": player_pos.x,
+		"py": player_pos.y,
 		"floors": floors_data,
 	}
 
@@ -282,11 +434,12 @@ func to_dict() -> Dictionary:
 static func from_dict(d: Dictionary) -> DungeonRun:
 	var run := DungeonRun.new()
 	run.level = int(d.get("level", 1))
-	run.current_floor = int(d.get("current_floor", -1))
-	var floors_data: Array = d.get("floors", [])
-	for row_data in floors_data:
-		var row: Array[DungeonNode] = []
-		for nd in row_data:
-			row.append(DungeonNode.from_dict(nd))
-		run.floors.append(row)
+	run.current_floor = int(d.get("current_floor", 0))
+	run.player_pos = Vector2i(int(d.get("px", 0)), int(d.get("py", 0)))
+	for arr in d.get("floors", []):
+		var rooms: Dictionary = {}
+		for rd in arr:
+			var room := DungeonRoom.from_dict(rd)
+			rooms[room.pos] = room
+		run.floors.append(rooms)
 	return run

@@ -6,7 +6,10 @@ extends Node
 const STARTING_GOLD: int = 50
 const STARTER_ITEMS: Array[String] = ["potion_heal", "potion_heal", "potion_mana"]
 const SAVE_PATH: String = "user://save.json"
-const SAVE_VERSION: int = 1
+## v2: room-based dungeon (floors of rooms, player position, explored state).
+## v1 node-map saves are intentionally NOT migrated — the version check
+## rejects them and the menu falls back to a fresh game.
+const SAVE_VERSION: int = 2
 
 var gold: int = 0
 ## Item ids (e.g. "potion_heal"). Duplicates allowed; resolved to ItemData on use.

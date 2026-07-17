@@ -27,6 +27,6 @@ func _on_continue_pressed() -> void:
 func _on_new_game_pressed() -> void:
 	Party.start_new_game()
 	GameState.start_new_game()
-	GameState.current_run = DungeonRun.generate(1, 3)
+	GameState.current_run = DungeonRun.generate(1)
 	GameState.save_game()
 	Fade.change_scene(DUNGEON_SCENE)
