@@ -1,10 +1,25 @@
 ## Autoload singleton for run/meta state that isn't the party itself:
-## gold, the shared inventory (item ids), and the active dungeon run.
-## Includes file-based save/load (JSON, versioned) and the TPK penalty.
+## gold, the shared inventory (item ids), the active dungeon run and the
+## city market's limited stock. Includes file-based save/load (JSON,
+## versioned) and the TPK penalty.
 extends Node
 
 const STARTING_GOLD: int = 50
 const STARTER_ITEMS: Array[String] = ["potion_heal", "potion_heal", "potion_mana"]
+
+## Equipment eligible for the market's random limited-stock section.
+## Full roster minus consumables and the boss-drop tome. Hardcoded ids
+## (matching the v1 shop convention) so exports never depend on res://
+## directory listing.
+const MARKET_EQUIPMENT_POOL: Array[String] = [
+	"sword_rusty", "sword_iron", "sword_steel", "dagger_shadow",
+	"staff_apprentice", "staff_runed", "staff_arcane",
+	"armor_cloth", "armor_leather", "armor_chain", "armor_plate",
+	"ring_might", "ring_focus", "ring_arcane",
+	"amulet_swift", "amulet_ward",
+]
+## How many random equipment items each restock puts on the shelves.
+const MARKET_SLOTS: int = 5
 const SAVE_PATH: String = "user://save.json"
 ## v2: room-based dungeon (floors of rooms, player position, explored state).
 ## v1 node-map saves are intentionally NOT migrated — the version check
@@ -20,6 +35,12 @@ var inventory: Array[String] = []
 var current_run = null
 ## Which dungeon the party is on. Increments on each victory; resets to 1 for new game.
 var dungeon_level: int = 1
+## The market's random limited-stock shelf: Dictionaries {"id": String,
+## "qty": int}. Restocked whenever a dungeon run ends (complete/abandon/TPK).
+var market_stock: Array = []
+## Where Personagens/Formação should return to when closed. Set by whichever
+## screen opened them (city hub or dungeon map). Never persisted.
+var nav_return_scene: String = "res://scripts/city/city_hub.tscn"
 
 
 ## Resets gold and inventory for a new game. Party.start_new_game() handles heroes.
@@ -28,6 +49,17 @@ func start_new_game() -> void:
 	inventory = STARTER_ITEMS.duplicate()
 	current_run = null
 	dungeon_level = 1
+	restock_market()
+
+
+## Rolls a fresh random shelf for the market's limited-stock section:
+## MARKET_SLOTS distinct equipment items, one unit each.
+func restock_market() -> void:
+	var pool := MARKET_EQUIPMENT_POOL.duplicate()
+	pool.shuffle()
+	market_stock = []
+	for i in mini(MARKET_SLOTS, pool.size()):
+		market_stock.append({"id": pool[i], "qty": 1})
 
 
 func add_item(item_id: String) -> void:
@@ -64,6 +96,7 @@ func save_game() -> void:
 		"heroes": Party.serialize(),
 		"run": run_data,
 		"dungeon_level": dungeon_level,
+		"market": market_stock.duplicate(true),
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -103,13 +136,23 @@ func load_game() -> bool:
 		current_run = DungeonRun.from_dict(run_data)
 	else:
 		current_run = null
+	var market_data = data.get("market", null)
+	if market_data is Array and not market_data.is_empty():
+		market_stock = []
+		for entry in market_data:
+			market_stock.append({"id": str(entry.get("id", "")), "qty": int(entry.get("qty", 0))})
+	else:
+		# Save predates the market (Fase 1) — just stock the shelves.
+		restock_market()
 	return true
 
 
 ## TPK penalty: revive all heroes at 25 % HP, lose 20 % gold, clear the run.
-## Called by DungeonMap on defeat before saving and returning to the menu.
+## Called by DungeonMap on defeat before saving and returning to the city.
+## A run ending (even in defeat) restocks the market.
 func apply_tpk_penalty() -> void:
 	for h in Party.heroes:
 		h.hp = maxi(1, roundi(h.max_hp() * 0.25))
 	gold = roundi(gold * 0.8)
 	current_run = null
+	restock_market()
