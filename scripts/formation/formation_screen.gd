@@ -3,7 +3,6 @@
 ## Rule: each row must have at least one hero.
 extends Control
 
-const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
 
 @onready var front_slots: VBoxContainer = %FrontSlots
 @onready var back_slots: VBoxContainer = %BackSlots
@@ -130,4 +129,5 @@ func _clear(container: VBoxContainer) -> void:
 
 func _on_confirm() -> void:
 	GameState.save_game()
-	Fade.change_scene(DUNGEON_SCENE)
+	# Back to whichever screen opened us (city hub by default).
+	Fade.change_scene(GameState.nav_return_scene)

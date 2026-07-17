@@ -78,13 +78,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Personagens"
 
-[node name="ShopButton" type="Button" parent="VBox/NavGrid" unique_id=723276572]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Loja"
-
 [node name="FormationButton" type="Button" parent="VBox/NavGrid" unique_id=522099337]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
@@ -92,12 +85,11 @@ layout_mode = 2
 size_flags_horizontal = 3
 text = "Formação"
 
-[node name="MenuButton" type="Button" parent="VBox/NavGrid" unique_id=555007273]
+[node name="CityButton" type="Button" parent="VBox" unique_id=555007273]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-size_flags_horizontal = 3
-text = "Sair para o menu"
+text = "Voltar à cidade"
 
 [node name="EndPanel" type="PanelContainer" parent="." unique_id=236522503]
 unique_name_in_owner = true
@@ -368,3 +360,56 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 text = "Continuar explorando"
+
+[node name="AbandonPanel" type="PanelContainer" parent="." unique_id=2011804909]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -150.0
+offset_right = 220.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AbandonMargin" type="MarginContainer" parent="AbandonPanel" unique_id=902217574]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="AbandonVBox" type="VBoxContainer" parent="AbandonPanel/AbandonMargin" unique_id=1712263793]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="AbandonTitleLabel" type="Label" parent="AbandonPanel/AbandonMargin/AbandonVBox" unique_id=397339600]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "Voltar à cidade"
+horizontal_alignment = 1
+
+[node name="AbandonMessageLabel" type="Label" parent="AbandonPanel/AbandonMargin/AbandonVBox" unique_id=963693084]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Abandonar a masmorra?
+O progresso desta masmorra será perdido."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="AbandonConfirmButton" type="Button" parent="AbandonPanel/AbandonMargin/AbandonVBox" unique_id=917704304]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Abandonar"
+
+[node name="AbandonCancelButton" type="Button" parent="AbandonPanel/AbandonMargin/AbandonVBox" unique_id=917704305]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+text = "Ficar"

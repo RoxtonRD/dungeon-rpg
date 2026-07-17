@@ -4,7 +4,6 @@
 extends Control
 
 const ITEM_DIR := "res://resources/items/"
-const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
 
 @onready var hero_tab_bar: HBoxContainer = %HeroTabBar
 @onready var full_body_tex: TextureRect = %FullBodyTex
@@ -391,4 +390,5 @@ func _flash_message(text: String) -> void:
 
 
 func _on_close() -> void:
-	Fade.change_scene(DUNGEON_SCENE)
+	# Back to whichever screen opened us (city hub by default).
+	Fade.change_scene(GameState.nav_return_scene)
