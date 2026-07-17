@@ -27,6 +27,9 @@ var kind: RoomType = RoomType.EMPTY
 var connections: int = 0
 var explored: bool = false
 var cleared: bool = false
+## The room has been glimpsed (was adjacent-connected to the player at some
+## point). Seen rooms stay on the map permanently, even after moving away.
+var seen: bool = false
 
 
 ## True when there is an open passage from this room toward `other_pos`
@@ -71,6 +74,7 @@ func to_dict() -> Dictionary:
 		"conn": connections,
 		"explored": explored,
 		"cleared": cleared,
+		"seen": seen,
 	}
 
 
@@ -81,4 +85,5 @@ static func from_dict(d: Dictionary) -> DungeonRoom:
 	r.connections = int(d.get("conn", 0))
 	r.explored = bool(d.get("explored", false))
 	r.cleared = bool(d.get("cleared", false))
+	r.seen = bool(d.get("seen", false))
 	return r

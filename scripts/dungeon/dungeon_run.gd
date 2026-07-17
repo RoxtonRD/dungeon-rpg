@@ -67,6 +67,7 @@ static func generate(p_level: int = 1) -> DungeonRun:
 	run.current_floor = 0
 	run.player_pos = Vector2i.ZERO
 	run.current_room().explored = true
+	run._mark_adjacent_seen()
 	return run
 
 
@@ -201,16 +202,28 @@ func can_move_to(pos: Vector2i) -> bool:
 func move_to(pos: Vector2i) -> void:
 	player_pos = pos
 	current_room().explored = true
+	_mark_adjacent_seen()
 
 
-## Rooms the map may draw: explored ones, the current room, and unexplored
-## rooms one connected passage away (they show their type). Everything else
-## is fog — simply not rendered.
+## Flags every room connected to the player's room as seen. Once seen, a
+## room stays on the map permanently — the fog only hides the never-glimpsed.
+func _mark_adjacent_seen() -> void:
+	var rooms: Dictionary = rooms_on_floor()
+	var cur := current_room()
+	for dir in DungeonRoom.DIRS:
+		var npos: Vector2i = player_pos + dir["vec"]
+		if (cur.connections & dir["bit"]) != 0 and rooms.has(npos):
+			(rooms[npos] as DungeonRoom).seen = true
+
+
+## Rooms the map may draw: explored or previously seen ones, the current
+## room, and rooms one connected passage away (covers saves from before the
+## seen flag existed). Everything else is fog — simply not rendered.
 func visible_rooms() -> Array[DungeonRoom]:
 	var out: Array[DungeonRoom] = []
 	var cur := current_room()
 	for room in rooms_on_floor().values():
-		if room.explored or room.pos == player_pos or cur.connects_to(room.pos):
+		if room.explored or room.seen or room.pos == player_pos or cur.connects_to(room.pos):
 			out.append(room)
 	return out
 
@@ -224,6 +237,7 @@ func descend() -> void:
 	current_floor += 1
 	player_pos = Vector2i.ZERO
 	current_room().explored = true
+	_mark_adjacent_seen()
 
 
 # ── Encounters ────────────────────────────────────────────────────────────────
