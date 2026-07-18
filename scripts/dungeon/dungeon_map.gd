@@ -166,7 +166,25 @@ func _rebuild_map() -> void:
 		rows * cell + (rows - 1) * CELL_GAP)
 	var origin := (area - grid_size) * 0.5
 
-	for room in run.visible_rooms():
+	var visible := run.visible_rooms()
+	var visible_pos: Dictionary = {}
+	for room in visible:
+		visible_pos[room.pos] = true
+
+	# Passage connectors first, so the room chips draw on top of them.
+	# Checking only EAST/SOUTH visits each connected pair exactly once.
+	for room in visible:
+		for dir in DungeonRoom.DIRS:
+			if dir["bit"] != DungeonRoom.EAST and dir["bit"] != DungeonRoom.SOUTH:
+				continue
+			var npos: Vector2i = room.pos + dir["vec"]
+			if (room.connections & dir["bit"]) == 0 or not visible_pos.has(npos):
+				continue
+			var from_player := room.pos == run.player_pos or npos == run.player_pos
+			map_area.add_child(_make_connector(
+				room.pos - min_pos, dir["bit"], origin, cell, from_player))
+
+	for room in visible:
 		var btn := Button.new()
 		var local := room.pos - min_pos
 		btn.position = origin + Vector2(local) * (cell + CELL_GAP)
@@ -191,6 +209,28 @@ func _variation_for(room: DungeonRoom) -> String:
 			and room.kind != DungeonRoom.RoomType.BOSS):
 		return ""
 	return ROOM_VARIATION.get(room.kind, "")
+
+
+## A short corridor bar drawn in the gap between two connected rooms.
+## Passages leading out of the player's room glow gold (movement options);
+## the rest render as muted stone. Mouse-transparent, drawn under the chips.
+func _make_connector(local: Vector2i, dir_bit: int, origin: Vector2, cell: int, from_player: bool) -> Control:
+	var bar := Panel.new()
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var thickness := 20
+	var reach := CELL_GAP + 12  # spans the gap, tucking 6px under each chip
+	var cell_origin := origin + Vector2(local) * (cell + CELL_GAP)
+	if dir_bit == DungeonRoom.EAST:
+		bar.position = cell_origin + Vector2(cell - 6, cell * 0.5 - thickness * 0.5)
+		bar.size = Vector2(reach, thickness)
+	else:  # SOUTH
+		bar.position = cell_origin + Vector2(cell * 0.5 - thickness * 0.5, cell - 6)
+		bar.size = Vector2(thickness, reach)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.82, 0.35, 0.85) if from_player else Color(0.42, 0.36, 0.26, 0.7)
+	sb.set_corner_radius_all(4)
+	bar.add_theme_stylebox_override("panel", sb)
+	return bar
 
 
 ## Gold border overlay marking the player's room. Mouse-transparent.
