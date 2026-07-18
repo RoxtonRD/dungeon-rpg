@@ -1,9 +1,10 @@
 ## Title screen.
-## "Continuar" loads the existing save and drops straight into the dungeon map.
-## "Nova Aventura" wipes any save, starts fresh, generates a level-1 dungeon.
+## "Continuar" loads the existing save and drops into the city hub.
+## "Nova Aventura" wipes any save and starts fresh in the city; the first
+## dungeon is generated when the player enters it from the hub.
 extends Control
 
-const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
+const CITY_SCENE := "res://scripts/city/city_hub.tscn"
 
 @onready var continue_button: Button = %ContinueButton
 @onready var new_game_button: Button = %NewGameButton
@@ -18,7 +19,7 @@ func _ready() -> void:
 
 func _on_continue_pressed() -> void:
 	if GameState.load_game():
-		Fade.change_scene(DUNGEON_SCENE)
+		Fade.change_scene(CITY_SCENE)
 	else:
 		# Corrupt / incompatible save — fall back to new game.
 		_on_new_game_pressed()
@@ -27,6 +28,5 @@ func _on_continue_pressed() -> void:
 func _on_new_game_pressed() -> void:
 	Party.start_new_game()
 	GameState.start_new_game()
-	GameState.current_run = DungeonRun.generate(1)
 	GameState.save_game()
-	Fade.change_scene(DUNGEON_SCENE)
+	Fade.change_scene(CITY_SCENE)

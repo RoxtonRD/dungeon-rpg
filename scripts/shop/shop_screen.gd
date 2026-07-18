@@ -1,32 +1,17 @@
-## Fixed-tier v1 shop. Players can buy from a curated catalogue and sell
-## any item in the shared inventory at 50% of its buy price.
+## The city Mercado (v2 Fase 2). Two buy sections: fixed always-available
+## potions, and a random limited-stock equipment shelf (GameState.market_stock)
+## that restocks whenever a dungeon run ends. Selling returns 50% of value.
 extends Control
 
 const ITEM_DIR := "res://resources/items/"
-const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
+const CITY_SCENE := "res://scripts/city/city_hub.tscn"
 
-## The v1 shop catalogue — one of each, fixed tier.
-const SHOP_ITEMS: Array[String] = [
-	# Consumables
+## Always in stock, unlimited quantity.
+const FIXED_MARKET: Array[String] = [
 	"potion_heal",
 	"potion_mana",
 	"elixir_full",
 	"elixir_revival",
-	# Weapons
-	"sword_rusty",
-	"sword_iron",
-	"staff_apprentice",
-	"staff_runed",
-	"dagger_shadow",
-	# Armour
-	"armor_cloth",
-	"armor_leather",
-	"armor_chain",
-	# Trinkets
-	"ring_might",
-	"ring_focus",
-	"amulet_swift",
-	"amulet_ward",
 ]
 
 @onready var gold_label: Label = %GoldLabel
@@ -70,43 +55,83 @@ func _refresh() -> void:
 
 func _rebuild_buy_list() -> void:
 	_clear_list()
-	for item_id in SHOP_ITEMS:
+	# Section 1: fixed potions, always available.
+	item_list_vbox.add_child(_make_section_label("Poções"))
+	for item_id in FIXED_MARKET:
 		var item := load(ITEM_DIR + item_id + ".tres") as ItemData
 		if item == null:
 			continue
-		var row := _make_row()
-		row.add_child(_make_icon(item.icon_or_null()))
+		_add_buy_row(item, -1)
+	# Section 2: the random limited-stock shelf.
+	item_list_vbox.add_child(_make_section_label("Equipamentos"))
+	for i in GameState.market_stock.size():
+		var entry: Dictionary = GameState.market_stock[i]
+		var item := load(ITEM_DIR + str(entry["id"]) + ".tres") as ItemData
+		if item == null:
+			continue
+		_add_buy_row(item, i)
 
-		var name_lbl := Label.new()
-		name_lbl.text = item.display_name
-		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 16)
-		row.add_child(name_lbl)
 
-		var price_lbl := Label.new()
-		price_lbl.text = "%d ✦" % item.value
-		price_lbl.custom_minimum_size = Vector2(60, 0)
-		price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		price_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		price_lbl.add_theme_font_size_override("font_size", 15)
-		row.add_child(price_lbl)
+## Builds one buy row. `stock_index` is -1 for fixed potions (unlimited) or
+## the market_stock index for limited equipment (sold out → "Esgotado").
+func _add_buy_row(item: ItemData, stock_index: int) -> void:
+	var sold_out := false
+	if stock_index >= 0:
+		sold_out = int(GameState.market_stock[stock_index]["qty"]) <= 0
 
-		var buy_btn := Button.new()
+	var row := _make_row()
+	row.add_child(_make_icon(item.icon_or_null()))
+
+	var name_lbl := Label.new()
+	name_lbl.text = item.display_name
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_lbl.add_theme_font_size_override("font_size", 16)
+	if sold_out:
+		name_lbl.modulate = Color(0.6, 0.6, 0.6)
+	row.add_child(name_lbl)
+
+	var price_lbl := Label.new()
+	price_lbl.text = "%d ✦" % item.value
+	price_lbl.custom_minimum_size = Vector2(60, 0)
+	price_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	price_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	price_lbl.add_theme_font_size_override("font_size", 15)
+	row.add_child(price_lbl)
+
+	var buy_btn := Button.new()
+	buy_btn.custom_minimum_size = Vector2(100, 0)
+	if sold_out:
+		buy_btn.text = "Esgotado"
+		buy_btn.disabled = true
+	else:
 		buy_btn.text = "Comprar"
-		buy_btn.custom_minimum_size = Vector2(100, 0)
 		buy_btn.disabled = GameState.gold < item.value
-		buy_btn.pressed.connect(_on_buy.bind(item_id, item.value))
-		row.add_child(buy_btn)
+		buy_btn.pressed.connect(_on_buy.bind(item.id, item.value, stock_index))
+	row.add_child(buy_btn)
 
-		_add_entry(row, item.short_description())
+	_add_entry(row, item.short_description())
 
 
-func _on_buy(item_id: String, price: int) -> void:
+func _make_section_label(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.add_theme_color_override("font_color", Color(1, 0.82, 0.35))
+	return lbl
+
+
+func _on_buy(item_id: String, price: int, stock_index: int) -> void:
 	if GameState.gold < price:
 		return
+	if stock_index >= 0:
+		var entry: Dictionary = GameState.market_stock[stock_index]
+		if int(entry["qty"]) <= 0:
+			return
+		entry["qty"] = int(entry["qty"]) - 1
 	GameState.gold -= price
 	GameState.add_item(item_id)
+	GameState.save_game()
 	_refresh()
 
 
@@ -162,6 +187,7 @@ func _on_sell(inv_idx: int) -> void:
 		return
 	GameState.gold += maxi(1, item.value / 2)
 	GameState.inventory.remove_at(inv_idx)
+	GameState.save_game()
 	_refresh()
 
 
@@ -219,4 +245,4 @@ func _make_desc_label(text: String) -> Label:
 
 
 func _on_close() -> void:
-	Fade.change_scene(DUNGEON_SCENE)
+	Fade.change_scene(CITY_SCENE)

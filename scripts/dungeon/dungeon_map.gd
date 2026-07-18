@@ -7,9 +7,9 @@
 extends Control
 
 const COMBAT_SCENE := "res://scripts/combat/combat_screen.tscn"
-const MENU_SCENE := "res://scenes/main.tscn"
+const CITY_SCENE := "res://scripts/city/city_hub.tscn"
+const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
 const INVENTORY_SCENE := "res://scripts/inventory/inventory_screen.tscn"
-const SHOP_SCENE := "res://scripts/shop/shop_screen.tscn"
 const FORMATION_SCENE := "res://scripts/formation/formation_screen.tscn"
 const ITEM_DIR := "res://resources/items/"
 
@@ -42,9 +42,8 @@ const EVENT_BG: Dictionary = {
 @onready var party_status: HBoxContainer = %PartyStatus
 @onready var map_area: Control = %MapArea
 @onready var inventory_button: Button = %InventoryButton
-@onready var shop_button: Button = %ShopButton
 @onready var formation_button: Button = %FormationButton
-@onready var menu_button: Button = %MenuButton
+@onready var city_button: Button = %CityButton
 @onready var end_panel: PanelContainer = %EndPanel
 @onready var end_label: Label = %EndLabel
 @onready var end_menu_button: Button = %EndMenuButton
@@ -74,6 +73,11 @@ const EVENT_BG: Dictionary = {
 @onready var descend_button: Button = %DescendButton
 @onready var stay_button: Button = %StayButton
 
+# Abandon-run confirmation
+@onready var abandon_panel: PanelContainer = %AbandonPanel
+@onready var abandon_confirm_button: Button = %AbandonConfirmButton
+@onready var abandon_cancel_button: Button = %AbandonCancelButton
+
 # Shared themed background shown behind whichever popup is open.
 @onready var popup_bg: TextureRect = %PopupBg
 
@@ -86,10 +90,11 @@ func _ready() -> void:
 	SafeArea.apply($VBox)
 	gold_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
 	inventory_button.pressed.connect(_on_inventory_pressed)
-	shop_button.pressed.connect(_on_shop_pressed)
 	formation_button.pressed.connect(_on_formation_pressed)
-	menu_button.pressed.connect(_on_menu_pressed)
-	end_menu_button.pressed.connect(_on_menu_pressed)
+	city_button.pressed.connect(_on_city_pressed)
+	end_menu_button.pressed.connect(_on_end_voltar_pressed)
+	abandon_confirm_button.pressed.connect(_on_abandon_confirmed)
+	abandon_cancel_button.pressed.connect(_on_abandon_cancelled)
 	treasure_continue_button.pressed.connect(_on_treasure_continue)
 	event_option1_button.pressed.connect(_on_event_option.bind(0))
 	event_option2_button.pressed.connect(_on_event_option.bind(1))
@@ -102,6 +107,7 @@ func _ready() -> void:
 	event_panel.visible = false
 	rest_panel.visible = false
 	stairs_panel.visible = false
+	abandon_panel.visible = false
 	popup_bg.visible = false
 	# Rebuild the grid when the map area gets its real size (or resizes).
 	map_area.resized.connect(_rebuild_map)
@@ -136,7 +142,7 @@ func _rebuild_map() -> void:
 	title_label.text = "Masmorra Nv %d — Andar %d/%d" % [
 		run.level, run.current_floor + 1, DungeonRun.NUM_FLOORS]
 	gold_label.text = "Ouro: %d" % GameState.gold
-	_rebuild_party_bar()
+	PartyBar.fill(party_status)
 
 	# Fixed bounding box over the whole floor, so positions don't shift.
 	var all_rooms: Array = run.rooms_on_floor().values()
@@ -160,7 +166,25 @@ func _rebuild_map() -> void:
 		rows * cell + (rows - 1) * CELL_GAP)
 	var origin := (area - grid_size) * 0.5
 
-	for room in run.visible_rooms():
+	var visible := run.visible_rooms()
+	var visible_pos: Dictionary = {}
+	for room in visible:
+		visible_pos[room.pos] = true
+
+	# Passage connectors first, so the room chips draw on top of them.
+	# Checking only EAST/SOUTH visits each connected pair exactly once.
+	for room in visible:
+		for dir in DungeonRoom.DIRS:
+			if dir["bit"] != DungeonRoom.EAST and dir["bit"] != DungeonRoom.SOUTH:
+				continue
+			var npos: Vector2i = room.pos + dir["vec"]
+			if (room.connections & dir["bit"]) == 0 or not visible_pos.has(npos):
+				continue
+			var from_player := room.pos == run.player_pos or npos == run.player_pos
+			map_area.add_child(_make_connector(
+				room.pos - min_pos, dir["bit"], origin, cell, from_player))
+
+	for room in visible:
 		var btn := Button.new()
 		var local := room.pos - min_pos
 		btn.position = origin + Vector2(local) * (cell + CELL_GAP)
@@ -187,6 +211,28 @@ func _variation_for(room: DungeonRoom) -> String:
 	return ROOM_VARIATION.get(room.kind, "")
 
 
+## A short corridor bar drawn in the gap between two connected rooms.
+## Passages leading out of the player's room glow gold (movement options);
+## the rest render as muted stone. Mouse-transparent, drawn under the chips.
+func _make_connector(local: Vector2i, dir_bit: int, origin: Vector2, cell: int, from_player: bool) -> Control:
+	var bar := Panel.new()
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var thickness := 20
+	var reach := CELL_GAP + 12  # spans the gap, tucking 6px under each chip
+	var cell_origin := origin + Vector2(local) * (cell + CELL_GAP)
+	if dir_bit == DungeonRoom.EAST:
+		bar.position = cell_origin + Vector2(cell - 6, cell * 0.5 - thickness * 0.5)
+		bar.size = Vector2(reach, thickness)
+	else:  # SOUTH
+		bar.position = cell_origin + Vector2(cell * 0.5 - thickness * 0.5, cell - 6)
+		bar.size = Vector2(thickness, reach)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.82, 0.35, 0.85) if from_player else Color(0.42, 0.36, 0.26, 0.7)
+	sb.set_corner_radius_all(4)
+	bar.add_theme_stylebox_override("panel", sb)
+	return bar
+
+
 ## Gold border overlay marking the player's room. Mouse-transparent.
 func _make_player_marker() -> Control:
 	var marker := Panel.new()
@@ -199,39 +245,6 @@ func _make_player_marker() -> Control:
 	sb.set_corner_radius_all(5)
 	marker.add_theme_stylebox_override("panel", sb)
 	return marker
-
-
-## Builds one compact entry per hero: class name + a red HP bar + HP text.
-func _rebuild_party_bar() -> void:
-	for child in party_status.get_children():
-		child.queue_free()
-	for h in Party.heroes:
-		var col := VBoxContainer.new()
-		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override("separation", 2)
-
-		var name_lbl := Label.new()
-		name_lbl.text = h.class_data.display_name
-		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		name_lbl.add_theme_font_size_override("font_size", 12)
-		col.add_child(name_lbl)
-
-		var bar := ProgressBar.new()
-		bar.theme_type_variation = "HpBar"
-		bar.custom_minimum_size = Vector2(0, 10)
-		bar.show_percentage = false
-		bar.max_value = maxi(1, h.max_hp())
-		bar.value = h.hp
-		col.add_child(bar)
-
-		var hp_lbl := Label.new()
-		hp_lbl.text = "%d/%d" % [h.hp, h.max_hp()]
-		hp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		hp_lbl.add_theme_font_size_override("font_size", 11)
-		hp_lbl.modulate = Color(0.8, 0.8, 0.85)
-		col.add_child(hp_lbl)
-
-		party_status.add_child(col)
 
 
 # ── Movement & room content ───────────────────────────────────────────────────
@@ -408,28 +421,47 @@ func _end_run(victory: bool) -> void:
 	if victory:
 		GameState.dungeon_level += 1
 		GameState.current_run = null
+		GameState.restock_market()
 		GameState.save_game()
-		# Fase 2 will route this to the city hub; the menu stands in for now.
 		end_label.text = "Masmorra concluída!\nO grupo retorna à cidade."
 	else:
 		# TPK rule: revive at 25 % HP, lose 20 % gold, then save and return.
+		# apply_tpk_penalty also clears the run and restocks the market.
 		GameState.apply_tpk_penalty()
 		GameState.save_game()
 		end_label.text = "O grupo foi derrotado.\nRevividos com 25%% HP.\n20%% do ouro perdido."
 	end_panel.visible = true
 
 
+func _on_end_voltar_pressed() -> void:
+	Fade.change_scene(CITY_SCENE)
+
+
+# ── Abandon run (Voltar à cidade mid-run) ─────────────────────────────────────
+
+func _on_city_pressed() -> void:
+	abandon_panel.visible = true
+
+
+## Abandoning counts as fleeing the dungeon: the run is discarded (no TPK
+## penalty, dungeon_level unchanged) and the market restocks.
+func _on_abandon_confirmed() -> void:
+	abandon_panel.visible = false
+	GameState.current_run = null
+	GameState.restock_market()
+	GameState.save_game()
+	Fade.change_scene(CITY_SCENE)
+
+
+func _on_abandon_cancelled() -> void:
+	abandon_panel.visible = false
+
+
 func _on_inventory_pressed() -> void:
+	GameState.nav_return_scene = DUNGEON_SCENE
 	Fade.change_scene(INVENTORY_SCENE)
 
 
-func _on_shop_pressed() -> void:
-	Fade.change_scene(SHOP_SCENE)
-
-
 func _on_formation_pressed() -> void:
+	GameState.nav_return_scene = DUNGEON_SCENE
 	Fade.change_scene(FORMATION_SCENE)
-
-
-func _on_menu_pressed() -> void:
-	Fade.change_scene(MENU_SCENE)
