@@ -6,7 +6,8 @@ Project context for Claude Code. Read this before any task.
 
 A turn-based tactical dungeon-crawler RPG for Android, inspired by
 Monster's Den. Built in Godot 4.6 with GDScript. Portrait orientation.
-UI text is in Brazilian Portuguese (pt-BR).
+Fully localized: Brazilian Portuguese (pt-BR, source language) and
+English, selectable in-game.
 
 This is **version 2 (Fases 1 e 2)**: a room-based dungeon replaced the
 v1 node-map, and the city hub is the home base between dungeons. The
@@ -30,6 +31,13 @@ Any system that does not directly serve this loop is out of scope for v1.
 - UI: one Godot scene per screen, using `Control` nodes and signals.
 - Save: file-based (JSON via `FileAccess` or `ConfigFile`), with a
   versioned save format to allow future migrations.
+- **i18n**: all user-facing text lives as keys in `i18n/translations.csv`
+  (columns `keys,pt_BR,en`); resolve with `tr()` (or
+  `TranslationServer.translate()` in static contexts). `.tres`
+  `display_name`/`description` fields hold keys, not literal text — never
+  hardcode a Portuguese string in a scene, script or resource.
+- Device settings (locale, combat speed) live in `user://settings.cfg`
+  via the `Settings` autoload — separate from game saves.
 
 ## Working style
 
@@ -56,7 +64,9 @@ potions + limited-stock random equipment, restocking when a run ends
 per class; XP/levels with 1 Skill Point per level (surplus converts to
 +2 max MP); equipment slots with stat modifiers; versioned file-based
 save (run layouts, explored rooms, player position, market stock) with
-a TPK rule (revive at 25% HP, lose 20% gold).
+a TPK rule (revive at 25% HP, lose 20% gold); **pt-BR/English
+localization; settings screen (language + combat speed) and credits
+screen from the main menu**.
 
 ## Scope — OUT (do not build unless asked)
 
