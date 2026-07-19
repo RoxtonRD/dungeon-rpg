@@ -39,12 +39,12 @@ func _ready() -> void:
 
 
 func _refresh() -> void:
-	gold_label.text = "Ouro: %d" % GameState.gold
+	gold_label.text = tr("UI_GOLD") % GameState.gold
 	PartyBar.fill(party_status)
 	if GameState.current_run != null:
-		enter_button.text = "Continuar na Masmorra Nv %d" % (GameState.current_run as DungeonRun).level
+		enter_button.text = tr("UI_RESUME_DUNGEON") % (GameState.current_run as DungeonRun).level
 	else:
-		enter_button.text = "Entrar na Masmorra Nv %d" % GameState.dungeon_level
+		enter_button.text = tr("UI_ENTER_DUNGEON") % GameState.dungeon_level
 
 
 func _on_enter_pressed() -> void:

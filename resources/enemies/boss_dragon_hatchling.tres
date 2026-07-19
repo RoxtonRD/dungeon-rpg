@@ -10,7 +10,7 @@
 [resource]
 script = ExtResource("1")
 id = "dragon_hatchling"
-display_name = "Dragão Filhote"
+display_name = "ENEMY_DRAGON_HATCHLING"
 max_hp = 90
 atk = 12
 def = 6

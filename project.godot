@@ -21,6 +21,7 @@ config/features=PackedStringArray("4.7", "Mobile")
 
 [autoload]
 
+Settings="*res://scripts/settings.gd"
 Party="*res://scripts/party.gd"
 GameState="*res://scripts/game_state.gd"
 SafeArea="*res://scripts/safe_area.gd"
@@ -42,6 +43,11 @@ enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 [gui]
 
 theme/custom="res://assets/ui/theme.tres"
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://i18n/translations.pt_BR.translation", "res://i18n/translations.en.translation")
+locale/fallback="pt_BR"
 
 [rendering]
 

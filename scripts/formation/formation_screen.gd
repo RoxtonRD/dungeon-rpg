@@ -60,9 +60,9 @@ func _make_hero_button(hero: Hero) -> Button:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	# Autowrap so the row indicator never clips, regardless of column width.
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var row_indicator := "→ Trás" if hero.row == 0 else "→ Frente"
-	label.text = "%s\n%d/%d HP\n%s" % [
-		hero.class_data.display_name, hero.hp, hero.max_hp(), row_indicator
+	var row_indicator := tr("UI_TO_BACK") if hero.row == 0 else tr("UI_TO_FRONT")
+	label.text = "%s\n%d/%d %s\n%s" % [
+		tr(hero.class_data.display_name), hero.hp, hero.max_hp(), tr("STAT_HP"), row_indicator
 	]
 	hbox.add_child(label)
 
@@ -94,7 +94,7 @@ func _make_portrait(hero: Hero) -> Control:
 func _maybe_add_empty_label(container: VBoxContainer) -> void:
 	if container.get_child_count() == 0:
 		var lbl := Label.new()
-		lbl.text = "(vazio)"
+		lbl.text = tr("UI_EMPTY_SLOT")
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.modulate = Color(0.5, 0.5, 0.5, 1)
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL

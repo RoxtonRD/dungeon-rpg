@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "e_curse"
-display_name = "Maldição"
+display_name = "ESKILL_CURSE"
 skill_type = 1
 target = 0
 power = 0.3

@@ -8,7 +8,7 @@
 [resource]
 script = ExtResource("1")
 id = "skeleton"
-display_name = "Esqueleto"
+display_name = "ENEMY_SKELETON"
 max_hp = 22
 atk = 6
 def = 3

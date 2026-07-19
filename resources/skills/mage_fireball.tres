@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "fireball"
-display_name = "Bola de Fogo"
-description = "Explosão de fogo que atinge todos os inimigos."
+display_name = "SKILL_MAGE_FIREBALL"
+description = "SKILLD_MAGE_FIREBALL"
 mp_cost = 10
 unlock_level = 1
 max_upgrade_level = 3

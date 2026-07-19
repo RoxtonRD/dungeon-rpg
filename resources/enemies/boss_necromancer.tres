@@ -9,7 +9,7 @@
 [resource]
 script = ExtResource("1")
 id = "necromancer"
-display_name = "Necromante"
+display_name = "ENEMY_NECROMANCER"
 role = 1
 max_hp = 60
 atk = 4

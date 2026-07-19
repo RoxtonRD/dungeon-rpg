@@ -19,8 +19,11 @@ extends RefCounted
 enum Result { NONE, VICTORY, DEFEAT, FLEE }
 ## Flavour of a floating combat number, so the UI can colour it.
 enum PopupKind { PHYS, MAG, HEAL }
+## Log-line category, so the UI can colour lines without parsing text
+## (language-independent — the old substring matching broke under i18n).
+enum LogKind { INFO, DAMAGE, CRIT, HEAL, BARRIER }
 
-signal log_appended(line: String)
+signal log_appended(line: String, kind: LogKind)
 signal hp_changed(battler: Battler)
 ## Emitted alongside hp_changed when an amount should pop up on a battler.
 signal damage_popup(battler: Battler, amount: int, kind: PopupKind)
@@ -51,7 +54,7 @@ static func build(heroes: Array[Hero], enemy_data_list: Array[EnemyData]) -> Com
 # ── Public API ────────────────────────────────────────────────────────────────
 
 func start() -> void:
-	_log("O combate começou!")
+	_log(tr("LOG_BEGIN"))
 	_roll_initiative()
 	_advance_to_next_actor()
 
@@ -92,7 +95,7 @@ func player_action(skill: SkillData, target: Battler) -> void:
 		return
 	var actor := current_actor
 	if actor.hero.mp < skill.mp_cost:
-		_log("MP insuficiente.")
+		_log(tr("LOG_NO_MP"))
 		return
 	actor.hero.mp -= skill.mp_cost
 	var scaled := Party.get_upgraded_skill(actor.hero, skill)
@@ -105,10 +108,10 @@ func player_flee() -> void:
 	if ended or current_actor == null or current_actor.side != Battler.Side.PARTY:
 		return
 	if randf() < 0.6:
-		_log("O grupo fugiu do combate.")
+		_log(tr("LOG_FLED"))
 		_end(Result.FLEE)
 	else:
-		_log("A fuga falhou!")
+		_log(tr("LOG_FLEE_FAIL"))
 		_after_action()
 
 
@@ -210,7 +213,7 @@ func _tick_statuses() -> void:
 			var st: CombatStatus = b.statuses[i]
 			if st.kind == CombatStatus.Kind.DOT:
 				b.set_hp(b.get_hp() - st.dot_damage)
-				_log("%s sofre %d de %s." % [b.display_name(), st.dot_damage, st.source_name])
+				_log(tr("LOG_DOT") % [b.display_name(), st.dot_damage, tr(st.source_name)], LogKind.DAMAGE)
 				hp_changed.emit(b)
 				damage_popup.emit(b, st.dot_damage, PopupKind.MAG)
 			st.duration -= 1
@@ -228,11 +231,11 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 		SkillData.SkillType.BUFF:
 			for t in targets:
 				_apply_buff(t, skill)
-			_log("%s usa %s." % [caster.display_name(), skill.display_name])
+			_log(tr("LOG_USE") % [caster.display_name(), tr(skill.display_name)])
 		SkillData.SkillType.DEBUFF:
 			for t in targets:
 				_apply_debuff(t, skill)
-			_log("%s usa %s!" % [caster.display_name(), skill.display_name])
+			_log(tr("LOG_USE_EXCL") % [caster.display_name(), tr(skill.display_name)])
 		SkillData.SkillType.HEAL:
 			for t in targets:
 				_apply_heal(caster, caster_stats, skill, t)
@@ -240,7 +243,7 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 			if not targets.is_empty():
 				_apply_revive(caster, targets[0])
 		SkillData.SkillType.MULTI:
-			_log("%s usa %s." % [caster.display_name(), skill.display_name])
+			_log(tr("LOG_USE") % [caster.display_name(), tr(skill.display_name)])
 			var hit_kind := SkillData.SkillType.PHYS \
 				if skill.multi_hit_type == SkillData.HitType.PHYS \
 				else SkillData.SkillType.MAG
@@ -318,7 +321,7 @@ func _apply_debuff(target: Battler, skill: SkillData) -> void:
 func _apply_heal(caster: Battler, caster_stats: Dictionary, skill: SkillData, target: Battler) -> void:
 	var heal_amount := int(floor(float(caster_stats["mag"]) * skill.power + 5.0))
 	target.set_hp(target.get_hp() + heal_amount)
-	_log("%s cura %s em %d." % [caster.display_name(), target.display_name(), heal_amount])
+	_log(tr("LOG_HEAL") % [caster.display_name(), target.display_name(), heal_amount], LogKind.HEAL)
 	hp_changed.emit(target)
 	damage_popup.emit(target, heal_amount, PopupKind.HEAL)
 
@@ -327,7 +330,7 @@ func _apply_revive(caster: Battler, target: Battler) -> void:
 	# 30% of max HP, prototype value.
 	var amount := maxi(1, int(floor(target.max_hp * 0.3)))
 	target.set_hp(amount)
-	_log("%s revive %s!" % [caster.display_name(), target.display_name()])
+	_log(tr("LOG_REVIVE") % [caster.display_name(), target.display_name()], LogKind.HEAL)
 	hp_changed.emit(target)
 	damage_popup.emit(target, amount, PopupKind.HEAL)
 
@@ -335,7 +338,7 @@ func _apply_revive(caster: Battler, target: Battler) -> void:
 func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillData, target: Battler, dmg_kind: SkillData.SkillType) -> void:
 	# Barrier eats the hit before damage is rolled.
 	if target.consume_barrier():
-		_log("A barreira de %s absorveu o golpe!" % target.display_name())
+		_log(tr("LOG_BARRIER") % target.display_name(), LogKind.BARRIER)
 		return
 	var is_mag := dmg_kind == SkillData.SkillType.MAG
 	var raw_attack := float(caster_stats["mag"] if is_mag else caster_stats["atk"])
@@ -354,8 +357,9 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 	target.set_hp(target.get_hp() - dmg)
 	hp_changed.emit(target)
 	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS)
-	var crit_label := " (CRÍTICO)" if crit else ""
-	_log("%s usa %s em %s causando %d%s." % [caster.display_name(), skill.display_name, target.display_name(), dmg, crit_label])
+	var crit_label := tr("LOG_CRIT_SUFFIX") if crit else ""
+	_log(tr("LOG_DAMAGE") % [caster.display_name(), tr(skill.display_name), target.display_name(), dmg, crit_label],
+		LogKind.CRIT if crit else LogKind.DAMAGE)
 	# DoT rider (prototype adds unconditionally — dead targets simply won't tick).
 	if skill.dot_damage > 0:
 		var dot := CombatStatus.new()
@@ -407,14 +411,14 @@ func _enemy_take_turn() -> void:
 	if skill.target == SkillData.TargetType.SELF:
 		if skill.skill_type == SkillData.SkillType.BUFF:
 			_apply_buff(e, skill)
-			_log("%s usa %s." % [e.display_name(), skill.display_name])
+			_log(tr("LOG_USE") % [e.display_name(), tr(skill.display_name)])
 		elif skill.skill_type == SkillData.SkillType.HEAL:
 			var mag_val := int(e_stats["mag"])
 			if mag_val <= 0:
 				mag_val = int(e_stats["atk"])
 			var heal_amount := int(floor(mag_val * skill.power + 5.0))
 			e.set_hp(e.get_hp() + heal_amount)
-			_log("%s se regenera em %d." % [e.display_name(), heal_amount])
+			_log(tr("LOG_REGEN") % [e.display_name(), heal_amount], LogKind.HEAL)
 			hp_changed.emit(e)
 			damage_popup.emit(e, heal_amount, PopupKind.HEAL)
 		return
@@ -473,6 +477,6 @@ func _side_has_living(list: Array[Battler]) -> bool:
 	return false
 
 
-func _log(msg: String) -> void:
+func _log(msg: String, kind: LogKind = LogKind.INFO) -> void:
 	log_lines.append(msg)
-	log_appended.emit(msg)
+	log_appended.emit(msg, kind)

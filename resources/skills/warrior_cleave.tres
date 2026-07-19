@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "cleave"
-display_name = "Talho"
-description = "Golpe amplo que atinge todos os inimigos."
+display_name = "SKILL_WARRIOR_CLEAVE"
+description = "SKILLD_WARRIOR_CLEAVE"
 mp_cost = 6
 unlock_level = 1
 max_upgrade_level = 3

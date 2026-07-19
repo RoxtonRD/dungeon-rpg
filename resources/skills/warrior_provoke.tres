@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "provoke"
-display_name = "Provocar"
-description = "Força inimigos a te atacar. +5 DEF por 3 turnos."
+display_name = "SKILL_WARRIOR_PROVOKE"
+description = "SKILLD_WARRIOR_PROVOKE"
 mp_cost = 6
 unlock_level = 3
 max_upgrade_level = 3

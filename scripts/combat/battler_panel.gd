@@ -246,7 +246,8 @@ func _format_statuses(b: Battler) -> String:
 		if not s.is_empty():
 			s += ", "
 		if st.kind == CombatStatus.Kind.BARRIER:
-			s += "BARREIRA"
+			s += tr("UI_STATUS_BARRIER")
 		else:
-			s += "%s (%d)" % [st.source_name, st.duration]
+			# source_name is a skill display_name, i.e. a translation key.
+			s += "%s (%d)" % [tr(st.source_name), st.duration]
 	return s

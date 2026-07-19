@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "backstab"
-display_name = "Apunhalar"
-description = "Ataque furtivo. 40% de chance de crítico."
+display_name = "SKILL_ROGUE_BACKSTAB"
+description = "SKILLD_ROGUE_BACKSTAB"
 mp_cost = 5
 unlock_level = 1
 max_upgrade_level = 3

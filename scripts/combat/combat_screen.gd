@@ -32,6 +32,11 @@ const BOSS_TOME_DROP_CHANCE: float = 0.25
 ## Boss background; the default combat background is set in the .tscn.
 const BG_BOSS: Texture2D = preload("res://assets/backgrounds/bg_boss.png")
 
+
+## Base delays scaled by the player's combat-speed setting (1x / 1.5x / 2x).
+func _delay(base: float) -> float:
+	return base / Settings.combat_speed
+
 @onready var background: TextureRect = $Background
 @onready var back_party_col: VBoxContainer = %BackPartyCol
 @onready var front_party_col: VBoxContainer = %FrontPartyCol
@@ -144,22 +149,23 @@ func _refresh_all_panels() -> void:
 
 # ── State signals ─────────────────────────────────────────────────────────────
 
-func _on_log_appended(line: String) -> void:
-	log_label.append_text(_colorize_log_line(line) + "\n")
+func _on_log_appended(line: String, kind: CombatState.LogKind) -> void:
+	log_label.append_text(_colorize_log_line(line, kind) + "\n")
 
 
-## Wraps a log line in a bbcode color matching its content, mirroring the
+## Colours a log line by its category (language-independent), mirroring the
 ## floating-number palette: crits gold, damage warm red, heals green,
-## barriers blue. Unmatched lines keep the theme's default color.
-func _colorize_log_line(line: String) -> String:
-	if line.contains("CRÍTICO"):
-		return "[color=#ffd159]%s[/color]" % line
-	if line.contains("cura") or line.contains("regenera") or line.contains("revive"):
-		return "[color=#80ff8c]%s[/color]" % line
-	if line.contains("barreira") or line.contains("absorveu"):
-		return "[color=#9eb3ff]%s[/color]" % line
-	if line.contains("causando") or line.contains("sofre"):
-		return "[color=#ff9d80]%s[/color]" % line
+## barriers blue. INFO lines keep the theme's default color.
+func _colorize_log_line(line: String, kind: CombatState.LogKind) -> String:
+	match kind:
+		CombatState.LogKind.CRIT:
+			return "[color=#ffd159]%s[/color]" % line
+		CombatState.LogKind.HEAL:
+			return "[color=#80ff8c]%s[/color]" % line
+		CombatState.LogKind.BARRIER:
+			return "[color=#9eb3ff]%s[/color]" % line
+		CombatState.LogKind.DAMAGE:
+			return "[color=#ff9d80]%s[/color]" % line
 	return line
 
 
@@ -205,13 +211,13 @@ func _on_combat_ended(r: CombatState.Result, rewards: Dictionary) -> void:
 # ── Turn pacing ───────────────────────────────────────────────────────────────
 
 func _process_turn() -> void:
-	await get_tree().create_timer(TURN_LEAD_DELAY).timeout
+	await get_tree().create_timer(_delay(TURN_LEAD_DELAY)).timeout
 	while not state.ended and state.current_actor != null \
 			and state.current_actor.side == Battler.Side.ENEMY:
 		_panel_for(state.current_actor).flash_active()
 		state.step()
 		_refresh_all_panels()
-		await get_tree().create_timer(ENEMY_TURN_DELAY).timeout
+		await get_tree().create_timer(_delay(ENEMY_TURN_DELAY)).timeout
 	if state.ended:
 		_show_end_panel()
 		return
@@ -272,13 +278,13 @@ func _populate_skill_buttons() -> void:
 
 
 func _label_for_skill(hero: Hero, skill: SkillData) -> String:
-	var name_part := skill.display_name
+	var name_part := tr(skill.display_name)
 	var tier := Party.get_skill_tier(hero, skill)
 	if tier > 1:
 		name_part += " (T%d)" % tier
 	var label := "%s · %d MP" % [name_part, skill.mp_cost]
 	if hero.level < skill.unlock_level:
-		label += " [Nv %d]" % skill.unlock_level
+		label += tr("UI_SKILL_LOCKED") % skill.unlock_level
 	return label
 
 
@@ -353,7 +359,7 @@ func _resolve_player_action(skill: SkillData, target: Battler) -> void:
 		_panel_for(state.current_actor).flash_active()
 	state.player_action(skill, target)
 	_refresh_all_panels()
-	await get_tree().create_timer(PLAYER_ACTION_DELAY).timeout
+	await get_tree().create_timer(_delay(PLAYER_ACTION_DELAY)).timeout
 	_process_turn()
 
 
@@ -398,7 +404,7 @@ func _encounter_has_boss() -> bool:
 
 func _tome_display_name() -> String:
 	var tome := load("res://resources/items/tome_sp.tres") as ItemData
-	return tome.display_name if tome != null else "Tomo de Maestria"
+	return tr(tome.display_name) if tome != null else tr("ITEM_TOME_SP")
 
 
 func _show_end_panel() -> void:
@@ -409,32 +415,32 @@ func _show_end_panel() -> void:
 	target_prompt.visible = false
 	cancel_button.visible = false
 	flee_button.disabled = true
-	var result_names := ["—", "VITÓRIA", "DERROTA", "FUGA"]
+	var result_names := ["—", tr("UI_RESULT_VICTORY"), tr("UI_RESULT_DEFEAT"), tr("UI_RESULT_FLEE")]
 	result_label.text = result_names[_pending_result]
 	if _pending_result == CombatState.Result.VICTORY:
 		GameState.gold += int(_pending_rewards["gold"])
 		var lines: Array[String] = []
-		lines.append("+%d XP   +%d ouro" % [_pending_rewards["xp"], _pending_rewards["gold"]])
+		lines.append(tr("UI_REWARDS") % [_pending_rewards["xp"], _pending_rewards["gold"]])
 		for h in Party.heroes:
 			if h.is_alive():
 				var prev_level := h.level
 				var prev_bonus_mp := h.bonus_mp
 				var unlocked: Array[SkillData] = Party.award_xp(h, int(_pending_rewards["xp"]))
 				if h.level > prev_level:
-					lines.append("%s subiu para Nv %d!" % [h.class_data.display_name, h.level])
+					lines.append(tr("UI_LEVEL_UP") % [tr(h.class_data.display_name), h.level])
 					for skill in unlocked:
-						lines.append("  ✦ Nova habilidade: %s" % skill.display_name)
+						lines.append(tr("UI_NEW_SKILL") % tr(skill.display_name))
 				if h.bonus_mp > prev_bonus_mp:
-					lines.append("%s não tem habilidades para evoluir — +%d MP máximo!" % [
-						h.class_data.display_name, h.bonus_mp - prev_bonus_mp])
+					lines.append(tr("UI_SP_CONVERT") % [
+						tr(h.class_data.display_name), h.bonus_mp - prev_bonus_mp])
 		# Rare boss-only drop: a Tomo de Maestria.
 		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
 			GameState.add_item("tome_sp")
-			lines.append("  ✦ O chefe deixou um %s!" % _tome_display_name())
+			lines.append(tr("UI_TOME_DROP") % _tome_display_name())
 		rewards_label.text = "\n".join(lines)
 		_refresh_all_panels()
 	elif _pending_result == CombatState.Result.DEFEAT:
-		rewards_label.text = "O grupo foi derrotado."
+		rewards_label.text = tr("UI_DEFEATED_TEXT")
 	else:
 		rewards_label.text = ""
 	end_panel.visible = true

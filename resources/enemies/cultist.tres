@@ -9,7 +9,7 @@
 [resource]
 script = ExtResource("1")
 id = "cultist"
-display_name = "Cultista"
+display_name = "ENEMY_CULTIST"
 role = 1
 max_hp = 25
 atk = 3

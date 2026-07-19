@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "revive"
-display_name = "Reviver"
-description = "Ressuscita um aliado caído com 30% do HP máximo."
+display_name = "SKILL_CLERIC_REVIVE"
+description = "SKILLD_CLERIC_REVIVE"
 mp_cost = 20
 unlock_level = 5
 max_upgrade_level = 4

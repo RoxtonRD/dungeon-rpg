@@ -52,15 +52,15 @@ func has_content() -> bool:
 ## explored/empty so the map reflects the consumed state.
 func type_name() -> String:
 	if cleared and kind != RoomType.STAIRS and kind != RoomType.BOSS:
-		return "Vazia"
+		return tr("ROOM_EMPTY")
 	match kind:
-		RoomType.EMPTY: return "Vazia"
-		RoomType.COMBAT: return "Combate"
-		RoomType.TREASURE: return "Tesouro"
-		RoomType.EVENT: return "Evento"
-		RoomType.REST: return "Descanso"
-		RoomType.STAIRS: return "Escada"
-		RoomType.BOSS: return "Chefe"
+		RoomType.EMPTY: return tr("ROOM_EMPTY")
+		RoomType.COMBAT: return tr("ROOM_COMBAT")
+		RoomType.TREASURE: return tr("ROOM_TREASURE")
+		RoomType.EVENT: return tr("ROOM_EVENT")
+		RoomType.REST: return tr("ROOM_REST")
+		RoomType.STAIRS: return tr("ROOM_STAIRS")
+		RoomType.BOSS: return tr("ROOM_BOSS")
 	return "?"
 
 

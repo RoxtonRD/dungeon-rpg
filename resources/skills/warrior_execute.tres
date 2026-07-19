@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "execute"
-display_name = "Executar"
-description = "50% crítico. Dobra dano se alvo tiver HP baixo."
+display_name = "SKILL_WARRIOR_EXECUTE"
+description = "SKILLD_WARRIOR_EXECUTE"
 mp_cost = 10
 unlock_level = 5
 max_upgrade_level = 4

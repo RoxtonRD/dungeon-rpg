@@ -41,7 +41,7 @@ theme_override_constants/separation = 10
 [node name="TitleLabel" type="Label" parent="VBox" unique_id=1941787553]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Personagens"
+text = "UI_CHARACTERS"
 horizontal_alignment = 1
 
 [node name="HeroTabBar" type="HBoxContainer" parent="VBox" unique_id=680559333]
@@ -119,7 +119,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
-text = "Equipamentos"
+text = "UI_EQUIPMENT"
 
 [node name="EquipmentRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=1003526158]
 unique_name_in_owner = true
@@ -130,7 +130,7 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
-text = "Habilidades"
+text = "UI_SKILLS"
 
 [node name="SkillRows" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=1144797677]
 unique_name_in_owner = true
@@ -142,7 +142,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
-text = "Inventário"
+text = "UI_INVENTORY"
 
 [node name="ItemListVBox" type="VBoxContainer" parent="VBox/ScrollPanel/MainScroll/ContentVBox" unique_id=1671274915]
 unique_name_in_owner = true
@@ -154,4 +154,4 @@ theme_override_constants/separation = 4
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Fechar"
+text = "UI_CLOSE"

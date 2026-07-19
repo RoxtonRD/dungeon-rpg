@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "e_drain"
-display_name = "Drenar"
+display_name = "ESKILL_DRAIN"
 skill_type = 1
 target = 0
 power = 1.2

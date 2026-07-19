@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "elixir_full"
-display_name = "Elixir Pleno"
+display_name = "ITEM_ELIXIR_FULL"
 slot = 3
 value = 90
 use_heal = 80

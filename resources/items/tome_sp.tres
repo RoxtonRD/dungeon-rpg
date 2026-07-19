@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "tome_sp"
-display_name = "Tomo de Maestria"
+display_name = "ITEM_TOME_SP"
 slot = 3
 value = 200
 use_sp = 1

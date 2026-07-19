@@ -11,7 +11,7 @@
 [resource]
 script = ExtResource("1")
 id = "mage"
-display_name = "Feiticeira"
+display_name = "CLASS_MAGE"
 role = 1
 base_hp = 24
 base_mp = 28

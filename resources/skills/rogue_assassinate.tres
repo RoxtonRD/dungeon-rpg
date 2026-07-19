@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "assassinate"
-display_name = "Assassinar"
-description = "Golpe letal com 60% de chance de crítico."
+display_name = "SKILL_ROGUE_ASSASSINATE"
+description = "SKILLD_ROGUE_ASSASSINATE"
 mp_cost = 14
 unlock_level = 5
 max_upgrade_level = 4

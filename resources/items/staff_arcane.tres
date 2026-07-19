@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "staff_arcane"
-display_name = "Cajado Arcano"
+display_name = "ITEM_STAFF_ARCANE"
 slot = 0
 value = 280
 mod_mp = 8

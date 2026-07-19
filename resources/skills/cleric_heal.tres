@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "heal"
-display_name = "Curar"
-description = "Restaura HP de 1 aliado."
+display_name = "SKILL_CLERIC_HEAL"
+description = "SKILLD_CLERIC_HEAL"
 mp_cost = 6
 skill_type = 2
 target = 3

@@ -42,7 +42,7 @@ func _on_tab(mode: String) -> void:
 
 
 func _refresh() -> void:
-	gold_label.text = "Ouro: %d" % GameState.gold
+	gold_label.text = tr("UI_GOLD") % GameState.gold
 	buy_tab_button.disabled = (_mode == "buy")
 	sell_tab_button.disabled = (_mode == "sell")
 	if _mode == "buy":
@@ -56,14 +56,14 @@ func _refresh() -> void:
 func _rebuild_buy_list() -> void:
 	_clear_list()
 	# Section 1: fixed potions, always available.
-	item_list_vbox.add_child(_make_section_label("Poções"))
+	item_list_vbox.add_child(_make_section_label(tr("UI_POTIONS")))
 	for item_id in FIXED_MARKET:
 		var item := load(ITEM_DIR + item_id + ".tres") as ItemData
 		if item == null:
 			continue
 		_add_buy_row(item, -1)
 	# Section 2: the random limited-stock shelf.
-	item_list_vbox.add_child(_make_section_label("Equipamentos"))
+	item_list_vbox.add_child(_make_section_label(tr("UI_EQUIPMENT")))
 	for i in GameState.market_stock.size():
 		var entry: Dictionary = GameState.market_stock[i]
 		var item := load(ITEM_DIR + str(entry["id"]) + ".tres") as ItemData
@@ -83,7 +83,7 @@ func _add_buy_row(item: ItemData, stock_index: int) -> void:
 	row.add_child(_make_icon(item.icon_or_null()))
 
 	var name_lbl := Label.new()
-	name_lbl.text = item.display_name
+	name_lbl.text = tr(item.display_name)
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_font_size_override("font_size", 16)
@@ -102,10 +102,10 @@ func _add_buy_row(item: ItemData, stock_index: int) -> void:
 	var buy_btn := Button.new()
 	buy_btn.custom_minimum_size = Vector2(100, 0)
 	if sold_out:
-		buy_btn.text = "Esgotado"
+		buy_btn.text = tr("UI_SOLD_OUT")
 		buy_btn.disabled = true
 	else:
-		buy_btn.text = "Comprar"
+		buy_btn.text = tr("UI_BUY")
 		buy_btn.disabled = GameState.gold < item.value
 		buy_btn.pressed.connect(_on_buy.bind(item.id, item.value, stock_index))
 	row.add_child(buy_btn)
@@ -141,7 +141,7 @@ func _rebuild_sell_list() -> void:
 	_clear_list()
 	if GameState.inventory.is_empty():
 		var lbl := Label.new()
-		lbl.text = "Inventário vazio."
+		lbl.text = tr("UI_INVENTORY_EMPTY")
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.add_theme_font_size_override("font_size", 16)
 		item_list_vbox.add_child(lbl)
@@ -157,7 +157,7 @@ func _rebuild_sell_list() -> void:
 		row.add_child(_make_icon(item.icon_or_null()))
 
 		var name_lbl := Label.new()
-		name_lbl.text = item.display_name
+		name_lbl.text = tr(item.display_name)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 16)
@@ -172,7 +172,7 @@ func _rebuild_sell_list() -> void:
 		row.add_child(price_lbl)
 
 		var sell_btn := Button.new()
-		sell_btn.text = "Vender"
+		sell_btn.text = tr("UI_SELL")
 		sell_btn.custom_minimum_size = Vector2(100, 0)
 		sell_btn.pressed.connect(_on_sell.bind(idx))
 		row.add_child(sell_btn)

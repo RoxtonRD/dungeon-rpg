@@ -11,7 +11,7 @@
 [resource]
 script = ExtResource("1")
 id = "cleric"
-display_name = "Sacerdotisa"
+display_name = "CLASS_CLERIC"
 role = 1
 base_hp = 28
 base_mp = 22
