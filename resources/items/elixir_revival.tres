@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "elixir_revival"
-display_name = "Elixir de Reviver"
+display_name = "ITEM_ELIXIR_REVIVAL"
 slot = 3
 value = 100
 use_revive_party = 0.25

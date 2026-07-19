@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "sword_steel"
-display_name = "Lâmina de Aço"
+display_name = "ITEM_SWORD_STEEL"
 slot = 0
 value = 180
 mod_atk = 9

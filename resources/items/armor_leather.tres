@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "armor_leather"
-display_name = "Armadura de Couro"
+display_name = "ITEM_ARMOR_LEATHER"
 slot = 1
 value = 70
 mod_hp = 8

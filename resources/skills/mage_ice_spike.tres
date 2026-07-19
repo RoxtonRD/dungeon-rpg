@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "ice_spike"
-display_name = "Lança de Gelo"
-description = "Perfura a armadura do alvo. -4 DEF por 2 turnos."
+display_name = "SKILL_MAGE_ICE_SPIKE"
+description = "SKILLD_MAGE_ICE_SPIKE"
 mp_cost = 8
 unlock_level = 3
 skill_type = 1

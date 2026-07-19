@@ -53,30 +53,30 @@ func short_description() -> String:
 	var parts: Array[String] = []
 	if slot == Slot.CONSUMABLE:
 		if use_heal > 0:
-			parts.append("Cura %d HP" % use_heal)
+			parts.append(tr("DESC_HEAL") % use_heal)
 		if use_mp > 0:
-			parts.append("Restaura %d MP" % use_mp)
+			parts.append(tr("DESC_MP") % use_mp)
 		if use_sp > 0:
-			parts.append("+%d Ponto de Habilidade" % use_sp)
+			parts.append(tr("DESC_SP") % use_sp)
 		if use_revive_party > 0.0:
-			parts.append("Revive caídos com %d%% HP" % roundi(use_revive_party * 100.0))
+			parts.append(tr("DESC_REVIVE") % roundi(use_revive_party * 100.0))
 	else:
 		var stats := _stat_mods_text()
 		if not stats.is_empty():
 			parts.append(stats)
 		if class_restriction.size() > 0:
-			parts.append("Apenas: %s" % ", ".join(_restriction_names()))
+			parts.append(tr("DESC_ONLY") % ", ".join(_restriction_names()))
 	return " · ".join(parts)
 
 
 func _stat_mods_text() -> String:
 	var mods: Array[String] = []
-	if mod_hp != 0:  mods.append("HP %+d" % mod_hp)
-	if mod_mp != 0:  mods.append("MP %+d" % mod_mp)
-	if mod_atk != 0: mods.append("ATQ %+d" % mod_atk)
-	if mod_def != 0: mods.append("DEF %+d" % mod_def)
-	if mod_mag != 0: mods.append("MAG %+d" % mod_mag)
-	if mod_spd != 0: mods.append("VEL %+d" % mod_spd)
+	if mod_hp != 0:  mods.append("%s %+d" % [tr("STAT_HP"), mod_hp])
+	if mod_mp != 0:  mods.append("%s %+d" % [tr("STAT_MP"), mod_mp])
+	if mod_atk != 0: mods.append("%s %+d" % [tr("STAT_ATK"), mod_atk])
+	if mod_def != 0: mods.append("%s %+d" % [tr("STAT_DEF"), mod_def])
+	if mod_mag != 0: mods.append("%s %+d" % [tr("STAT_MAG"), mod_mag])
+	if mod_spd != 0: mods.append("%s %+d" % [tr("STAT_SPD"), mod_spd])
 	return ", ".join(mods)
 
 
@@ -84,5 +84,5 @@ func _restriction_names() -> Array:
 	var names: Array = []
 	for cid in class_restriction:
 		var c := load("res://resources/classes/%s.tres" % cid) as ClassData
-		names.append(c.display_name if c != null else str(cid))
+		names.append(tr(c.display_name) if c != null else str(cid))
 	return names

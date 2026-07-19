@@ -326,11 +326,11 @@ func roll_event() -> Dictionary:
 func _event_fountain() -> Dictionary:
 	return {
 		"id": "fountain",
-		"title": "Fonte Antiga",
-		"desc": "Uma fonte cristalina brilha com luz suave. Beber dela?",
+		"title": tr("EVT_FOUNTAIN_TITLE"),
+		"desc": tr("EVT_FOUNTAIN_DESC"),
 		"options": [
-			{"text": "Beber", "available": true, "effect": _fountain_drink},
-			{"text": "Ignorar", "available": true, "effect": _move_on},
+			{"text": tr("EVT_FOUNTAIN_OPT1"), "available": true, "effect": _fountain_drink},
+			{"text": tr("EVT_FOUNTAIN_OPT2"), "available": true, "effect": _move_on},
 		],
 	}
 
@@ -338,11 +338,11 @@ func _event_fountain() -> Dictionary:
 func _event_merchant() -> Dictionary:
 	return {
 		"id": "merchant",
-		"title": "Mercador Errante",
-		"desc": "Um velho mercador oferece uma poção de cura por 30 ouro.",
+		"title": tr("EVT_MERCHANT_TITLE"),
+		"desc": tr("EVT_MERCHANT_DESC"),
 		"options": [
-			{"text": "Comprar (30 ouro)", "available": GameState.gold >= 30, "effect": _merchant_buy},
-			{"text": "Recusar", "available": true, "effect": _move_on},
+			{"text": tr("EVT_MERCHANT_OPT1"), "available": GameState.gold >= 30, "effect": _merchant_buy},
+			{"text": tr("EVT_MERCHANT_OPT2"), "available": true, "effect": _move_on},
 		],
 	}
 
@@ -350,11 +350,11 @@ func _event_merchant() -> Dictionary:
 func _event_altar() -> Dictionary:
 	return {
 		"id": "altar",
-		"title": "Altar Sombrio",
-		"desc": "Um altar sussurra promessas de poder em troca de sangue.",
+		"title": tr("EVT_ALTAR_TITLE"),
+		"desc": tr("EVT_ALTAR_DESC"),
 		"options": [
-			{"text": "Sacrificar HP por XP", "available": true, "effect": _altar_sacrifice},
-			{"text": "Recuar", "available": true, "effect": _altar_retreat},
+			{"text": tr("EVT_ALTAR_OPT1"), "available": true, "effect": _altar_sacrifice},
+			{"text": tr("EVT_ALTAR_OPT2"), "available": true, "effect": _altar_retreat},
 		],
 	}
 
@@ -362,55 +362,55 @@ func _event_altar() -> Dictionary:
 func _event_chest() -> Dictionary:
 	return {
 		"id": "chest",
-		"title": "Baú Suspeito",
-		"desc": "Um baú trancado pulsa com energia.",
+		"title": tr("EVT_CHEST_TITLE"),
+		"desc": tr("EVT_CHEST_DESC"),
 		"options": [
-			{"text": "Forçar (pode dar errado)", "available": true, "effect": _chest_force},
-			{"text": "Deixar", "available": true, "effect": _chest_leave},
+			{"text": tr("EVT_CHEST_OPT1"), "available": true, "effect": _chest_force},
+			{"text": tr("EVT_CHEST_OPT2"), "available": true, "effect": _chest_leave},
 		],
 	}
 
 
 func _move_on() -> String:
-	return "Vocês seguem em frente."
+	return tr("EVT_MOVE_ON")
 
 
 func _fountain_drink() -> String:
 	resolve_rest()
-	return "O grupo é completamente curado!"
+	return tr("EVT_FOUNTAIN_R")
 
 
 func _merchant_buy() -> String:
 	if GameState.gold < 30:
-		return "Ouro insuficiente."
+		return tr("EVT_NO_GOLD")
 	GameState.gold -= 30
 	GameState.add_item("potion_heal")
-	return "Poção adquirida."
+	return tr("EVT_MERCHANT_R")
 
 
 func _altar_sacrifice() -> String:
 	for h in Party.heroes:
 		h.hp = maxi(1, int(h.hp / 2.0))
 		Party.award_xp(h, 12)
-	return "Cada herói perde metade do HP, mas ganha 12 XP."
+	return tr("EVT_ALTAR_R")
 
 
 func _altar_retreat() -> String:
-	return "Vocês recuam, evitando o altar."
+	return tr("EVT_ALTAR_RETREAT")
 
 
 func _chest_force() -> String:
 	if randf() < 0.6:
 		var loot := ["potion_heal", "ring_might", "ring_focus"]
 		GameState.add_item(loot[randi() % loot.size()])
-		return "Sucesso! Um item estava dentro."
+		return tr("EVT_CHEST_WIN")
 	for h in Party.heroes:
 		h.hp = maxi(1, h.hp - 8)
-	return "Armadilha! Cada herói perde 8 HP."
+	return tr("EVT_CHEST_TRAP")
 
 
 func _chest_leave() -> String:
-	return "Melhor não arriscar."
+	return tr("EVT_CHEST_LEAVE")
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────

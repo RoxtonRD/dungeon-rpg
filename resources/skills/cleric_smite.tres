@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "smite"
-display_name = "Punir"
-description = "Dano sagrado em 1 inimigo."
+display_name = "SKILL_CLERIC_SMITE"
+description = "SKILLD_CLERIC_SMITE"
 skill_type = 1
 power = 1.1

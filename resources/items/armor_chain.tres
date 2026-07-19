@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "armor_chain"
-display_name = "Cota de Malha"
+display_name = "ITEM_ARMOR_CHAIN"
 slot = 1
 value = 200
 mod_hp = 14

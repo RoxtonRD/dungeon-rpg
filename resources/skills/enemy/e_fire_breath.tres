@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "e_fire_breath"
-display_name = "Sopro Flamejante"
+display_name = "ESKILL_FIRE_BREATH"
 skill_type = 1
 target = 1
 power = 0.9

@@ -39,13 +39,13 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 26
-text = "Cidade"
+text = "UI_CITY"
 
 [node name="GoldLabel" type="Label" parent="VBox/Header"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "Ouro: 0"
+text = ""
 vertical_alignment = 1
 
 [node name="PartyStatus" type="HBoxContainer" parent="VBox"]
@@ -68,25 +68,25 @@ theme_override_constants/separation = 10
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
-text = "Entrar na Masmorra"
+text = ""
 
 [node name="MarketButton" type="Button" parent="VBox/HubPanel/HubVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-text = "Mercado"
+text = "UI_MARKET"
 
 [node name="CharactersButton" type="Button" parent="VBox/HubPanel/HubVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-text = "Personagens"
+text = "UI_CHARACTERS"
 
 [node name="FormationButton" type="Button" parent="VBox/HubPanel/HubVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
-text = "Formação"
+text = "UI_FORMATION"
 
 [node name="Spacer2" type="Control" parent="VBox"]
 layout_mode = 2
@@ -96,4 +96,4 @@ size_flags_vertical = 3
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-text = "Menu principal"
+text = "UI_MAIN_MENU"

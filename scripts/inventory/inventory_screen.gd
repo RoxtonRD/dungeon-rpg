@@ -41,7 +41,7 @@ func _build_hero_tabs() -> void:
 	for i in Party.heroes.size():
 		var h: Hero = Party.heroes[i]
 		var btn := Button.new()
-		btn.text = h.class_data.display_name
+		btn.text = tr(h.class_data.display_name)
 		btn.custom_minimum_size = Vector2(0, 48)  # 48dp minimum touch target
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.toggle_mode = true
@@ -86,14 +86,15 @@ func _refresh_full_body(hero: Hero) -> void:
 
 
 func _update_hero_info(hero: Hero) -> void:
-	hero_info_label.text = "%s  Nv.%d  HP: %d/%d  MP: %d/%d  SP: %d" % [
-		hero.class_data.display_name, hero.level,
+	hero_info_label.text = tr("UI_HERO_INFO") % [
+		tr(hero.class_data.display_name), hero.level,
 		hero.hp, hero.max_hp(),
 		hero.mp, hero.max_mp(),
 		hero.sp_available,
 	]
-	stats_label.text = "ATQ: %d   DEF: %d   MAG: %d   VEL: %d" % [
-		hero.atk(), hero.def(), hero.mag(), hero.spd(),
+	stats_label.text = "%s: %d   %s: %d   %s: %d   %s: %d" % [
+		tr("STAT_ATK"), hero.atk(), tr("STAT_DEF"), hero.def(),
+		tr("STAT_MAG"), hero.mag(), tr("STAT_SPD"), hero.spd(),
 	]
 
 
@@ -104,9 +105,9 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 		child.queue_free()
 
 	var slot_labels: Dictionary = {
-		"weapon": "Arma",
-		"armor": "Armadura",
-		"trinket": "Amuleto",
+		"weapon": tr("UI_SLOT_WEAPON"),
+		"armor": tr("UI_SLOT_ARMOR"),
+		"trinket": tr("UI_SLOT_TRINKET"),
 	}
 	for slot in ["weapon", "armor", "trinket"]:
 		var entry := VBoxContainer.new()
@@ -127,7 +128,7 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 		if item != null:
 			row.add_child(_make_icon(item.icon_or_null()))
 		var item_lbl := Label.new()
-		item_lbl.text = item.display_name if item != null else "—"
+		item_lbl.text = tr(item.display_name) if item != null else "—"
 		item_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		item_lbl.add_theme_font_size_override("font_size", 16)
 		item_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -135,7 +136,7 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 
 		if item != null:
 			var unequip_btn := Button.new()
-			unequip_btn.text = "Desequipar"
+			unequip_btn.text = tr("UI_UNEQUIP")
 			unequip_btn.custom_minimum_size = Vector2(110, 0)
 			unequip_btn.pressed.connect(_on_unequip.bind(slot))
 			row.add_child(unequip_btn)
@@ -182,7 +183,7 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		# Skill name + tier
 		var tier := Party.get_skill_tier(hero, skill)
 		var name_lbl := Label.new()
-		name_lbl.text = "%s  T%d  ·  %d MP" % [skill.display_name, tier, skill.mp_cost]
+		name_lbl.text = "%s  T%d  ·  %d MP" % [tr(skill.display_name), tier, skill.mp_cost]
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 15)
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -192,7 +193,7 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		# Upgrade button — only shown when the skill can ever be upgraded
 		if skill.max_upgrade_level > 1:
 			var up_btn := Button.new()
-			up_btn.text = "Evoluir"
+			up_btn.text = tr("UI_UPGRADE")
 			up_btn.custom_minimum_size = Vector2(90, 0)
 			up_btn.disabled = not Party.can_upgrade_skill(hero, skill)
 			up_btn.pressed.connect(_on_upgrade_skill.bind(hero, skill))
@@ -200,7 +201,7 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 
 		entry.add_child(row)
 		if not skill.description.is_empty():
-			entry.add_child(_make_desc_label(skill.description))
+			entry.add_child(_make_desc_label(tr(skill.description)))
 		skill_rows.add_child(entry)
 
 
@@ -215,11 +216,11 @@ func _rebuild_item_list(hero: Hero) -> void:
 	for child in item_list_vbox.get_children():
 		child.queue_free()
 
-	inv_section_label.text = "Inventário (%d)" % GameState.inventory.size()
+	inv_section_label.text = tr("UI_INVENTORY_N") % GameState.inventory.size()
 
 	if GameState.inventory.is_empty():
 		var empty_lbl := Label.new()
-		empty_lbl.text = "Inventário vazio."
+		empty_lbl.text = tr("UI_INVENTORY_EMPTY")
 		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		empty_lbl.add_theme_font_size_override("font_size", 16)
 		item_list_vbox.add_child(empty_lbl)
@@ -240,7 +241,7 @@ func _rebuild_item_list(hero: Hero) -> void:
 		row.add_child(_make_icon(item.icon_or_null()))
 
 		var name_lbl := Label.new()
-		name_lbl.text = item.display_name
+		name_lbl.text = tr(item.display_name)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 16)
@@ -250,11 +251,11 @@ func _rebuild_item_list(hero: Hero) -> void:
 		action_btn.custom_minimum_size = Vector2(100, 0)
 
 		if item.slot == ItemData.Slot.CONSUMABLE:
-			action_btn.text = "Usar"
+			action_btn.text = tr("UI_USE")
 			action_btn.disabled = not _can_use_consumable(hero, item)
 			action_btn.pressed.connect(_on_use.bind(idx))
 		else:
-			action_btn.text = "Equipar"
+			action_btn.text = tr("UI_EQUIP")
 			action_btn.disabled = not _can_equip(hero, item)
 			action_btn.pressed.connect(_on_equip.bind(idx))
 
@@ -349,8 +350,8 @@ func _on_use(inv_idx: int) -> void:
 	if item.use_sp > 0:
 		var mp_gain := Party.award_sp(hero, item.use_sp)
 		if mp_gain > 0:
-			_flash_message("%s não tem habilidades para evoluir — +%d MP máximo!" % [
-				hero.class_data.display_name, mp_gain])
+			_flash_message(tr("UI_SP_CONVERT") % [
+				tr(hero.class_data.display_name), mp_gain])
 	if item.use_revive_party > 0:
 		for h in Party.heroes:
 			if not h.is_alive():

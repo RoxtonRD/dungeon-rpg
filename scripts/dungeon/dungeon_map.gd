@@ -139,9 +139,9 @@ func _rebuild_map() -> void:
 		return
 	for child in map_area.get_children():
 		child.queue_free()
-	title_label.text = "Masmorra Nv %d — Andar %d/%d" % [
+	title_label.text = tr("UI_DUNGEON_TITLE") % [
 		run.level, run.current_floor + 1, DungeonRun.NUM_FLOORS]
-	gold_label.text = "Ouro: %d" % GameState.gold
+	gold_label.text = tr("UI_GOLD") % GameState.gold
 	PartyBar.fill(party_status)
 
 	# Fixed bounding box over the whole floor, so positions don't shift.
@@ -322,15 +322,15 @@ func _on_combat_finished(result: int) -> void:
 
 func _show_treasure_popup() -> void:
 	var result: Dictionary = run.resolve_treasure()
-	treasure_gold_label.text = "Você ganhou %d ouro!" % result["gold"]
+	treasure_gold_label.text = tr("UI_TREASURE_GOLD") % result["gold"]
 	var items: Array = result["items"]
 	if items.is_empty():
 		treasure_item_label.visible = false
 	else:
 		var item_id: String = items[0]
 		var item := load(ITEM_DIR + item_id + ".tres") as ItemData
-		var item_name: String = item.display_name if item != null else item_id
-		treasure_item_label.text = "Item encontrado: %s" % item_name
+		var item_name: String = tr(item.display_name) if item != null else item_id
+		treasure_item_label.text = tr("UI_TREASURE_ITEM") % item_name
 		treasure_item_label.visible = true
 	popup_bg.texture = BG_TREASURE
 	popup_bg.visible = true
@@ -400,7 +400,7 @@ func _on_rest_continue() -> void:
 # ── Stairs popup ──────────────────────────────────────────────────────────────
 
 func _show_stairs_popup() -> void:
-	stairs_message_label.text = "Descer para o andar %d?" % (run.current_floor + 2)
+	stairs_message_label.text = tr("UI_STAIRS_Q") % (run.current_floor + 2)
 	stairs_panel.visible = true
 
 
@@ -423,13 +423,13 @@ func _end_run(victory: bool) -> void:
 		GameState.current_run = null
 		GameState.restock_market()
 		GameState.save_game()
-		end_label.text = "Masmorra concluída!\nO grupo retorna à cidade."
+		end_label.text = tr("UI_RUN_COMPLETE")
 	else:
 		# TPK rule: revive at 25 % HP, lose 20 % gold, then save and return.
 		# apply_tpk_penalty also clears the run and restocks the market.
 		GameState.apply_tpk_penalty()
 		GameState.save_game()
-		end_label.text = "O grupo foi derrotado.\nRevividos com 25%% HP.\n20%% do ouro perdido."
+		end_label.text = tr("UI_RUN_TPK")
 	end_panel.visible = true
 
 

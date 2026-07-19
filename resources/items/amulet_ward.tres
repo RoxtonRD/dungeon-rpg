@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "amulet_ward"
-display_name = "Amuleto de Guarda"
+display_name = "ITEM_AMULET_WARD"
 slot = 2
 value = 130
 mod_hp = 10

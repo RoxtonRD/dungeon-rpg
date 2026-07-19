@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 id = "stab"
-display_name = "Estocar"
-description = "Golpe rápido e preciso. Sem custo de MP."
+display_name = "SKILL_ROGUE_STAB"
+description = "SKILLD_ROGUE_STAB"
 mp_cost = 0
 unlock_level = 1
 max_upgrade_level = 3

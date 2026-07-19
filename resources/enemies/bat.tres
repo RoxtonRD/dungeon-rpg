@@ -8,7 +8,7 @@
 [resource]
 script = ExtResource("1")
 id = "bat"
-display_name = "Morcego"
+display_name = "ENEMY_BAT"
 role = 1
 max_hp = 12
 atk = 4

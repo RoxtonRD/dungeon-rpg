@@ -15,7 +15,7 @@ static func fill(container: Container) -> void:
 		col.add_theme_constant_override("separation", 2)
 
 		var name_lbl := Label.new()
-		name_lbl.text = h.class_data.display_name
+		name_lbl.text = TranslationServer.translate(h.class_data.display_name)
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 12)
 		col.add_child(name_lbl)

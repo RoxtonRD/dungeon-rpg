@@ -46,13 +46,13 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 26
-text = "Masmorra"
+text = ""
 
 [node name="GoldLabel" type="Label" parent="VBox/Header" unique_id=303263866]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
-text = "Ouro: 0"
+text = ""
 vertical_alignment = 1
 
 [node name="PartyStatus" type="HBoxContainer" parent="VBox" unique_id=1372335489]
@@ -76,20 +76,20 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Personagens"
+text = "UI_CHARACTERS"
 
 [node name="FormationButton" type="Button" parent="VBox/NavGrid" unique_id=522099337]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Formação"
+text = "UI_FORMATION"
 
 [node name="CityButton" type="Button" parent="VBox" unique_id=555007273]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Voltar à cidade"
+text = "UI_BACK_TO_CITY"
 
 [node name="EndPanel" type="PanelContainer" parent="." unique_id=236522503]
 unique_name_in_owner = true
@@ -128,7 +128,7 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Voltar"
+text = "UI_BACK"
 
 [node name="PopupBg" type="TextureRect" parent="." unique_id=1357924680]
 unique_name_in_owner = true
@@ -173,7 +173,7 @@ theme_override_constants/separation = 14
 [node name="TreasureTitleLabel" type="Label" parent="TreasurePanel/TreasureMargin/TreasureVBox" unique_id=1770334478]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Tesouro"
+text = "ROOM_TREASURE"
 horizontal_alignment = 1
 
 [node name="TreasureGoldLabel" type="Label" parent="TreasurePanel/TreasureMargin/TreasureVBox" unique_id=898412710]
@@ -193,7 +193,7 @@ autowrap_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Continuar"
+text = "UI_CONTINUE"
 
 [node name="EventPanel" type="PanelContainer" parent="." unique_id=1526795137]
 unique_name_in_owner = true
@@ -260,7 +260,7 @@ unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Continuar"
+text = "UI_CONTINUE"
 
 [node name="RestPanel" type="PanelContainer" parent="." unique_id=2011804907]
 unique_name_in_owner = true
@@ -292,13 +292,13 @@ theme_override_constants/separation = 18
 [node name="RestTitleLabel" type="Label" parent="RestPanel/RestMargin/RestVBox" unique_id=397339598]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Descanso"
+text = "ROOM_REST"
 horizontal_alignment = 1
 
 [node name="RestMessageLabel" type="Label" parent="RestPanel/RestMargin/RestVBox" unique_id=963693082]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "O grupo descansou e recuperou todas as forças."
+text = "UI_REST_DESC"
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -306,7 +306,7 @@ autowrap_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Continuar"
+text = "UI_CONTINUE"
 
 [node name="StairsPanel" type="PanelContainer" parent="." unique_id=2011804908]
 unique_name_in_owner = true
@@ -338,14 +338,14 @@ theme_override_constants/separation = 18
 [node name="StairsTitleLabel" type="Label" parent="StairsPanel/StairsMargin/StairsVBox" unique_id=397339599]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Escada"
+text = "ROOM_STAIRS"
 horizontal_alignment = 1
 
 [node name="StairsMessageLabel" type="Label" parent="StairsPanel/StairsMargin/StairsVBox" unique_id=963693083]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Uma escada desce para a escuridão."
+text = "UI_STAIRS_DESC"
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -353,13 +353,13 @@ autowrap_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Descer"
+text = "UI_DESCEND"
 
 [node name="StayButton" type="Button" parent="StairsPanel/StairsMargin/StairsVBox" unique_id=917704303]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Continuar explorando"
+text = "UI_KEEP_EXPLORING"
 
 [node name="AbandonPanel" type="PanelContainer" parent="." unique_id=2011804909]
 unique_name_in_owner = true
@@ -391,14 +391,13 @@ theme_override_constants/separation = 18
 [node name="AbandonTitleLabel" type="Label" parent="AbandonPanel/AbandonMargin/AbandonVBox" unique_id=397339600]
 layout_mode = 2
 theme_override_font_sizes/font_size = 26
-text = "Voltar à cidade"
+text = "UI_BACK_TO_CITY"
 horizontal_alignment = 1
 
 [node name="AbandonMessageLabel" type="Label" parent="AbandonPanel/AbandonMargin/AbandonVBox" unique_id=963693084]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Abandonar a masmorra?
-O progresso desta masmorra será perdido."
+text = "UI_ABANDON_Q"
 horizontal_alignment = 1
 autowrap_mode = 2
 
@@ -406,10 +405,10 @@ autowrap_mode = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Abandonar"
+text = "UI_ABANDON"
 
 [node name="AbandonCancelButton" type="Button" parent="AbandonPanel/AbandonMargin/AbandonVBox" unique_id=917704305]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 52)
 layout_mode = 2
-text = "Ficar"
+text = "UI_STAY"

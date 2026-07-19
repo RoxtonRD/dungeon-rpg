@@ -9,7 +9,7 @@
 [resource]
 script = ExtResource("1")
 id = "wolf"
-display_name = "Lobo"
+display_name = "ENEMY_WOLF"
 max_hp = 20
 atk = 6
 def = 2

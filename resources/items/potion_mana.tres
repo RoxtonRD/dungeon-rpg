@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "potion_mana"
-display_name = "Poção de Mana"
+display_name = "ITEM_POTION_MANA"
 slot = 3
 value = 30
 use_mp = 20

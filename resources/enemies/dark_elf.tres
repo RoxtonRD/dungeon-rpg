@@ -9,7 +9,7 @@
 [resource]
 script = ExtResource("1")
 id = "dark_elf"
-display_name = "Elfo Negro"
+display_name = "ENEMY_DARK_ELF"
 role = 1
 max_hp = 22
 atk = 5

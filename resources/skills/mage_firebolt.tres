@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "firebolt"
-display_name = "Dardo Ígneo"
-description = "Projétil de fogo. Baixo custo de MP."
+display_name = "SKILL_MAGE_FIREBOLT"
+description = "SKILLD_MAGE_FIREBOLT"
 skill_type = 1
 power = 1.1

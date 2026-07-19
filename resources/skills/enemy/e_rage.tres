@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "e_rage"
-display_name = "Fúria"
+display_name = "ESKILL_RAGE"
 skill_type = 0
 target = 0
 power = 1.5
