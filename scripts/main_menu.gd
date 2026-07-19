@@ -5,9 +5,11 @@
 extends Control
 
 const CITY_SCENE := "res://scripts/city/city_hub.tscn"
+const SETTINGS_SCENE := "res://scripts/menu/settings_screen.tscn"
 
 @onready var continue_button: Button = %ContinueButton
 @onready var new_game_button: Button = %NewGameButton
+@onready var settings_button: Button = %SettingsButton
 
 
 func _ready() -> void:
@@ -15,6 +17,7 @@ func _ready() -> void:
 	continue_button.visible = GameState.has_save()
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)
+	settings_button.pressed.connect(func(): Fade.change_scene(SETTINGS_SCENE))
 
 
 func _on_continue_pressed() -> void:
