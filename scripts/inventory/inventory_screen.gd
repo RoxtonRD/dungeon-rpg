@@ -58,6 +58,9 @@ func _on_hero_tab(idx: int) -> void:
 
 func _refresh() -> void:
 	var hero: Hero = Party.heroes[_selected_hero_idx]
+	# Heal saves that predate the surplus-SP fix: fold any stranded, unspendable
+	# SP into max MP before drawing the SP count and skill rows.
+	Party.reconcile_surplus_sp(hero)
 	_refresh_full_body(hero)
 	_update_hero_info(hero)
 	_rebuild_equipment_rows(hero)
