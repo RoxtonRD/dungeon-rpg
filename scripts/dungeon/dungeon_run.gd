@@ -14,8 +14,16 @@ const ENCOUNTER_POOLS := [
 	["goblin", "bat", "wolf", "skeleton"],
 	["bandit", "dark_elf", "orc", "skeleton", "wolf"],
 ]
-## The dungeon boss: Necromante plus a skeleton minion.
-const BOSS_ENCOUNTER := ["boss_necromancer", "skeleton"]
+## Boss encounters, one rolled per run (see `boss`). Each is the boss plus
+## thematic minions; the roll is stored on the run so it survives save/reload.
+## Three comparable-but-distinct fights: a boss + tanky add, a boss + fragile
+## swarm, and a lone hard-hitter (no add — its high stats and AoE offset the
+## lost action economy).
+const BOSS_ENCOUNTERS := [
+	["boss_necromancer", "skeleton"],        # undead: Necromante + esqueleto
+	["boss_vampire", "bat", "bat"],          # vampiro: Vampiro + morcegos
+	["boss_dragon_hatchling"],               # draconico: Dragao Jovem (sozinho)
+]
 
 ## Difficulty scaling per step. Enemy stats and rewards are multiplied by
 ## 1 + (floor-1)*FLOOR_SCALE + (dungeon_level-1)*DUNGEON_SCALE.
@@ -49,6 +57,8 @@ const KIND_ORDER := [
 ]
 
 var level: int = 1
+## Index into BOSS_ENCOUNTERS chosen for this run's floor-4 boss.
+var boss: int = 0
 ## One Dictionary per floor: Vector2i grid position -> DungeonRoom.
 var floors: Array = []
 ## 0-based floor the player is on (0..NUM_FLOORS-1).
@@ -62,6 +72,7 @@ var player_pos: Vector2i = Vector2i.ZERO
 static func generate(p_level: int = 1) -> DungeonRun:
 	var run := DungeonRun.new()
 	run.level = p_level
+	run.boss = randi() % BOSS_ENCOUNTERS.size()
 	for f in NUM_FLOORS:
 		run.floors.append(_generate_floor(f))
 	run.current_floor = 0
@@ -254,7 +265,7 @@ func roll_encounter(floor_index: int) -> Array[EnemyData]:
 func roll_boss() -> Array[EnemyData]:
 	var out: Array[EnemyData] = []
 	var boss_floor := floors.size()  # the boss sits on the last floor (1-based)
-	for id in BOSS_ENCOUNTER:
+	for id in BOSS_ENCOUNTERS[boss % BOSS_ENCOUNTERS.size()]:
 		out.append(_scale_enemy(_load_enemy(id), boss_floor))
 	return out
 
@@ -424,6 +435,7 @@ func to_dict() -> Dictionary:
 		floors_data.append(arr)
 	return {
 		"level": level,
+		"boss": boss,
 		"current_floor": current_floor,
 		"px": player_pos.x,
 		"py": player_pos.y,
@@ -434,6 +446,7 @@ func to_dict() -> Dictionary:
 static func from_dict(d: Dictionary) -> DungeonRun:
 	var run := DungeonRun.new()
 	run.level = int(d.get("level", 1))
+	run.boss = int(d.get("boss", 0))
 	run.current_floor = int(d.get("current_floor", 0))
 	run.player_pos = Vector2i(int(d.get("px", 0)), int(d.get("py", 0)))
 	for arr in d.get("floors", []):
