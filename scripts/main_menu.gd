@@ -14,6 +14,7 @@ const SETTINGS_SCENE := "res://scripts/menu/settings_screen.tscn"
 
 func _ready() -> void:
 	SafeArea.apply($CenterContainer)
+	Backdrop.apply($Background, "menu")
 	continue_button.visible = GameState.has_save()
 	continue_button.pressed.connect(_on_continue_pressed)
 	new_game_button.pressed.connect(_on_new_game_pressed)

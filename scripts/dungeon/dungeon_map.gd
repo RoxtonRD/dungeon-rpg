@@ -88,6 +88,7 @@ var _current_event: Dictionary = {}
 
 func _ready() -> void:
 	SafeArea.apply($VBox)
+	Backdrop.apply($Background, "dungeon")
 	gold_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
 	inventory_button.pressed.connect(_on_inventory_pressed)
 	formation_button.pressed.connect(_on_formation_pressed)

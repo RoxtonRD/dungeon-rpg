@@ -3,8 +3,9 @@
 ## Masmorra" resumes the active run when one exists (app quit mid-run),
 ## otherwise generates a fresh dungeon at the current dungeon_level.
 ##
-## Background reuses the merchant-stall art as a placeholder until real
-## city art exists — swap the Background texture in city_hub.tscn then.
+## Background reuses the merchant-stall art as a placeholder until real city
+## art exists — drop assets/backgrounds/bg_city.png in and Backdrop.apply()
+## (called in _ready) picks it up automatically, no scene edit needed.
 extends Control
 
 const DUNGEON_SCENE := "res://scripts/dungeon/dungeon_map.tscn"
@@ -25,6 +26,7 @@ const CITY_SCENE := "res://scripts/city/city_hub.tscn"
 
 func _ready() -> void:
 	SafeArea.apply($VBox)
+	Backdrop.apply($Background, "city")
 	gold_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
 	# Safety net: allows this scene to be run directly via F6 for testing.
 	if Party.heroes.is_empty():
