@@ -17,9 +17,10 @@ documents the v1 base that everything else reuses).
 
 ## Core loop
 
-enter dungeon -> fight -> get loot -> grow stronger -> next dungeon
+city hub -> enter dungeon -> fight -> get loot -> return to city ->
+prepare (market/gear) -> deeper dungeon
 
-Any system that does not directly serve this loop is out of scope for v1.
+Any system that does not directly serve this loop is out of scope.
 
 ## Stack & conventions
 
@@ -77,5 +78,6 @@ affixes; save migration from v1.
 
 ## Out of bounds
 
-Do not add systems, screens, or mechanics not listed in v1 scope without
-asking first. If something seems missing, ask before building it.
+Do not add systems, screens, or mechanics not listed in the current
+scope without asking first. If something seems missing, ask before
+building it.
