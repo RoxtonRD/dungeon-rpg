@@ -214,3 +214,8 @@ Revived with 25% HP.
 "ENEMY_NECROMANCER","Necromante","Necromancer"
 "ENEMY_VAMPIRE","Vampiro","Vampire"
 "ENEMY_DRAGON_HATCHLING","Dragão Filhote","Dragon Hatchling"
+"UI_RESET_CONFIRM_Q","Apagar o jogo salvo?
+Isto vai apagar seu progresso permanentemente e não pode ser desfeito.","Delete your saved game?
+This permanently erases your progress and cannot be undone."
+"UI_RESET_CONFIRM_PROMPT","Digite %s para confirmar:","Type %s to confirm:"
+"UI_RESET_CONFIRM_WORD","Concordo","Agree"
