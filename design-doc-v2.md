@@ -39,7 +39,7 @@
   (fonte, mercador, altar, baú), descanso, tesouro. A sala de combate
   abre a tela de combate atual sem mudanças.
 - Scaling de dificuldade: manter a fórmula
-  `1 + (andar−1)×0.15 + (dungeon_level−1)×0.25` — agora com 4 andares.
+  `1 + (andar−1)×0.15 + (dungeon_level−1)×0.20` — agora com 4 andares.
 
 ### Fim de dungeon
 
