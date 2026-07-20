@@ -101,6 +101,24 @@ func award_sp(hero: Hero, points: int) -> int:
 	hero.mp = mini(hero.max_mp(), hero.mp + mp_gain)
 	return mp_gain
 
+
+## Sweeps banked SP that can never be spent — every skill already at its max
+## tier — into permanent max MP, applying the surplus-SP rule that award_sp()
+## only enforces at earn time. Without this, SP hoarded (or held while skills
+## are still level-locked) and then spent down to a fully-maxed build would
+## strand points in sp_available, letting a hero hold more SP than the skill
+## tiers can ever absorb. Safe to call anytime; returns the max MP gained.
+func reconcile_surplus_sp(hero: Hero) -> int:
+	if hero.sp_available <= 0 or has_upgradable_skills(hero):
+		return 0
+	var leftover := hero.sp_available
+	hero.sp_available = 0
+	var gain := leftover * SP_TO_MP
+	hero.bonus_mp += gain
+	hero.mp = mini(hero.max_mp(), hero.mp + gain)
+	return gain
+
+
 ## Stable key used inside Hero.sp_spent. The .tres filename without extension —
 ## e.g. "warrior_slash" for res://resources/skills/warrior_slash.tres.
 func _skill_key(skill: SkillData) -> String:
@@ -127,6 +145,9 @@ func upgrade_skill(hero: Hero, skill: SkillData) -> bool:
 	var key := _skill_key(skill)
 	hero.sp_spent[key] = int(hero.sp_spent.get(key, 0)) + 1
 	hero.sp_available -= 1
+	# If that was the last available upgrade, convert any SP still banked so it
+	# doesn't strand above the skills' capacity (hoard-then-spend case).
+	reconcile_surplus_sp(hero)
 	return true
 
 

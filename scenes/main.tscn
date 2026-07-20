@@ -61,3 +61,80 @@ unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(280, 56)
 text = "UI_SETTINGS"
+
+[node name="ResetConfirm" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+
+[node name="Dim" type="ColorRect" parent="ResetConfirm"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.65)
+
+[node name="Center" type="CenterContainer" parent="ResetConfirm"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Panel" type="PanelContainer" parent="ResetConfirm/Center"]
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="ResetConfirm/Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="ResetConfirm/Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="QLabel" type="Label" parent="ResetConfirm/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.7, 0.55, 1)
+theme_override_font_sizes/font_size = 18
+text = "UI_RESET_CONFIRM_Q"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="PromptLabel" type="Label" parent="ResetConfirm/Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ResetInput" type="LineEdit" parent="ResetConfirm/Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+alignment = 1
+caret_blink = true
+
+[node name="Buttons" type="HBoxContainer" parent="ResetConfirm/Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ResetCancelButton" type="Button" parent="ResetConfirm/Center/Panel/Margin/VBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "UI_CANCEL"
+
+[node name="ResetConfirmButton" type="Button" parent="ResetConfirm/Center/Panel/Margin/VBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+size_flags_horizontal = 3
+disabled = true
+text = "UI_CONFIRM"
