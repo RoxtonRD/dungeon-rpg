@@ -9,6 +9,7 @@ const _CLIENT_SCRIPTS := [
 	preload("res://addons/godot_ai/clients/claude_code.gd"),
 	preload("res://addons/godot_ai/clients/claude_desktop.gd"),
 	preload("res://addons/godot_ai/clients/codex.gd"),
+	preload("res://addons/godot_ai/clients/grok.gd"),
 	preload("res://addons/godot_ai/clients/antigravity.gd"),
 	preload("res://addons/godot_ai/clients/cursor.gd"),
 	preload("res://addons/godot_ai/clients/windsurf.gd"),
@@ -19,12 +20,14 @@ const _CLIENT_SCRIPTS := [
 	preload("res://addons/godot_ai/clients/cline.gd"),
 	preload("res://addons/godot_ai/clients/kilo_code.gd"),
 	preload("res://addons/godot_ai/clients/roo_code.gd"),
+	preload("res://addons/godot_ai/clients/zoo_code.gd"),
 	preload("res://addons/godot_ai/clients/kiro.gd"),
 	preload("res://addons/godot_ai/clients/trae.gd"),
 	preload("res://addons/godot_ai/clients/cherry_studio.gd"),
 	preload("res://addons/godot_ai/clients/opencode.gd"),
 	preload("res://addons/godot_ai/clients/qwen_code.gd"),
 	preload("res://addons/godot_ai/clients/kimi_code.gd"),
+	preload("res://addons/godot_ai/clients/hermes.gd"),
 ]
 
 static var _instances: Array[McpClient] = []
