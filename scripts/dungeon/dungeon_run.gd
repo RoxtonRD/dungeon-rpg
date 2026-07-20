@@ -29,7 +29,7 @@ const BOSS_ENCOUNTERS := [
 ## 1 + (floor-1)*FLOOR_SCALE + (dungeon_level-1)*DUNGEON_SCALE.
 ## Floor 1 of dungeon 1 is the 1.0 baseline.
 const FLOOR_SCALE := 0.15
-const DUNGEON_SCALE := 0.25
+const DUNGEON_SCALE := 0.20
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.

@@ -422,17 +422,26 @@ func _show_end_panel() -> void:
 		var lines: Array[String] = []
 		lines.append(tr("UI_REWARDS") % [_pending_rewards["xp"], _pending_rewards["gold"]])
 		for h in Party.heroes:
-			if h.is_alive():
-				var prev_level := h.level
-				var prev_bonus_mp := h.bonus_mp
-				var unlocked: Array[SkillData] = Party.award_xp(h, int(_pending_rewards["xp"]))
-				if h.level > prev_level:
-					lines.append(tr("UI_LEVEL_UP") % [tr(h.class_data.display_name), h.level])
-					for skill in unlocked:
-						lines.append(tr("UI_NEW_SKILL") % tr(skill.display_name))
-				if h.bonus_mp > prev_bonus_mp:
-					lines.append(tr("UI_SP_CONVERT") % [
-						tr(h.class_data.display_name), h.bonus_mp - prev_bonus_mp])
+			# Downed heroes still earn XP, at half rate, so a hero KO'd early in a
+			# run doesn't spiral levels behind the survivors. A level-up must not
+			# revive them, though — award_xp()'s level_up() full-heals, so we
+			# re-down them afterwards to preserve the "dead until rest/item" rule.
+			var was_down := not h.is_alive()
+			var xp_award := int(_pending_rewards["xp"])
+			if was_down:
+				xp_award /= 2
+			var prev_level := h.level
+			var prev_bonus_mp := h.bonus_mp
+			var unlocked: Array[SkillData] = Party.award_xp(h, xp_award)
+			if was_down:
+				h.hp = 0
+			if h.level > prev_level:
+				lines.append(tr("UI_LEVEL_UP") % [tr(h.class_data.display_name), h.level])
+				for skill in unlocked:
+					lines.append(tr("UI_NEW_SKILL") % tr(skill.display_name))
+			if h.bonus_mp > prev_bonus_mp:
+				lines.append(tr("UI_SP_CONVERT") % [
+					tr(h.class_data.display_name), h.bonus_mp - prev_bonus_mp])
 		# Rare boss-only drop: a Tomo de Maestria.
 		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
 			GameState.add_item("tome_sp")
