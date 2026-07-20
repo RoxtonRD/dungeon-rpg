@@ -11,6 +11,7 @@ extends Control
 
 func _ready() -> void:
 	SafeArea.apply($VBox)
+	Backdrop.apply($Background, "formation")
 	# Safety net: allows this scene to be run directly for testing.
 	if Party.heroes.is_empty():
 		Party.start_new_game()

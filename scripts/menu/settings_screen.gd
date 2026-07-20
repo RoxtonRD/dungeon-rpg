@@ -17,6 +17,7 @@ const CREDITS_SCENE := "res://scripts/menu/credits_screen.tscn"
 
 func _ready() -> void:
 	SafeArea.apply($VBox)
+	Backdrop.apply($Background, "settings")
 	# Language toggles form a radio group; same for combat speed.
 	var lang_group := ButtonGroup.new()
 	lang_pt_button.button_group = lang_group

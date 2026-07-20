@@ -8,4 +8,5 @@ const SETTINGS_SCENE := "res://scripts/menu/settings_screen.tscn"
 
 func _ready() -> void:
 	SafeArea.apply($VBox)
+	Backdrop.apply($Background, "credits")
 	back_button.pressed.connect(func(): Fade.change_scene(SETTINGS_SCENE))
