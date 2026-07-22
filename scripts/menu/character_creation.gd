@@ -77,12 +77,7 @@ func _on_class_picked(cid: String) -> void:
 
 ## Skins available to a class: the default (class id) first, then any extras.
 func _class_skins(class_id: String) -> Array:
-	var cd := load(CLASS_DIR + "%s.tres" % class_id) as ClassData
-	var out: Array = [class_id]
-	for s in cd.skins:
-		if not out.has(s):
-			out.append(s)
-	return out
+	return (load(CLASS_DIR + "%s.tres" % class_id) as ClassData).all_skins()
 
 
 func _on_skin_step(step: int) -> void:

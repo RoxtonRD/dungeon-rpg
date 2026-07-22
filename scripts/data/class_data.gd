@@ -38,3 +38,13 @@ enum Role { FRONT, BACK }
 ## always the class id itself). Add a new skin by dropping its art in and listing
 ## its id here — see assets/full_body/README.md and HeroArt.
 @export var skins: Array[String] = []
+
+
+## Every skin id for this class: the default look (the class id) first, then the
+## authored extras, de-duplicated. Never empty. Used by the skin pickers.
+func all_skins() -> Array[String]:
+	var out: Array[String] = [id]
+	for s in skins:
+		if not out.has(s):
+			out.append(s)
+	return out

@@ -15,8 +15,13 @@ const ITEM_DIR := "res://resources/items/"
 @onready var inv_section_label: Label = %InvSectionLabel
 @onready var item_list_vbox: VBoxContainer = %ItemListVBox
 @onready var close_button: Button = %CloseButton
+@onready var rename_input: LineEdit = %RenameInput
+@onready var prev_skin_button: Button = %PrevSkinButton
+@onready var next_skin_button: Button = %NextSkinButton
+@onready var skin_count_label: Label = %SkinCountLabel
 
 var _selected_hero_idx: int = 0
+var _hero_tab_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -24,6 +29,9 @@ func _ready() -> void:
 	# Pixel art: render the full-body image without linear-filter blur.
 	full_body_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	close_button.pressed.connect(_on_close)
+	rename_input.text_changed.connect(_on_rename_changed)
+	prev_skin_button.pressed.connect(_on_skin_step.bind(-1))
+	next_skin_button.pressed.connect(_on_skin_step.bind(1))
 	# Safety net: allows this scene to be run directly for testing.
 	if Party.heroes.is_empty():
 		Party.start_new_game()
@@ -35,6 +43,7 @@ func _ready() -> void:
 func _build_hero_tabs() -> void:
 	for child in hero_tab_bar.get_children():
 		child.queue_free()
+	_hero_tab_buttons.clear()
 	# Toggle buttons in a shared group act as a radio: the selected tab keeps
 	# the theme's "pressed" (gold) style so the active hero is obvious.
 	var group := ButtonGroup.new()
@@ -49,6 +58,7 @@ func _build_hero_tabs() -> void:
 		btn.button_pressed = (i == _selected_hero_idx)
 		btn.pressed.connect(_on_hero_tab.bind(i))
 		hero_tab_bar.add_child(btn)
+		_hero_tab_buttons.append(btn)
 
 
 func _on_hero_tab(idx: int) -> void:
@@ -62,10 +72,56 @@ func _refresh() -> void:
 	# SP into max MP before drawing the SP count and skill rows.
 	Party.reconcile_surplus_sp(hero)
 	_refresh_full_body(hero)
+	_refresh_appearance(hero)
 	_update_hero_info(hero)
 	_rebuild_equipment_rows(hero)
 	_rebuild_skill_rows(hero)
 	_rebuild_item_list(hero)
+
+
+# ── Appearance: rename + skin (cosmetic; class is never editable) ─────────────
+
+## Refreshes the rename field and skin cycler for the selected hero. Setting
+## rename_input.text in code does not emit text_changed, so this never loops.
+func _refresh_appearance(hero: Hero) -> void:
+	rename_input.text = hero.custom_name
+	rename_input.placeholder_text = _default_name(hero)
+	var skins := hero.class_data.all_skins()
+	var idx := maxi(0, skins.find(hero.effective_skin()))
+	skin_count_label.text = tr("UI_CREATE_SKIN_N") % [idx + 1, skins.size()]
+	var multi := skins.size() > 1
+	prev_skin_button.disabled = not multi
+	next_skin_button.disabled = not multi
+
+
+## The name the hero shows when custom_name is cleared (roster or class name).
+func _default_name(hero: Hero) -> String:
+	if not hero.character_id.is_empty():
+		var cd := Party.character_by_id(hero.character_id)
+		if cd != null:
+			return tr(cd.display_name)
+	return tr(hero.class_data.display_name)
+
+
+## Live rename: a typed name overrides the display name immediately. Cleared =
+## back to the default. Persisted on close.
+func _on_rename_changed(new_text: String) -> void:
+	var hero: Hero = Party.heroes[_selected_hero_idx]
+	hero.custom_name = new_text.strip_edges()
+	_hero_tab_buttons[_selected_hero_idx].text = hero.display_name()
+
+
+## Cycles the selected hero's skin among the class's available looks, wrapping.
+func _on_skin_step(step: int) -> void:
+	var hero: Hero = Party.heroes[_selected_hero_idx]
+	var skins := hero.class_data.all_skins()
+	var idx := maxi(0, skins.find(hero.effective_skin()))
+	idx = wrapi(idx + step, 0, skins.size())
+	# Store "" for the class default to keep saves tidy (matches build_custom_party).
+	hero.skin_id = "" if idx == 0 else skins[idx]
+	_refresh_full_body(hero)
+	_refresh_appearance(hero)
+	GameState.save_game()
 
 
 ## Shows the hero's full-body Texture2D if present; otherwise falls back to a
@@ -390,5 +446,7 @@ func _flash_message(text: String) -> void:
 
 
 func _on_close() -> void:
+	# Persist appearance edits (rename) and any equipment changes before leaving.
+	GameState.save_game()
 	# Back to whichever screen opened us (city hub by default).
 	Fade.change_scene(GameState.nav_return_scene)
