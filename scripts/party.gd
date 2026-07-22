@@ -11,6 +11,22 @@ const CLASS_PATHS: Array[String] = [
 	"res://resources/classes/mage.tres",
 ]
 
+const CLASS_DIR := "res://resources/classes/"
+const ROSTER_DIR := "res://resources/characters/"
+## The premade companion roster, in display order. Ids match the .tres files
+## under ROSTER_DIR. The player picks 3 of these to fill the party.
+const ROSTER_IDS: Array[String] = [
+	"warrior_aldric", "warrior_gunnar",
+	"cleric_mirena", "cleric_tobias",
+	"rogue_vesper", "rogue_kesla",
+	"mage_orwin", "mage_lysandra",
+]
+## Party size is fixed at 4 (the 2x2 formation grid depends on it): 1 main + 3.
+const PARTY_SIZE := 4
+const NUM_COMPANIONS := 3
+## A single class may appear on at most this many heroes in one party.
+const MAX_PER_CLASS := 2
+
 ## Hard ceiling on hero level. The prototype had none; we cap at 10 because
 ## a level-10 hero has earned exactly enough SP (10 total) to fully max all
 ## four skills — 3 normals to tier 3 + the ultimate to tier 4 = 9 SP, plus
@@ -22,12 +38,61 @@ var heroes: Array[Hero] = []
 
 # ── New game ──────────────────────────────────────────────────────────────────
 
-## Builds a fresh party for a new game: four level-1 heroes at full HP/MP.
+## Builds a fresh default party: one level-1 hero per class. Used by the F6
+## standalone bootstraps and as the fallback when no custom party was created.
 func start_new_game() -> void:
 	heroes.clear()
 	for path in CLASS_PATHS:
 		var class_data := load(path) as ClassData
 		heroes.append(Hero.create(class_data))
+
+
+# ── Roster & custom party ─────────────────────────────────────────────────────
+
+## The premade companion roster as CharacterData, in ROSTER_IDS order.
+func roster() -> Array[CharacterData]:
+	var out: Array[CharacterData] = []
+	for id in ROSTER_IDS:
+		var cd := character_by_id(id)
+		if cd != null:
+			out.append(cd)
+	return out
+
+
+func character_by_id(id: String) -> CharacterData:
+	return load(ROSTER_DIR + "%s.tres" % id) as CharacterData
+
+
+## Number of current party heroes belonging to `class_id`.
+func class_count(class_id: String) -> int:
+	var n := 0
+	for h in heroes:
+		if h.class_data.id == class_id:
+			n += 1
+	return n
+
+
+## Builds the party from a creation choice: the freely-built main character plus
+## the chosen companion character ids (in pick order). Main character is always
+## slot 0. Callers are responsible for enforcing the MAX_PER_CLASS / size rules
+## before calling; this trusts its inputs.
+func build_custom_party(main_class_id: String, main_name: String, main_skin_id: String, companion_ids: Array) -> void:
+	heroes.clear()
+	var main_class := load(CLASS_DIR + "%s.tres" % main_class_id) as ClassData
+	var main := Hero.create(main_class)
+	main.is_main = true
+	main.custom_name = main_name.strip_edges()
+	# Store "" when the skin is just the class default, keeping saves tidy.
+	main.skin_id = "" if main_skin_id == main_class_id else main_skin_id
+	heroes.append(main)
+	for cid in companion_ids:
+		var cd := character_by_id(str(cid))
+		if cd == null:
+			continue
+		var h := Hero.create(cd.class_data)
+		h.character_id = cd.id
+		h.skin_id = cd.skin_id
+		heroes.append(h)
 
 
 # ── XP & leveling ─────────────────────────────────────────────────────────────

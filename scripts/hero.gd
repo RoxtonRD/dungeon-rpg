@@ -6,6 +6,17 @@ extends RefCounted
 ## The class this hero belongs to. Drives base stats and the skill list.
 var class_data: ClassData
 
+## Player-typed display name. When set it overrides the roster/class name and is
+## shown literally (never translated). Empty = fall back to roster/class name.
+var custom_name: String = ""
+## Roster character this hero was created from (companions). Supplies a default,
+## localizable name via its CharacterData. Empty for the freely-built main hero.
+var character_id: String = ""
+## Art skin id. Empty means "use the class default" (see effective_skin / HeroArt).
+var skin_id: String = ""
+## True for the player's main character.
+var is_main: bool = false
+
 var level: int = 1
 var xp: int = 0
 
@@ -86,6 +97,25 @@ func is_alive() -> bool:
 	return hp > 0
 
 
+## The name shown in every UI. Priority: a player-typed name (literal), else the
+## roster character's localizable name, else the class name (today's behaviour).
+## Roster/class names resolve through tr() at call time so they follow a live
+## language switch; a typed custom_name is intentionally never translated.
+func display_name() -> String:
+	if not custom_name.strip_edges().is_empty():
+		return custom_name
+	if not character_id.is_empty():
+		var cd := load("res://resources/characters/%s.tres" % character_id) as CharacterData
+		if cd != null:
+			return tr(cd.display_name)
+	return tr(class_data.display_name)
+
+
+## Art key for this hero: the chosen skin, or the class default when unset.
+func effective_skin() -> String:
+	return skin_id if not skin_id.is_empty() else class_data.id
+
+
 # ── Persistence ───────────────────────────────────────────────────────────────
 
 ## Plain-Dictionary snapshot of this hero. Equipment is stored by item id;
@@ -97,6 +127,10 @@ func to_dict() -> Dictionary:
 		equip[slot] = item.id if item != null else ""
 	return {
 		"class_id": class_data.id,
+		"custom_name": custom_name,
+		"character_id": character_id,
+		"skin_id": skin_id,
+		"is_main": is_main,
 		"level": level,
 		"xp": xp,
 		"sp_available": sp_available,
@@ -113,6 +147,10 @@ static func from_dict(data: Dictionary) -> Hero:
 	var h := Hero.new()
 	var class_id: String = data.get("class_id", "")
 	h.class_data = load("res://resources/classes/%s.tres" % class_id) as ClassData
+	h.custom_name = str(data.get("custom_name", ""))
+	h.character_id = str(data.get("character_id", ""))
+	h.skin_id = str(data.get("skin_id", ""))
+	h.is_main = bool(data.get("is_main", false))
 	h.level = int(data.get("level", 1))
 	h.xp = int(data.get("xp", 0))
 	h.sp_available = int(data.get("sp_available", 0))
