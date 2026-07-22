@@ -41,7 +41,7 @@ func _build_hero_tabs() -> void:
 	for i in Party.heroes.size():
 		var h: Hero = Party.heroes[i]
 		var btn := Button.new()
-		btn.text = tr(h.class_data.display_name)
+		btn.text = h.display_name()
 		btn.custom_minimum_size = Vector2(0, 48)  # 48dp minimum touch target
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.toggle_mode = true
@@ -86,7 +86,7 @@ func _refresh_full_body(hero: Hero) -> void:
 
 func _update_hero_info(hero: Hero) -> void:
 	hero_info_label.text = tr("UI_HERO_INFO") % [
-		tr(hero.class_data.display_name), hero.level,
+		hero.display_name(), hero.level,
 		hero.hp, hero.max_hp(),
 		hero.mp, hero.max_mp(),
 		hero.sp_available,
@@ -350,7 +350,7 @@ func _on_use(inv_idx: int) -> void:
 		var mp_gain := Party.award_sp(hero, item.use_sp)
 		if mp_gain > 0:
 			_flash_message(tr("UI_SP_CONVERT") % [
-				tr(hero.class_data.display_name), mp_gain])
+				hero.display_name(), mp_gain])
 	if item.use_revive_party > 0:
 		for h in Party.heroes:
 			if not h.is_alive():

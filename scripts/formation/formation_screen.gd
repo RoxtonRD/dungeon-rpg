@@ -63,7 +63,7 @@ func _make_hero_button(hero: Hero) -> Button:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var row_indicator := tr("UI_TO_BACK") if hero.row == 0 else tr("UI_TO_FRONT")
 	label.text = "%s\n%d/%d %s\n%s" % [
-		tr(hero.class_data.display_name), hero.hp, hero.max_hp(), tr("STAT_HP"), row_indicator
+		hero.display_name(), hero.hp, hero.max_hp(), tr("STAT_HP"), row_indicator
 	]
 	hbox.add_child(label)
 

@@ -58,7 +58,7 @@ func is_alive() -> bool:
 
 func display_name() -> String:
 	# class/enemy display_name holds a translation key.
-	return tr(hero.class_data.display_name) if side == Battler.Side.PARTY else tr(enemy_data.display_name)
+	return hero.display_name() if side == Battler.Side.PARTY else tr(enemy_data.display_name)
 
 
 ## Returns true when this battler is in the front row.
