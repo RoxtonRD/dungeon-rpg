@@ -103,6 +103,38 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 
+[node name="RenameInput" type="LineEdit" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+placeholder_text = "UI_CREATE_NAME_PH"
+max_length = 16
+
+[node name="SkinRow" type="HBoxContainer" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PrevSkinButton" type="Button" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol/SkinRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 40)
+layout_mode = 2
+text = "◀"
+
+[node name="SkinCountLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol/SkinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "UI_CREATE_SKIN_N"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NextSkinButton" type="Button" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol/SkinRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 40)
+layout_mode = 2
+text = "▶"
+
 [node name="ScrollPanel" type="PanelContainer" parent="VBox" unique_id=569195016]
 layout_mode = 2
 size_flags_vertical = 3

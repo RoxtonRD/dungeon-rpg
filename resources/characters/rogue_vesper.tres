@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/character_data.gd" id="1"]
+[ext_resource type="Resource" uid="uid://3wtvdy34rqx1" path="res://resources/classes/rogue.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = "rogue_vesper"
+display_name = "CHAR_VESPER"
+class_data = ExtResource("2")
+skin_id = ""

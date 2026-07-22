@@ -63,7 +63,7 @@ func _make_hero_button(hero: Hero) -> Button:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var row_indicator := tr("UI_TO_BACK") if hero.row == 0 else tr("UI_TO_FRONT")
 	label.text = "%s\n%d/%d %s\n%s" % [
-		tr(hero.class_data.display_name), hero.hp, hero.max_hp(), tr("STAT_HP"), row_indicator
+		hero.display_name(), hero.hp, hero.max_hp(), tr("STAT_HP"), row_indicator
 	]
 	hbox.add_child(label)
 
@@ -74,14 +74,15 @@ func _make_hero_button(hero: Hero) -> Button:
 ## otherwise a colour placeholder tinted per class (shared with combat panels).
 func _make_portrait(hero: Hero) -> Control:
 	var portrait_size := Vector2(110, 110)
-	if hero.class_data.portrait != null:
+	var portrait := HeroArt.portrait_for(hero)
+	if portrait != null:
 		var tex := TextureRect.new()
 		tex.custom_minimum_size = portrait_size
 		tex.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		# Pixel art: keep portraits crisp at small sizes.
 		tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		tex.texture = hero.class_data.portrait
+		tex.texture = portrait
 		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return tex
 	var rect := ColorRect.new()

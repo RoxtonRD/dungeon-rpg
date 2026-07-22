@@ -436,12 +436,12 @@ func _show_end_panel() -> void:
 			if was_down:
 				h.hp = 0
 			if h.level > prev_level:
-				lines.append(tr("UI_LEVEL_UP") % [tr(h.class_data.display_name), h.level])
+				lines.append(tr("UI_LEVEL_UP") % [h.display_name(), h.level])
 				for skill in unlocked:
 					lines.append(tr("UI_NEW_SKILL") % tr(skill.display_name))
 			if h.bonus_mp > prev_bonus_mp:
 				lines.append(tr("UI_SP_CONVERT") % [
-					tr(h.class_data.display_name), h.bonus_mp - prev_bonus_mp])
+					h.display_name(), h.bonus_mp - prev_bonus_mp])
 		# Rare boss-only drop: a Tomo de Maestria.
 		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
 			GameState.add_item("tome_sp")

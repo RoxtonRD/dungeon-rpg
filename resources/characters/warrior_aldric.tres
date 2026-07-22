@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/character_data.gd" id="1"]
+[ext_resource type="Resource" uid="uid://bksoqpn6t4qvu" path="res://resources/classes/warrior.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = "warrior_aldric"
+display_name = "CHAR_ALDRIC"
+class_data = ExtResource("2")
+skin_id = ""

@@ -1,11 +1,12 @@
 ## Title screen.
 ## "Continuar" loads the existing save and drops into the city hub.
-## "Nova Aventura" wipes any save and starts fresh in the city; the first
-## dungeon is generated when the player enters it from the hub.
+## "Nova Aventura" (behind a typed confirmation when a save exists) opens
+## character creation, which builds the party and starts the fresh game.
 extends Control
 
 const CITY_SCENE := "res://scripts/city/city_hub.tscn"
 const SETTINGS_SCENE := "res://scripts/menu/settings_screen.tscn"
+const CREATE_SCENE := "res://scripts/menu/character_creation.tscn"
 
 @onready var continue_button: Button = %ContinueButton
 @onready var new_game_button: Button = %NewGameButton
@@ -49,11 +50,11 @@ func _on_new_game_pressed() -> void:
 		_start_new_game()
 
 
+## New adventure → character creation. The party build + meta reset + save all
+## happen there on confirm, so the existing save is untouched until the player
+## commits (and stays intact if they back out of creation).
 func _start_new_game() -> void:
-	Party.start_new_game()
-	GameState.start_new_game()
-	GameState.save_game()
-	Fade.change_scene(CITY_SCENE)
+	Fade.change_scene(CREATE_SCENE)
 
 
 # ── Reset confirmation modal ──────────────────────────────────────────────────

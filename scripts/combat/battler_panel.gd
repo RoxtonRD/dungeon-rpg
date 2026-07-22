@@ -129,7 +129,7 @@ func refresh() -> void:
 	var portrait_tex: Texture2D = null
 	if battler.side == Battler.Side.PARTY:
 		_portrait_bg.color = color_for_class(battler.hero.class_data.id)
-		portrait_tex = battler.hero.class_data.portrait
+		portrait_tex = HeroArt.portrait_for(battler.hero)
 		_mp_label.visible = true
 		_mp_bar.visible = true
 		var mp_max := battler.hero.max_mp()

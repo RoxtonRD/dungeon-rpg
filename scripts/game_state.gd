@@ -22,9 +22,10 @@ const MARKET_EQUIPMENT_POOL: Array[String] = [
 const MARKET_SLOTS: int = 5
 const SAVE_PATH: String = "user://save.json"
 ## v2: room-based dungeon (floors of rooms, player position, explored state).
-## v1 node-map saves are intentionally NOT migrated — the version check
-## rejects them and the menu falls back to a fresh game.
-const SAVE_VERSION: int = 2
+## v3: customizable party (hero custom_name / character_id / skin_id / is_main).
+## Older saves are intentionally NOT migrated — the version check rejects them
+## and the menu falls back to a fresh game.
+const SAVE_VERSION: int = 3
 
 var gold: int = 0
 ## Item ids (e.g. "potion_heal"). Duplicates allowed; resolved to ItemData on use.
