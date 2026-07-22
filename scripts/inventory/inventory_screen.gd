@@ -73,18 +73,14 @@ func _refresh() -> void:
 ## Loads from assets/full_body — the single source hero image; portraits are
 ## AtlasTexture head-crops of this same file.
 func _refresh_full_body(hero: Hero) -> void:
-	var class_id := hero.class_data.id
-	var path := "res://assets/full_body/%s.png" % class_id
-	var tex: Texture2D = null
-	if ResourceLoader.exists(path):
-		tex = load(path) as Texture2D
+	var tex := HeroArt.full_body_for(hero)
 	if tex != null:
 		full_body_tex.texture = tex
 		full_body_tex.visible = true
 		full_body_bg.visible = false
 	else:
 		full_body_tex.visible = false
-		full_body_bg.color = BattlerPanel.color_for_class(class_id)
+		full_body_bg.color = BattlerPanel.color_for_class(hero.class_data.id)
 		full_body_bg.visible = true
 
 

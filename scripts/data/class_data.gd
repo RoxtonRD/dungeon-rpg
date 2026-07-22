@@ -34,3 +34,7 @@ enum Role { FRONT, BACK }
 @export var skills: Array[SkillData] = []
 ## Hand-drawn portrait. Left empty in v1 — the UI shows a placeholder.
 @export var portrait: Texture2D
+## Alternate skin ids available to this class, beyond the default look (which is
+## always the class id itself). Add a new skin by dropping its art in and listing
+## its id here — see assets/full_body/README.md and HeroArt.
+@export var skins: Array[String] = []
