@@ -59,7 +59,7 @@ character creation on New Adventure builds all four heroes, each with a
 typed name, chosen class and chosen skin, with at most 2 heroes of any
 one class; heroes can be renamed and reskinned (cosmetic only, class
 fixed) from the city Characters screen; hero skins are drop-in via
-`HeroArt` and `assets/full_body/README.md`**; turn-based combat
+`HeroArt` and `assets/heroes/README.md`**; turn-based combat
 with front/back rows; 2x2 formation grid; **room-based dungeon: 4 floors
 of orthogonally connected grid rooms, fog of war (seen rooms persist),
 stairs room per floor, boss room on floor 4**; room types (combat,

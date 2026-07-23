@@ -59,9 +59,9 @@ func build_party(specs: Array) -> void:
 		var h := Hero.create(load(CLASS_DIR + "%s.tres" % class_id) as ClassData)
 		h.is_main = (i == 0)
 		h.custom_name = str(s["name"]).strip_edges()
-		# Store "" when the skin is just the class default, keeping saves tidy.
+		# Store "" for the default skin ("1"), keeping saves tidy.
 		var skin := str(s["skin_id"])
-		h.skin_id = "" if skin == class_id else skin
+		h.skin_id = "" if skin == "1" else skin
 		heroes.append(h)
 
 

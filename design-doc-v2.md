@@ -70,7 +70,7 @@
 - Na cidade (tela **Personagens**) dá para **renomear e trocar a skin**
   de qualquer herói — só cosmético, a classe nunca muda.
 - **Skins são drop-in**: `HeroArt` resolve a arte pela skin com fallback
-  para a classe; ver `assets/full_body/README.md`. Sem skins extras ainda.
+  para a classe; ver `assets/heroes/README.md`. Skins numeradas por classe.
 - Save versão 3: `custom_name`, `skin_id`, `is_main` por herói. Saves v2
   são rejeitados (começa jogo novo).
 
