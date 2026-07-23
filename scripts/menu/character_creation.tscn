@@ -30,7 +30,7 @@ offset_left = 16.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = -16.0
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="VBox"]
 layout_mode = 2
@@ -38,69 +38,68 @@ theme_override_font_sizes/font_size = 26
 text = "UI_CREATE_TITLE"
 horizontal_alignment = 1
 
+[node name="SlotTabs" type="HBoxContainer" parent="VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
 [node name="Scroll" type="ScrollContainer" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="ScrollVBox" type="VBoxContainer" parent="VBox/Scroll"]
+[node name="EditorVBox" type="VBoxContainer" parent="VBox/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
-[node name="MCPanel" type="PanelContainer" parent="VBox/Scroll/ScrollVBox"]
+[node name="EditorPanel" type="PanelContainer" parent="VBox/Scroll/EditorVBox"]
 layout_mode = 2
 
-[node name="MCMargin" type="MarginContainer" parent="VBox/Scroll/ScrollVBox/MCPanel"]
+[node name="Margin" type="MarginContainer" parent="VBox/Scroll/EditorVBox/EditorPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 12
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 12
 
-[node name="MCVBox" type="VBoxContainer" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin"]
+[node name="EVBox" type="VBoxContainer" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="MCHeading" type="Label" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
-theme_override_font_sizes/font_size = 18
-text = "UI_CREATE_MC"
-
-[node name="NameLabel" type="Label" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox"]
+[node name="NameLabel" type="Label" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "UI_CREATE_NAME"
 
-[node name="NameInput" type="LineEdit" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox"]
+[node name="NameInput" type="LineEdit" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 placeholder_text = "UI_CREATE_NAME_PH"
 max_length = 16
 
-[node name="ClassLabel" type="Label" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox"]
+[node name="ClassLabel" type="Label" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "UI_CREATE_CLASS"
 
-[node name="ClassRow" type="GridContainer" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox"]
+[node name="ClassRow" type="GridContainer" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 2
 
-[node name="PreviewRow" type="HBoxContainer" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox"]
+[node name="PreviewRow" type="HBoxContainer" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="PreviewBox" type="Control" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow"]
+[node name="PreviewBox" type="Control" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow"]
 custom_minimum_size = Vector2(110, 140)
 layout_mode = 2
 
-[node name="PreviewBg" type="ColorRect" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow/PreviewBox"]
+[node name="PreviewBg" type="ColorRect" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow/PreviewBox"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -108,7 +107,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.3, 0.3, 0.4, 1)
 
-[node name="PreviewTex" type="TextureRect" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow/PreviewBox"]
+[node name="PreviewTex" type="TextureRect" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow/PreviewBox"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -117,71 +116,36 @@ anchor_bottom = 1.0
 expand_mode = 1
 stretch_mode = 5
 
-[node name="SkinCol" type="VBoxContainer" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow"]
+[node name="SkinCol" type="VBoxContainer" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 1
 theme_override_constants/separation = 8
 
-[node name="SkinLabel" type="Label" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow/SkinCol"]
+[node name="SkinLabel" type="Label" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow/SkinCol"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "UI_CREATE_SKIN_N"
 horizontal_alignment = 1
 
-[node name="SkinButtons" type="HBoxContainer" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow/SkinCol"]
+[node name="SkinButtons" type="HBoxContainer" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow/SkinCol"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="PrevSkinButton" type="Button" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow/SkinCol/SkinButtons"]
+[node name="PrevSkinButton" type="Button" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow/SkinCol/SkinButtons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "◀"
 
-[node name="NextSkinButton" type="Button" parent="VBox/Scroll/ScrollVBox/MCPanel/MCMargin/MCVBox/PreviewRow/SkinCol/SkinButtons"]
+[node name="NextSkinButton" type="Button" parent="VBox/Scroll/EditorVBox/EditorPanel/Margin/EVBox/PreviewRow/SkinCol/SkinButtons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 text = "▶"
-
-[node name="CompPanel" type="PanelContainer" parent="VBox/Scroll/ScrollVBox"]
-layout_mode = 2
-
-[node name="CompMargin" type="MarginContainer" parent="VBox/Scroll/ScrollVBox/CompPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 12
-
-[node name="CompVBox" type="VBoxContainer" parent="VBox/Scroll/ScrollVBox/CompPanel/CompMargin"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="CompHeading" type="Label" parent="VBox/Scroll/ScrollVBox/CompPanel/CompMargin/CompVBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.82, 0.35, 1)
-theme_override_font_sizes/font_size = 18
-text = "UI_CREATE_COMPANIONS"
-autowrap_mode = 2
-
-[node name="CountLabel" type="Label" parent="VBox/Scroll/ScrollVBox/CompPanel/CompMargin/CompVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.78, 0.82, 1)
-theme_override_font_sizes/font_size = 14
-text = "UI_CREATE_COUNT"
-
-[node name="RosterGrid" type="GridContainer" parent="VBox/Scroll/ScrollVBox/CompPanel/CompMargin/CompVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 2
 
 [node name="HintLabel" type="Label" parent="VBox"]
 unique_name_in_owner = true

@@ -94,12 +94,8 @@ func _refresh_appearance(hero: Hero) -> void:
 	next_skin_button.disabled = not multi
 
 
-## The name the hero shows when custom_name is cleared (roster or class name).
+## The name the hero shows when custom_name is cleared (the class name).
 func _default_name(hero: Hero) -> String:
-	if not hero.character_id.is_empty():
-		var cd := Party.character_by_id(hero.character_id)
-		if cd != null:
-			return tr(cd.display_name)
 	return tr(hero.class_data.display_name)
 
 
