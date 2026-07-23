@@ -12,6 +12,7 @@
 script = ExtResource("1")
 id = "rogue"
 display_name = "CLASS_ROGUE"
+skins = Array[String](["rogue_b"])
 base_hp = 30
 base_mp = 12
 atk = 6
