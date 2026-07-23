@@ -32,6 +32,9 @@ var _skin_idx: Array[int] = [0, 0, 0, 0]
 var _slot: int = 0
 
 var _slot_buttons: Array[Button] = []
+var _slot_portraits: Array[TextureRect] = []
+var _slot_portrait_bgs: Array[ColorRect] = []
+var _slot_class_labels: Array[Label] = []
 var _class_buttons: Dictionary = {}   # class_id -> Button
 
 
@@ -52,18 +55,50 @@ func _ready() -> void:
 
 # ── Slots ─────────────────────────────────────────────────────────────────────
 
+## Each slot is a small card: the name button (selector), a portrait and the
+## class name — a live party overview while building.
 func _build_slot_tabs() -> void:
 	var group := ButtonGroup.new()
 	for i in Party.PARTY_SIZE:
+		var card := VBoxContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_theme_constant_override("separation", 3)
+
 		var btn := Button.new()
 		btn.toggle_mode = true
 		btn.button_group = group
-		btn.custom_minimum_size = Vector2(0, 44)
+		btn.custom_minimum_size = Vector2(0, 40)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.clip_text = true
 		btn.pressed.connect(_select_slot.bind(i))
-		slot_tabs.add_child(btn)
+		card.add_child(btn)
 		_slot_buttons.append(btn)
+
+		var pbox := Control.new()
+		pbox.custom_minimum_size = Vector2(0, 50)
+		var pbg := ColorRect.new()
+		pbg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		pbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pbox.add_child(pbg)
+		var ptex := TextureRect.new()
+		ptex.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ptex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ptex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ptex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		ptex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pbox.add_child(ptex)
+		card.add_child(pbox)
+		_slot_portraits.append(ptex)
+		_slot_portrait_bgs.append(pbg)
+
+		var clabel := Label.new()
+		clabel.add_theme_font_size_override("font_size", 11)
+		clabel.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		clabel.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		card.add_child(clabel)
+		_slot_class_labels.append(clabel)
+
+		slot_tabs.add_child(card)
 
 
 ## Tab caption: the hero's name, or "Hero N" until one is typed.
@@ -107,6 +142,32 @@ func _class_skins(class_id: String) -> Array:
 	return (load(CLASS_DIR + "%s.tres" % class_id) as ClassData).all_skins()
 
 
+## A throwaway Hero carrying a slot's class + chosen skin, for art resolution.
+func _temp_hero(i: int) -> Hero:
+	var cd := load(CLASS_DIR + "%s.tres" % _class_ids[i]) as ClassData
+	var h := Hero.create(cd)
+	var skins := cd.all_skins()
+	h.skin_id = skins[clampi(_skin_idx[i], 0, skins.size() - 1)]
+	return h
+
+
+## Updates every slot card (name caption, portrait, class name) — the overview.
+func _refresh_slot_cards() -> void:
+	for i in Party.PARTY_SIZE:
+		_slot_buttons[i].text = _slot_title(i)
+		var cd := load(CLASS_DIR + "%s.tres" % _class_ids[i]) as ClassData
+		_slot_class_labels[i].text = tr(cd.display_name)
+		var tex := HeroArt.portrait_for(_temp_hero(i))
+		if tex != null:
+			_slot_portraits[i].texture = tex
+			_slot_portraits[i].visible = true
+			_slot_portrait_bgs[i].visible = false
+		else:
+			_slot_portraits[i].visible = false
+			_slot_portrait_bgs[i].color = BattlerPanel.color_for_class(_class_ids[i])
+			_slot_portrait_bgs[i].visible = true
+
+
 func _on_skin_step(step: int) -> void:
 	var skins := _class_skins(_class_ids[_slot])
 	_skin_idx[_slot] = wrapi(_skin_idx[_slot] + step, 0, skins.size())
@@ -139,11 +200,8 @@ func _refresh_editor() -> void:
 	var multi := skins.size() > 1
 	prev_skin_button.disabled = not multi
 	next_skin_button.disabled = not multi
-	# Preview through a throwaway Hero so HeroArt resolves the skin (with fallback).
-	var cd := load(CLASS_DIR + "%s.tres" % _class_ids[_slot]) as ClassData
-	var preview := Hero.create(cd)
-	preview.skin_id = skins[_skin_idx[_slot]]
-	var tex := HeroArt.full_body_for(preview)
+	# Main preview through a throwaway Hero so HeroArt resolves the skin (fallback).
+	var tex := HeroArt.full_body_for(_temp_hero(_slot))
 	if tex != null:
 		preview_tex.texture = tex
 		preview_tex.visible = true
@@ -152,14 +210,13 @@ func _refresh_editor() -> void:
 		preview_tex.visible = false
 		preview_bg.color = BattlerPanel.color_for_class(_class_ids[_slot])
 		preview_bg.visible = true
-	# Keep every tab caption in sync (class change can shift a name-less label).
-	for i in Party.PARTY_SIZE:
-		_slot_buttons[i].text = _slot_title(i)
+	# Refresh the slot cards (captions/portraits/class) — the party overview.
+	_refresh_slot_cards()
 
 
 func _on_name_changed(new_text: String) -> void:
 	_names[_slot] = new_text
-	_slot_buttons[_slot].text = _slot_title(_slot)
+	_slot_buttons[_slot].text = _slot_title(_slot)   # portrait/class unchanged
 	_refresh_validity()
 
 
