@@ -22,7 +22,7 @@ const MARKET_EQUIPMENT_POOL: Array[String] = [
 const MARKET_SLOTS: int = 5
 const SAVE_PATH: String = "user://save.json"
 ## v2: room-based dungeon (floors of rooms, player position, explored state).
-## v3: customizable party (hero custom_name / character_id / skin_id / is_main).
+## v3: customizable party (hero custom_name / skin_id / is_main).
 ## Older saves are intentionally NOT migrated — the version check rejects them
 ## and the menu falls back to a fresh game.
 const SAVE_VERSION: int = 3

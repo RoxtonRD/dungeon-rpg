@@ -55,9 +55,8 @@ Any system that does not directly serve this loop is out of scope.
 ## v2 scope — IN (Fases 1 e 2)
 
 4 classes (Guerreiro, Clerigo, Ladino, Mago); **customizable party:
-character creation on New Adventure builds a freely-configured main
-character (typed name, chosen class, chosen skin) plus 3 companions
-picked from an 8-character premade roster, with at most 2 heroes of any
+character creation on New Adventure builds all four heroes, each with a
+typed name, chosen class and chosen skin, with at most 2 heroes of any
 one class; heroes can be renamed and reskinned (cosmetic only, class
 fixed) from the city Characters screen; hero skins are drop-in via
 `HeroArt` and `assets/full_body/README.md`**; turn-based combat

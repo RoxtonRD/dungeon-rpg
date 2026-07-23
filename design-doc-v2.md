@@ -61,18 +61,18 @@
 - **Nova Aventura abre a tela de Criação de Personagem** (após a
   confirmação digitada quando existe save). Nada é apagado até confirmar
   a criação — voltar preserva o save.
-- **Personagem principal** totalmente configurável: nome digitado
-  (≤16, não-vazio), classe escolhida e skin escolhida (com prévia).
-- **3 companheiros** escolhidos de um **roster de 8 personagens prontos**
-  (2 por classe), cada um com nome padrão localizável e classe fixa.
-- **Máximo de 2 heróis por classe** no grupo (o principal conta). O grupo
-  é sempre de 4 (grade 2x2 da formação).
+- **Os 4 heróis são criados pelo jogador**, um por vez (abas de slot):
+  nome digitado (≤16, não-vazio), classe escolhida e skin escolhida
+  (com prévia). O slot 0 é marcado como personagem principal.
+- **Máximo de 2 heróis por classe** no grupo. As classes já cheias nos
+  outros slots ficam travadas ao editar um slot. O grupo é sempre de 4
+  (grade 2x2 da formação).
 - Na cidade (tela **Personagens**) dá para **renomear e trocar a skin**
   de qualquer herói — só cosmético, a classe nunca muda.
 - **Skins são drop-in**: `HeroArt` resolve a arte pela skin com fallback
   para a classe; ver `assets/full_body/README.md`. Sem skins extras ainda.
-- Save versão 3: `custom_name`, `character_id`, `skin_id`, `is_main` por
-  herói. Saves v2 são rejeitados (começa jogo novo).
+- Save versão 3: `custom_name`, `skin_id`, `is_main` por herói. Saves v2
+  são rejeitados (começa jogo novo).
 
 ## Fora de escopo da v2
 

@@ -12,18 +12,8 @@ const CLASS_PATHS: Array[String] = [
 ]
 
 const CLASS_DIR := "res://resources/classes/"
-const ROSTER_DIR := "res://resources/characters/"
-## The premade companion roster, in display order. Ids match the .tres files
-## under ROSTER_DIR. The player picks 3 of these to fill the party.
-const ROSTER_IDS: Array[String] = [
-	"warrior_aldric", "warrior_gunnar",
-	"cleric_mirena", "cleric_tobias",
-	"rogue_vesper", "rogue_kesla",
-	"mage_orwin", "mage_lysandra",
-]
-## Party size is fixed at 4 (the 2x2 formation grid depends on it): 1 main + 3.
+## Party size is fixed at 4 (the 2x2 formation grid depends on it).
 const PARTY_SIZE := 4
-const NUM_COMPANIONS := 3
 ## A single class may appear on at most this many heroes in one party.
 const MAX_PER_CLASS := 2
 
@@ -47,21 +37,7 @@ func start_new_game() -> void:
 		heroes.append(Hero.create(class_data))
 
 
-# ── Roster & custom party ─────────────────────────────────────────────────────
-
-## The premade companion roster as CharacterData, in ROSTER_IDS order.
-func roster() -> Array[CharacterData]:
-	var out: Array[CharacterData] = []
-	for id in ROSTER_IDS:
-		var cd := character_by_id(id)
-		if cd != null:
-			out.append(cd)
-	return out
-
-
-func character_by_id(id: String) -> CharacterData:
-	return load(ROSTER_DIR + "%s.tres" % id) as CharacterData
-
+# ── Custom party ──────────────────────────────────────────────────────────────
 
 ## Number of current party heroes belonging to `class_id`.
 func class_count(class_id: String) -> int:
@@ -72,26 +48,20 @@ func class_count(class_id: String) -> int:
 	return n
 
 
-## Builds the party from a creation choice: the freely-built main character plus
-## the chosen companion character ids (in pick order). Main character is always
-## slot 0. Callers are responsible for enforcing the MAX_PER_CLASS / size rules
-## before calling; this trusts its inputs.
-func build_custom_party(main_class_id: String, main_name: String, main_skin_id: String, companion_ids: Array) -> void:
+## Builds the party from the character-creation specs — one Dictionary per hero,
+## {name, class_id, skin_id}. Slot 0 is flagged as the main character. Callers
+## enforce the naming / MAX_PER_CLASS / size rules; this trusts its inputs.
+func build_party(specs: Array) -> void:
 	heroes.clear()
-	var main_class := load(CLASS_DIR + "%s.tres" % main_class_id) as ClassData
-	var main := Hero.create(main_class)
-	main.is_main = true
-	main.custom_name = main_name.strip_edges()
-	# Store "" when the skin is just the class default, keeping saves tidy.
-	main.skin_id = "" if main_skin_id == main_class_id else main_skin_id
-	heroes.append(main)
-	for cid in companion_ids:
-		var cd := character_by_id(str(cid))
-		if cd == null:
-			continue
-		var h := Hero.create(cd.class_data)
-		h.character_id = cd.id
-		h.skin_id = cd.skin_id
+	for i in specs.size():
+		var s: Dictionary = specs[i]
+		var class_id := str(s["class_id"])
+		var h := Hero.create(load(CLASS_DIR + "%s.tres" % class_id) as ClassData)
+		h.is_main = (i == 0)
+		h.custom_name = str(s["name"]).strip_edges()
+		# Store "" when the skin is just the class default, keeping saves tidy.
+		var skin := str(s["skin_id"])
+		h.skin_id = "" if skin == class_id else skin
 		heroes.append(h)
 
 
