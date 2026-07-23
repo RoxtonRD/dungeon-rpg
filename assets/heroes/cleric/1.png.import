@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://i8ye1eujb3c0"
-path="res://.godot/imported/cleric.png-a5fb6af20d9ca2d2b5fec5f08d569e98.ctex"
+uid="uid://bxvojo1q7m70r"
+path="res://.godot/imported/1.png-807f5b0c0f848e5e98a158f4a5a88374.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/full_body/cleric.png"
-dest_files=["res://.godot/imported/cleric.png-a5fb6af20d9ca2d2b5fec5f08d569e98.ctex"]
+source_file="res://assets/heroes/cleric/1.png"
+dest_files=["res://.godot/imported/1.png-807f5b0c0f848e5e98a158f4a5a88374.ctex"]
 
 [params]
 

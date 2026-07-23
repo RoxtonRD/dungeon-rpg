@@ -103,9 +103,10 @@ func display_name() -> String:
 	return tr(class_data.display_name)
 
 
-## Art key for this hero: the chosen skin, or the class default when unset.
+## Skin number for this hero as a string ("1", "2", …): the chosen skin, or "1"
+## (the class default look) when unset. See HeroArt / ClassData.all_skins.
 func effective_skin() -> String:
-	return skin_id if not skin_id.is_empty() else class_data.id
+	return skin_id if not skin_id.is_empty() else "1"
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────

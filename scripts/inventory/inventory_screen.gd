@@ -122,8 +122,7 @@ func _on_skin_step(step: int) -> void:
 
 ## Shows the hero's full-body Texture2D if present; otherwise falls back to a
 ## class-tinted ColorRect placeholder (same pattern as combat portraits).
-## Loads from assets/full_body — the single source hero image; portraits are
-## AtlasTexture head-crops of this same file.
+## Resolved by HeroArt from the hero's class folder + skin (assets/heroes/).
 func _refresh_full_body(hero: Hero) -> void:
 	var tex := HeroArt.full_body_for(hero)
 	if tex != null:

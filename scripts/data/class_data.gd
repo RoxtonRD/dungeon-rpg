@@ -32,19 +32,22 @@ enum Role { FRONT, BACK }
 @export_group("Skills & Art")
 ## The 4 skills this class can learn (v1 scope). Order = unlock order.
 @export var skills: Array[SkillData] = []
-## Hand-drawn portrait. Left empty in v1 — the UI shows a placeholder.
+## Hand-drawn portrait (skin 1's head-crop). Used as a last-ditch fallback by
+## HeroArt; skins normally resolve straight from the class folder.
 @export var portrait: Texture2D
-## Alternate skin ids available to this class, beyond the default look (which is
-## always the class id itself). Add a new skin by dropping its art in and listing
-## its id here — see assets/full_body/README.md and HeroArt.
-@export var skins: Array[String] = []
+
+## Highest skin number probed for. Skins are drop-in: no registration needed.
+const MAX_SKINS := 12
 
 
-## Every skin id for this class: the default look (the class id) first, then the
-## authored extras, de-duplicated. Never empty. Used by the skin pickers.
+## Skin numbers available to this class, as strings ("1", "2", …). Discovered by
+## probing assets/heroes/<id>/<n>.png — drop the next numbered file in and it
+## appears. Always returns at least ["1"] (the default look).
 func all_skins() -> Array[String]:
-	var out: Array[String] = [id]
-	for s in skins:
-		if not out.has(s):
-			out.append(s)
+	var out: Array[String] = []
+	for n in range(1, MAX_SKINS + 1):
+		if ResourceLoader.exists("res://assets/heroes/%s/%d.png" % [id, n]):
+			out.append(str(n))
+	if out.is_empty():
+		out.append("1")
 	return out

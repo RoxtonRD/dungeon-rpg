@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://50locixlpato"
-path="res://.godot/imported/mage.png-21cc8c87fbaa2d88763c5251540822fb.ctex"
+uid="uid://grabb43dlc8v"
+path="res://.godot/imported/2.png-8a887574672beb1cfadff79f4b5c7a9b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/full_body/mage.png"
-dest_files=["res://.godot/imported/mage.png-21cc8c87fbaa2d88763c5251540822fb.ctex"]
+source_file="res://assets/heroes/rogue/2.png"
+dest_files=["res://.godot/imported/2.png-8a887574672beb1cfadff79f4b5c7a9b.ctex"]
 
 [params]
 

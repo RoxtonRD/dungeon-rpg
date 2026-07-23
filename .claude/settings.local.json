@@ -38,7 +38,12 @@
       "Bash(grep ^uid= assets/portraits/heroes/__TRACKED_VAR__.png.import)",
       "Bash(git checkout *)",
       "Bash(git commit *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git ls-remote *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --base main --head feat/boss-variety --title 'feat\\(dungeon\\): randomize floor-4 boss \\(necromancer / vampire / dragon\\)' --body ' *)"
     ]
   }
 }
