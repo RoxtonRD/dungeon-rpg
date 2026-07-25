@@ -1,7 +1,40 @@
-[gd_resource type="Resource" script_class="SkinCatalog" format=3]
+[gd_resource type="Resource" script_class="SkinCatalog" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/skin_catalog.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/skin_data.gd" id="2"]
+
+[sub_resource type="Resource" id="warrior_2"]
+script = ExtResource("2")
+id = "warrior/2"
+display_name = "SKIN_VANGUARD"
+unlock = 1
+price = 150
+level_req = 0
+
+[sub_resource type="Resource" id="rogue_2"]
+script = ExtResource("2")
+id = "rogue/2"
+display_name = "SKIN_NIGHTBLADE"
+unlock = 1
+price = 200
+level_req = 0
+
+[sub_resource type="Resource" id="cleric_2"]
+script = ExtResource("2")
+id = "cleric/2"
+display_name = "SKIN_SERAPH"
+unlock = 2
+price = 0
+level_req = 4
+
+[sub_resource type="Resource" id="mage_2"]
+script = ExtResource("2")
+id = "mage/2"
+display_name = "SKIN_ARCHON"
+unlock = 3
+price = 0
+level_req = 0
 
 [resource]
 script = ExtResource("1")
-metadata/_custom_type_script = "res://scripts/data/skin_catalog.gd"
+entries = Array[ExtResource("2")]([SubResource("warrior_2"), SubResource("rogue_2"), SubResource("cleric_2"), SubResource("mage_2")])
