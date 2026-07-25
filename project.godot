@@ -24,6 +24,7 @@ config/features=PackedStringArray("4.7", "Mobile")
 Settings="*res://scripts/settings.gd"
 Party="*res://scripts/party.gd"
 GameState="*res://scripts/game_state.gd"
+Skins="*res://scripts/skins.gd"
 SafeArea="*res://scripts/safe_area.gd"
 Fade="*res://scripts/scene_fade.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"

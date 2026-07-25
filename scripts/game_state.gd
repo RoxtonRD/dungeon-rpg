@@ -30,6 +30,9 @@ const SAVE_VERSION: int = 3
 var gold: int = 0
 ## Item ids (e.g. "potion_heal"). Duplicates allowed; resolved to ItemData on use.
 var inventory: Array[String] = []
+## Full ids of unlocked locked skins (gold/level/event). Free skins are never
+## stored — always usable. See the Skins autoload and SkinData.
+var owned_skins: Array[String] = []
 ## The active DungeonRun. Left untyped to avoid a class_name <-> autoload
 ## dependency cycle (DungeonRun references the GameState autoload), which
 ## Godot resolves inconsistently across recompiles. Callers cast as needed.
@@ -48,9 +51,20 @@ var nav_return_scene: String = "res://scripts/city/city_hub.tscn"
 func start_new_game() -> void:
 	gold = STARTING_GOLD
 	inventory = STARTER_ITEMS.duplicate()
+	owned_skins = []
 	current_run = null
 	dungeon_level = 1
 	restock_market()
+
+
+## Grants a locked skin (by full id). Returns true if it was newly unlocked.
+## The unlock hook for gold buys, level milestones and event rewards.
+func unlock_skin(id: String) -> bool:
+	if id.is_empty() or owned_skins.has(id):
+		return false
+	owned_skins.append(id)
+	save_game()
+	return true
 
 
 ## Rolls a fresh random shelf for the market's limited-stock section:
@@ -94,6 +108,7 @@ func save_game() -> void:
 		"version": SAVE_VERSION,
 		"gold": gold,
 		"inventory": inventory.duplicate(),
+		"owned_skins": owned_skins.duplicate(),
 		"heroes": Party.serialize(),
 		"run": run_data,
 		"dungeon_level": dungeon_level,
@@ -131,6 +146,9 @@ func load_game() -> bool:
 	inventory.clear()
 	for item_id in inv:
 		inventory.append(str(item_id))
+	owned_skins.clear()
+	for sid in data.get("owned_skins", []):
+		owned_skins.append(str(sid))
 	Party.deserialize(data.get("heroes", {}))
 	var run_data = data.get("run", null)
 	if run_data != null and run_data is Dictionary:

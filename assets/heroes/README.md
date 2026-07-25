@@ -29,11 +29,42 @@ screen automatically. `HeroArt` resolves a hero's skin at runtime and **falls
 back to skin 1** whenever a file is missing, so a half-finished skin never blanks
 a screen. Number them consecutively from 1 (a gap stops discovery at the gap).
 
+## Common skins (any class)
+
+Class-neutral art (a "jack-of-all-trades" actor) lives in a shared folder and is
+usable by every class:
+
+```
+assets/heroes/common/<name>.png
+assets/heroes/common/<name>_portrait.tres
+```
+
+Unlike numbered per-class skins, a common skin is **not** auto-discovered — it
+needs a catalog entry (below), because it also carries a display name and, if
+locked, its unlock rule. Its skin id is `common/<name>`.
+
+## The catalog — common & locked skins
+
+`resources/skins/catalog.tres` (a `SkinCatalog`) lists every skin that needs
+metadata: common skins and any skin locked behind an unlock. Each entry is a
+`SkinData`: `id` (`common/<name>` or `<class>/<n>`), `display_name` (a
+translation key), `unlock` (FREE / GOLD / LEVEL / EVENT), `price`, `level_req`.
+
+- **FREE** — usable from the start.
+- **GOLD** — bought on the Characters screen for `price` gold.
+- **LEVEL** — auto-granted (account-wide) when any hero reaches `level_req`.
+- **EVENT** — granted by `GameState.unlock_skin(id)` (a future rare room/boss).
+
+A plain numbered per-class skin with **no** catalog entry is simply free — drop-in
+as before. Add a catalog entry only to name it, make it common, or lock it.
+Ownership of unlocked skins is saved in `GameState.owned_skins`.
+
 ## Skin ids in saves
 
-A hero stores its skin as the number string (`"2"`), or `""` for the default.
-Keep a skin's number stable once heroes may have it saved.
+A hero stores its skin as a number string (`"2"`), `common/<name>`, or `""` for
+the default. Keep a skin's id stable once heroes may have it saved.
 
 ## Current art
 
-Each class ships `1` (default) and `2` (alternate). Add `3`, `4`, … as drawn.
+Each class ships `1` (default) and `2` (alternate). Add `3`, `4`, … as drawn,
+plus common skins under `common/` with catalog entries.
