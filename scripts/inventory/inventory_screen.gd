@@ -19,9 +19,14 @@ const ITEM_DIR := "res://resources/items/"
 @onready var prev_skin_button: Button = %PrevSkinButton
 @onready var next_skin_button: Button = %NextSkinButton
 @onready var skin_count_label: Label = %SkinCountLabel
+@onready var skin_status_label: Label = %SkinStatusLabel
+@onready var skin_buy_button: Button = %SkinBuyButton
 
 var _selected_hero_idx: int = 0
 var _hero_tab_buttons: Array[Button] = []
+## Skin ids the selected hero can browse (Skins.for_class) + the browsed index.
+var _browse: Array = []
+var _browse_idx: int = 0
 
 
 func _ready() -> void:
@@ -32,6 +37,7 @@ func _ready() -> void:
 	rename_input.text_changed.connect(_on_rename_changed)
 	prev_skin_button.pressed.connect(_on_skin_step.bind(-1))
 	next_skin_button.pressed.connect(_on_skin_step.bind(1))
+	skin_buy_button.pressed.connect(_on_skin_buy)
 	# Safety net: allows this scene to be run directly for testing.
 	if Party.heroes.is_empty():
 		Party.start_new_game()
@@ -71,8 +77,7 @@ func _refresh() -> void:
 	# Heal saves that predate the surplus-SP fix: fold any stranded, unspendable
 	# SP into max MP before drawing the SP count and skill rows.
 	Party.reconcile_surplus_sp(hero)
-	_refresh_full_body(hero)
-	_refresh_appearance(hero)
+	_refresh_appearance(hero)   # owns the full-body preview (browsed skin)
 	_update_hero_info(hero)
 	_rebuild_equipment_rows(hero)
 	_rebuild_skill_rows(hero)
@@ -81,17 +86,18 @@ func _refresh() -> void:
 
 # ── Appearance: rename + skin (cosmetic; class is never editable) ─────────────
 
-## Refreshes the rename field and skin cycler for the selected hero. Setting
-## rename_input.text in code does not emit text_changed, so this never loops.
+## Refreshes the rename field and the skin browser for the selected hero. The
+## browser cycles every skin the class can see (owned + locked, incl. common);
+## the browsed skin is previewed, and equipped when owned.
 func _refresh_appearance(hero: Hero) -> void:
 	rename_input.text = hero.custom_name
 	rename_input.placeholder_text = _default_name(hero)
-	var skins := hero.class_data.all_skins()
-	var idx := maxi(0, skins.find(hero.effective_skin()))
-	skin_count_label.text = tr("UI_CREATE_SKIN_N") % [idx + 1, skins.size()]
-	var multi := skins.size() > 1
+	_browse = Skins.for_class(hero.class_data.id)
+	_browse_idx = maxi(0, _browse.find(hero.effective_skin()))
+	var multi := _browse.size() > 1
 	prev_skin_button.disabled = not multi
 	next_skin_button.disabled = not multi
+	_show_browsed(hero)
 
 
 ## The name the hero shows when custom_name is cleared (the class name).
@@ -107,31 +113,76 @@ func _on_rename_changed(new_text: String) -> void:
 	_hero_tab_buttons[_selected_hero_idx].text = hero.display_name()
 
 
-## Cycles the selected hero's skin among the class's available looks, wrapping.
 func _on_skin_step(step: int) -> void:
 	var hero: Hero = Party.heroes[_selected_hero_idx]
-	var skins := hero.class_data.all_skins()
-	var idx := maxi(0, skins.find(hero.effective_skin()))
-	idx = wrapi(idx + step, 0, skins.size())
-	# Store "" for the class default to keep saves tidy (matches build_custom_party).
-	hero.skin_id = "" if idx == 0 else skins[idx]
-	_refresh_full_body(hero)
-	_refresh_appearance(hero)
-	GameState.save_game()
+	_browse_idx = wrapi(_browse_idx + step, 0, _browse.size())
+	_show_browsed(hero)
+	# Persist only when the browsed skin was owned (i.e. actually equipped).
+	if Skins.is_owned(Skins.full_id(hero.class_data.id, _browse[_browse_idx])):
+		GameState.save_game()
 
 
-## Shows the hero's full-body Texture2D if present; otherwise falls back to a
-## class-tinted ColorRect placeholder (same pattern as combat portraits).
-## Resolved by HeroArt from the hero's class folder + skin (assets/heroes/).
-func _refresh_full_body(hero: Hero) -> void:
-	var tex := HeroArt.full_body_for(hero)
+## Previews the browsed skin, equips it when owned, and drives the lock/buy line.
+func _show_browsed(hero: Hero) -> void:
+	var skin: String = _browse[_browse_idx]
+	var full: String = Skins.full_id(hero.class_data.id, skin)
+	var owned := Skins.is_owned(full)
+	if owned:
+		# Store "" for the class default ("1"); a common id keeps its full form.
+		hero.skin_id = "" if skin == "1" else skin
+	_render_full_body(hero.class_data.id, skin)
+	skin_count_label.text = tr("UI_CREATE_SKIN_N") % [_browse_idx + 1, _browse.size()]
+	_update_skin_status(full, owned)
+
+
+## Sets the status line + buy button for the browsed skin. A plain free class
+## skin has no catalog entry, so it shows nothing.
+func _update_skin_status(full: String, owned: bool) -> void:
+	var m: SkinData = Skins.meta(full)
+	skin_buy_button.visible = false
+	if owned:
+		skin_status_label.text = tr(m.display_name) if m != null else ""
+		return
+	match m.unlock:
+		SkinData.Unlock.GOLD:
+			skin_status_label.text = "%s — %d ✦" % [tr(m.display_name), m.price]
+			skin_buy_button.text = tr("UI_SKIN_BUY") % m.price
+			skin_buy_button.disabled = GameState.gold < m.price
+			skin_buy_button.visible = true
+		SkinData.Unlock.LEVEL:
+			skin_status_label.text = tr("UI_SKIN_LOCKED_LEVEL") % [tr(m.display_name), m.level_req]
+		SkinData.Unlock.EVENT:
+			skin_status_label.text = "%s — %s" % [tr(m.display_name), tr("UI_SKIN_EVENT")]
+		_:
+			skin_status_label.text = tr(m.display_name)
+
+
+func _on_skin_buy() -> void:
+	var hero: Hero = Party.heroes[_selected_hero_idx]
+	var full: String = Skins.full_id(hero.class_data.id, _browse[_browse_idx])
+	var m: SkinData = Skins.meta(full)
+	if m == null or m.unlock != SkinData.Unlock.GOLD or GameState.gold < m.price:
+		return
+	GameState.gold -= m.price
+	GameState.unlock_skin(full)   # saves owned_skins
+	_show_browsed(hero)           # now owned -> equips + refreshes the line
+	GameState.save_game()         # persist the equip + gold spend
+	_update_hero_info(hero)       # gold changed
+
+
+## Renders an arbitrary skin's full body into the preview (temp Hero for HeroArt),
+## or a class-tinted placeholder when no art exists.
+func _render_full_body(class_id: String, skin: String) -> void:
+	var h := Hero.create(load("res://resources/classes/%s.tres" % class_id) as ClassData)
+	h.skin_id = "" if skin == "1" else skin
+	var tex := HeroArt.full_body_for(h)
 	if tex != null:
 		full_body_tex.texture = tex
 		full_body_tex.visible = true
 		full_body_bg.visible = false
 	else:
 		full_body_tex.visible = false
-		full_body_bg.color = BattlerPanel.color_for_class(hero.class_data.id)
+		full_body_bg.color = BattlerPanel.color_for_class(class_id)
 		full_body_bg.visible = true
 
 

@@ -71,6 +71,13 @@
   de qualquer herói — só cosmético, a classe nunca muda.
 - **Skins são drop-in**: `HeroArt` resolve a arte pela skin com fallback
   para a classe; ver `assets/heroes/README.md`. Skins numeradas por classe.
+- **Skins comuns e desbloqueáveis**: skins comuns (arte neutra, qualquer
+  classe) e skins travadas por ouro/nível/evento vivem no catálogo
+  `resources/skins/catalog.tres` (`SkinData`); posse por save em
+  `GameState.owned_skins`. Compra na tela Personagens; nível libera na
+  subida de nível (qualquer herói); evento via `GameState.unlock_skin()`
+  (gancho — a sala/chefe raro fica para depois). IAP real fica para o
+  futuro; a posse é offline/cliente por enquanto.
 - Save versão 3: `custom_name`, `skin_id`, `is_main` por herói. Saves v2
   são rejeitados (começa jogo novo).
 

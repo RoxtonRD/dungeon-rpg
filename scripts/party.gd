@@ -98,11 +98,19 @@ func level_up(hero: Hero) -> Array[SkillData]:
 	award_sp(hero, 1)
 	hero.hp = hero.max_hp()
 	hero.mp = hero.max_mp()
+	_grant_level_skins(hero.level)
 	var newly: Array[SkillData] = []
 	for skill in hero.class_data.skills:
 		if skill.unlock_level == hero.level:
 			newly.append(skill)
 	return newly
+
+
+## Unlocks any LEVEL-gated skin whose requirement this new level meets. Skins are
+## account-wide, so reaching the level on any hero grants it for the whole save.
+func _grant_level_skins(reached_level: int) -> void:
+	for id in Skins.level_unlocks_at_or_below(reached_level):
+		GameState.unlock_skin(id)
 
 
 # ── Skill Points ──────────────────────────────────────────────────────────────
