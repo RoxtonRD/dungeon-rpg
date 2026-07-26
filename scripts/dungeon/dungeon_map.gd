@@ -25,8 +25,7 @@ const ROOM_VARIATION: Dictionary = {
 	DungeonRoom.RoomType.REST:     "RestNodeButton",
 	DungeonRoom.RoomType.STAIRS:   "StairsNodeButton",
 	DungeonRoom.RoomType.BOSS:     "BossNodeButton",
-	# Rare shrine reuses the treasure chip style until it gets dedicated art.
-	DungeonRoom.RoomType.SHRINE:   "TreasureNodeButton",
+	DungeonRoom.RoomType.SHRINE:   "ShrineNodeButton",
 }
 # ── Popup backgrounds (treasure / rest / event). ──────────────────────────────
 const BG_TREASURE: Texture2D = preload("res://assets/backgrounds/bg_treasure.png")
