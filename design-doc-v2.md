@@ -75,9 +75,11 @@
   classe) e skins travadas por ouro/nível/evento vivem no catálogo
   `resources/skins/catalog.tres` (`SkinData`); posse por save em
   `GameState.owned_skins`. Compra na tela Personagens; nível libera na
-  subida de nível (qualquer herói); evento via `GameState.unlock_skin()`
-  (gancho — a sala/chefe raro fica para depois). IAP real fica para o
-  futuro; a posse é offline/cliente por enquanto.
+  subida de nível (qualquer herói); evento pela **sala Santuário** rara
+  (`SHRINE_CHANCE` por andar) que concede uma skin de evento ainda não
+  possuída via `GameState.unlock_skin()` — ou ouro de consolação se já
+  tiver todas. IAP real fica para o futuro; a posse é offline/cliente
+  por enquanto.
 - Save versão 3: `custom_name`, `skin_id`, `is_main` por herói. Saves v2
   são rejeitados (começa jogo novo).
 

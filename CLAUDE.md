@@ -66,7 +66,8 @@ skins and skins unlockable by gold/level/event through a skin catalog
 with front/back rows; 2x2 formation grid; **room-based dungeon: 4 floors
 of orthogonally connected grid rooms, fog of war (seen rooms persist),
 stairs room per floor, boss room on floor 4**; room types (combat,
-treasure, event, rest, empty, stairs, boss); **city hub between dungeons
+treasure, event, rest, empty, stairs, boss, rare shrine that grants an
+event-exclusive skin); **city hub between dungeons
 (Mercado, Personagens, Formação, Entrar na Masmorra); Mercado with fixed
 potions + limited-stock random equipment, restocking when a run ends
 (complete/abandon/TPK); leaving a dungeon abandons the run**; 4 skills

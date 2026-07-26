@@ -25,10 +25,14 @@ const ROOM_VARIATION: Dictionary = {
 	DungeonRoom.RoomType.REST:     "RestNodeButton",
 	DungeonRoom.RoomType.STAIRS:   "StairsNodeButton",
 	DungeonRoom.RoomType.BOSS:     "BossNodeButton",
+	# Rare shrine reuses the treasure chip style until it gets dedicated art.
+	DungeonRoom.RoomType.SHRINE:   "TreasureNodeButton",
 }
 # ── Popup backgrounds (treasure / rest / event). ──────────────────────────────
 const BG_TREASURE: Texture2D = preload("res://assets/backgrounds/bg_treasure.png")
 const BG_REST: Texture2D = preload("res://assets/backgrounds/bg_rest.png")
+## The shrine reuses the altar event art (thematically a shrine).
+const BG_SHRINE: Texture2D = preload("res://assets/backgrounds/bg_event_altar.png")
 ## Event id → background. Keys match the "id" field set in DungeonRun events.
 const EVENT_BG: Dictionary = {
 	"fountain": preload("res://assets/backgrounds/bg_event_fountain.png"),
@@ -67,6 +71,11 @@ const EVENT_BG: Dictionary = {
 @onready var rest_panel: PanelContainer = %RestPanel
 @onready var rest_continue_button: Button = %RestContinueButton
 
+# Shrine popup (rare event-skin reward)
+@onready var shrine_panel: PanelContainer = %ShrinePanel
+@onready var shrine_message_label: Label = %ShrineMessageLabel
+@onready var shrine_continue_button: Button = %ShrineContinueButton
+
 # Stairs popup
 @onready var stairs_panel: PanelContainer = %StairsPanel
 @onready var stairs_message_label: Label = %StairsMessageLabel
@@ -101,12 +110,14 @@ func _ready() -> void:
 	event_option2_button.pressed.connect(_on_event_option.bind(1))
 	event_continue_button.pressed.connect(_on_event_continue)
 	rest_continue_button.pressed.connect(_on_rest_continue)
+	shrine_continue_button.pressed.connect(_on_shrine_continue)
 	descend_button.pressed.connect(_on_descend_pressed)
 	stay_button.pressed.connect(_on_stay_pressed)
 	end_panel.visible = false
 	treasure_panel.visible = false
 	event_panel.visible = false
 	rest_panel.visible = false
+	shrine_panel.visible = false
 	stairs_panel.visible = false
 	abandon_panel.visible = false
 	popup_bg.visible = false
@@ -281,6 +292,8 @@ func _trigger_room(room: DungeonRoom) -> void:
 			_show_event_popup()
 		DungeonRoom.RoomType.REST:
 			_show_rest_popup()
+		DungeonRoom.RoomType.SHRINE:
+			_show_shrine_popup()
 
 
 ## Marks the player's room consumed, persists, and redraws.
@@ -394,6 +407,25 @@ func _show_rest_popup() -> void:
 
 func _on_rest_continue() -> void:
 	rest_panel.visible = false
+	popup_bg.visible = false
+	_clear_current_room()
+
+
+# ── Shrine popup ──────────────────────────────────────────────────────────────
+
+func _show_shrine_popup() -> void:
+	var result: Dictionary = run.resolve_shrine()
+	if result.has("skin_id"):
+		shrine_message_label.text = tr("UI_SHRINE_SKIN") % result["skin_name"]
+	else:
+		shrine_message_label.text = tr("UI_SHRINE_GOLD") % result["gold"]
+	popup_bg.texture = BG_SHRINE
+	popup_bg.visible = true
+	shrine_panel.visible = true
+
+
+func _on_shrine_continue() -> void:
+	shrine_panel.visible = false
 	popup_bg.visible = false
 	_clear_current_room()
 

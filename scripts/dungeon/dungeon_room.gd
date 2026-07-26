@@ -6,7 +6,8 @@
 class_name DungeonRoom
 extends RefCounted
 
-enum RoomType { EMPTY, COMBAT, TREASURE, EVENT, REST, STAIRS, BOSS }
+## SHRINE is appended last so existing saved `kind` ints stay stable.
+enum RoomType { EMPTY, COMBAT, TREASURE, EVENT, REST, STAIRS, BOSS, SHRINE }
 
 ## Passage bitmask values, matching DIRS order below.
 const NORTH := 1
@@ -45,7 +46,7 @@ func connects_to(other_pos: Vector2i) -> bool:
 func has_content() -> bool:
 	if cleared:
 		return false
-	return kind in [RoomType.COMBAT, RoomType.TREASURE, RoomType.EVENT, RoomType.REST, RoomType.BOSS]
+	return kind in [RoomType.COMBAT, RoomType.TREASURE, RoomType.EVENT, RoomType.REST, RoomType.BOSS, RoomType.SHRINE]
 
 
 ## Display label (pt-BR) for the room type. Cleared content rooms read as
@@ -61,6 +62,7 @@ func type_name() -> String:
 		RoomType.REST: return tr("ROOM_REST")
 		RoomType.STAIRS: return tr("ROOM_STAIRS")
 		RoomType.BOSS: return tr("ROOM_BOSS")
+		RoomType.SHRINE: return tr("ROOM_SHRINE")
 	return "?"
 
 
