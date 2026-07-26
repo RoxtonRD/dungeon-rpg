@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" format=3 uid="uid://lqo3ncglrx10"]
+
+[ext_resource type="Texture2D" uid="uid://c5ogxfplmx5ug" path="res://assets/heroes/mage/3.png" id="1_gbvbm"]
+
+[resource]
+atlas = ExtResource("1_gbvbm")
+region = Rect2(64, 24, 128, 128)
