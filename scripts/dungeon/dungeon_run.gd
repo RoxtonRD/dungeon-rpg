@@ -38,6 +38,9 @@ const NUM_FLOORS := 4
 ## Chance of opening an extra passage between two adjacent rooms that the
 ## growth tree left unconnected (checked once per pair).
 const LOOP_CHANCE := 0.35
+## Per-floor chance that one ordinary room becomes a rare SHRINE (grants an
+## event-exclusive skin). FLAG: tune me.
+const SHRINE_CHANCE := 0.12
 
 ## Content weights per floor: COMBAT, TREASURE, EVENT, REST, EMPTY.
 ## Deeper floors lean harder into combat and events (design-doc-v2).
@@ -125,7 +128,24 @@ static func _generate_floor(floor_index: int) -> Dictionary:
 		_place_stairs(rooms)
 	else:
 		_place_boss(rooms)
+	_maybe_place_shrine(rooms)
 	return rooms
+
+
+## Very rarely converts one ordinary room into a SHRINE (grants an event skin).
+## Never the start, stairs or boss room.
+static func _maybe_place_shrine(rooms: Dictionary) -> void:
+	if randf() >= SHRINE_CHANCE:
+		return
+	var eligible: Array = []
+	for room in rooms.values():
+		if room.pos == Vector2i.ZERO:
+			continue
+		if room.kind == DungeonRoom.RoomType.STAIRS or room.kind == DungeonRoom.RoomType.BOSS:
+			continue
+		eligible.append(room)
+	if not eligible.is_empty():
+		(eligible[randi() % eligible.size()] as DungeonRoom).kind = DungeonRoom.RoomType.SHRINE
 
 
 static func _roll_kind(floor_index: int) -> DungeonRoom.RoomType:
@@ -323,6 +343,21 @@ func resolve_rest() -> void:
 	for h in Party.heroes:
 		h.hp = h.max_hp()
 		h.mp = h.max_mp()
+
+
+# ── Shrine ────────────────────────────────────────────────────────────────────
+
+## Grants a random unowned event-exclusive skin. When every event skin is owned,
+## gives a gold consolation instead. Returns {skin_id, skin_name} or {gold}.
+func resolve_shrine() -> Dictionary:
+	var pool := Skins.unowned_event_skins()
+	if not pool.is_empty():
+		var id: String = pool[randi() % pool.size()]
+		GameState.unlock_skin(id)
+		return {"skin_id": id, "skin_name": Skins.display_name(id)}
+	var gold_amount := randi_range(20 + level * 6, 40 + level * 10)
+	GameState.gold += gold_amount
+	return {"gold": gold_amount}
 
 
 # ── Events ────────────────────────────────────────────────────────────────────

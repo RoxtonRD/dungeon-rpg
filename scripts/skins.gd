@@ -64,3 +64,19 @@ func level_unlocks_at_or_below(level: int) -> Array[String]:
 		if m.unlock == SkinData.Unlock.LEVEL and m.level_req <= level:
 			out.append(id)
 	return out
+
+
+## Full ids of EVENT-gated skins the player does not yet own. The pool a rare
+## shrine draws its reward from.
+func unowned_event_skins() -> Array[String]:
+	var out: Array[String] = []
+	for id in _by_id:
+		if _by_id[id].unlock == SkinData.Unlock.EVENT and not GameState.owned_skins.has(id):
+			out.append(id)
+	return out
+
+
+## Display name (translated) for a skin id, or the id itself if uncataloged.
+func display_name(full: String) -> String:
+	var m: SkinData = _by_id.get(full, null)
+	return tr(m.display_name) if m != null else full
