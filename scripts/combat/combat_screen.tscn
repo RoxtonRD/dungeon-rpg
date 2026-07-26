@@ -119,10 +119,22 @@ theme_override_font_sizes/font_size = 22
 text = "UI_SELECT_TARGET"
 horizontal_alignment = 1
 
-[node name="FleeButton" type="Button" parent="VBox/ActionBar" unique_id=1851039607]
+[node name="BottomRow" type="HBoxContainer" parent="VBox/ActionBar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ItemsButton" type="Button" parent="VBox/ActionBar/BottomRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
+size_flags_horizontal = 3
+text = "UI_ITEMS"
+
+[node name="FleeButton" type="Button" parent="VBox/ActionBar/BottomRow" unique_id=1851039607]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+size_flags_horizontal = 3
 text = "UI_FLEE"
 
 [node name="CancelButton" type="Button" parent="VBox/ActionBar" unique_id=1234512345]

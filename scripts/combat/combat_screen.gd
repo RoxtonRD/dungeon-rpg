@@ -31,6 +31,7 @@ const BOSS_TOME_DROP_CHANCE: float = 0.25
 
 ## Boss background; the default combat background is set in the .tscn.
 const BG_BOSS: Texture2D = preload("res://assets/backgrounds/bg_boss.png")
+const ITEM_DIR := "res://resources/items/"
 
 
 ## Base delays scaled by the player's combat-speed setting (1x / 1.5x / 2x).
@@ -46,6 +47,7 @@ func _delay(base: float) -> float:
 @onready var skill_grid: GridContainer = %SkillGrid
 @onready var target_prompt: Label = %TargetPrompt
 @onready var flee_button: Button = %FleeButton
+@onready var items_button: Button = %ItemsButton
 @onready var cancel_button: Button = %CancelButton
 @onready var end_panel: PanelContainer = %EndPanel
 @onready var result_label: Label = %ResultLabel
@@ -57,6 +59,8 @@ var state: CombatState
 var _party_panels: Array[BattlerPanel] = []
 var _enemy_panels: Array[BattlerPanel] = []
 var _pending_skill: SkillData = null
+## Inventory id of the item awaiting a target ("" when not choosing an item).
+var _pending_item: String = ""
 var _picking_target: bool = false
 var _pending_result: int = 0
 var _pending_rewards: Dictionary = {}
@@ -65,6 +69,7 @@ var _pending_rewards: Dictionary = {}
 func _ready() -> void:
 	SafeArea.apply($VBox)
 	flee_button.pressed.connect(_on_flee_pressed)
+	items_button.pressed.connect(_on_items_pressed)
 	cancel_button.pressed.connect(_on_cancel_pressed)
 	continue_button.pressed.connect(_on_continue_pressed)
 	end_panel.visible = false
@@ -230,10 +235,12 @@ func _process_turn() -> void:
 func _show_player_turn_ui() -> void:
 	_picking_target = false
 	_pending_skill = null
+	_pending_item = ""
 	target_prompt.visible = false
 	cancel_button.visible = false
 	flee_button.visible = true
 	flee_button.disabled = false
+	items_button.visible = _has_usable_items()
 	_populate_skill_buttons()
 
 
@@ -331,13 +338,28 @@ func _on_skill_pressed(skill: SkillData) -> void:
 	target_prompt.visible = true
 	_clear_skill_buttons()
 	flee_button.visible = false
+	items_button.visible = false
 	cancel_button.visible = true
 	for panel in _all_panels():
 		panel.set_selectable(targets.has(panel.battler))
 
 
 func _on_panel_tapped(b: Battler) -> void:
-	if not _picking_target or _pending_skill == null:
+	if not _picking_target:
+		return
+	# Choosing a target for an item takes priority over the skill path.
+	if _pending_item != "":
+		if not state.item_targets(state.current_actor).has(b):
+			return
+		var id := _pending_item
+		_pending_item = ""
+		_picking_target = false
+		target_prompt.visible = false
+		for p in _all_panels():
+			p.set_selectable(false)
+		_resolve_player_item(id, b)
+		return
+	if _pending_skill == null:
 		return
 	var targets := state.valid_targets_for(state.current_actor, _pending_skill)
 	if not targets.has(b):
@@ -349,6 +371,99 @@ func _on_panel_tapped(b: Battler) -> void:
 	for p in _all_panels():
 		p.set_selectable(false)
 	_resolve_player_action(skill, b)
+
+
+# ── Item flow ─────────────────────────────────────────────────────────────────
+
+## True when the shared inventory holds a consumable usable in combat.
+func _has_usable_items() -> bool:
+	for id in GameState.inventory:
+		var item := load(ITEM_DIR + id + ".tres") as ItemData
+		if item != null and _item_usable_in_combat(item):
+			return true
+	return false
+
+
+func _item_usable_in_combat(item: ItemData) -> bool:
+	return item.slot == ItemData.Slot.CONSUMABLE \
+		and (item.use_heal > 0 or item.use_mp > 0 or item.use_revive_party > 0.0)
+
+
+## Replaces the skill grid with the usable-item menu (distinct ids + counts).
+func _on_items_pressed() -> void:
+	if state.ended or _picking_target:
+		return
+	_clear_skill_buttons()
+	flee_button.visible = false
+	items_button.visible = false
+	cancel_button.visible = true
+	var counts: Dictionary = {}
+	for id in GameState.inventory:
+		counts[id] = int(counts.get(id, 0)) + 1
+	for id in counts:
+		var item := load(ITEM_DIR + id + ".tres") as ItemData
+		if item == null or not _item_usable_in_combat(item):
+			continue
+		var btn := Button.new()
+		btn.custom_minimum_size = Vector2(0, 96)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.pressed.connect(_on_item_pressed.bind(id))
+		var hbox := HBoxContainer.new()
+		hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		hbox.offset_left = 6
+		hbox.offset_right = -6
+		hbox.add_theme_constant_override("separation", 8)
+		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(hbox)
+		hbox.add_child(_make_icon(item.icon_or_null(), 96, 1.0))
+		var label := Label.new()
+		label.text = "%s  x%d\n%s" % [tr(item.display_name), int(counts[id]), item.short_description()]
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		label.add_theme_font_size_override("font_size", 14)
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hbox.add_child(label)
+		skill_grid.add_child(btn)
+
+
+func _on_item_pressed(item_id: String) -> void:
+	if state.ended:
+		return
+	var item := load(ITEM_DIR + item_id + ".tres") as ItemData
+	if item == null:
+		return
+	# Party-wide revive auto-resolves; only offered when someone is down.
+	if item.use_revive_party > 0.0:
+		for b in state.party:
+			if not b.is_alive():
+				_resolve_player_item(item_id, null)
+				return
+		return
+	# Heal / mana: choose a living ally.
+	var targets := state.item_targets(state.current_actor)
+	if targets.is_empty():
+		return
+	_pending_item = item_id
+	_picking_target = true
+	target_prompt.visible = true
+	_clear_skill_buttons()
+	cancel_button.visible = true
+	for panel in _all_panels():
+		panel.set_selectable(targets.has(panel.battler))
+
+
+func _resolve_player_item(item_id: String, target: Battler) -> void:
+	_clear_skill_buttons()
+	cancel_button.visible = false
+	flee_button.disabled = true
+	items_button.visible = false
+	if state.current_actor != null:
+		_panel_for(state.current_actor).flash_active()
+	state.player_item(item_id, target)
+	_refresh_all_panels()
+	await get_tree().create_timer(_delay(PLAYER_ACTION_DELAY)).timeout
+	_process_turn()
 
 
 func _resolve_player_action(skill: SkillData, target: Battler) -> void:
@@ -415,6 +530,7 @@ func _show_end_panel() -> void:
 	target_prompt.visible = false
 	cancel_button.visible = false
 	flee_button.disabled = true
+	items_button.visible = false
 	var result_names := ["—", tr("UI_RESULT_VICTORY"), tr("UI_RESULT_DEFEAT"), tr("UI_RESULT_FLEE")]
 	result_label.text = result_names[_pending_result]
 	if _pending_result == CombatState.Result.VICTORY:

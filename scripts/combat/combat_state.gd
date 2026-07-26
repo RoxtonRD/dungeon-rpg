@@ -103,6 +103,46 @@ func player_action(skill: SkillData, target: Battler) -> void:
 	_after_action()
 
 
+## Living party members — the pick list for a heal/mana item.
+func item_targets(actor: Battler) -> Array[Battler]:
+	return _alive(_same_side(actor))
+
+
+## Consumes a party-inventory consumable as the actor's turn: heal/mana applied
+## to `target`, or a party-wide revive (target ignored). Ends the turn. No-op if
+## the item is missing from the inventory.
+func player_item(item_id: String, target: Battler) -> void:
+	if ended or current_actor == null or current_actor.side != Battler.Side.PARTY:
+		return
+	var item := load("res://resources/items/%s.tres" % item_id) as ItemData
+	if item == null or not GameState.remove_item(item_id):
+		return
+	_apply_item(current_actor, item, target)
+	_after_action()
+
+
+func _apply_item(user: Battler, item: ItemData, target: Battler) -> void:
+	_log(tr("LOG_ITEM") % [user.display_name(), tr(item.display_name)], LogKind.HEAL)
+	if item.use_revive_party > 0.0:
+		for b in party:
+			if not b.is_alive():
+				var amt := maxi(1, int(round(b.max_hp * item.use_revive_party)))
+				b.set_hp(amt)
+				hp_changed.emit(b)
+				damage_popup.emit(b, amt, PopupKind.HEAL)
+		return
+	if target == null:
+		return
+	if item.use_heal > 0:
+		var before := target.get_hp()
+		target.set_hp(before + item.use_heal)
+		hp_changed.emit(target)
+		damage_popup.emit(target, target.get_hp() - before, PopupKind.HEAL)
+	if item.use_mp > 0 and target.side == Battler.Side.PARTY:
+		target.hero.mp = mini(target.hero.max_mp(), target.hero.mp + item.use_mp)
+		hp_changed.emit(target)
+
+
 ## 60% chance of success per prototype combat.js.
 func player_flee() -> void:
 	if ended or current_actor == null or current_actor.side != Battler.Side.PARTY:

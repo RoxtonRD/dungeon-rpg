@@ -63,7 +63,8 @@ fixed) from the city Characters screen; hero skins are drop-in via
 skins and skins unlockable by gold/level/event through a skin catalog
 (`resources/skins/catalog.tres`) with per-save ownership
 (`GameState.owned_skins`)**; turn-based combat
-with front/back rows; 2x2 formation grid; **room-based dungeon: 4 floors
+with front/back rows (skills + **usable consumables mid-combat**); 2x2
+formation grid; **room-based dungeon: 4 floors
 of orthogonally connected grid rooms, fog of war (seen rooms persist),
 stairs room per floor, boss room on floor 4**; room types (combat,
 treasure, event, rest, empty, stairs, boss, rare shrine that grants an
