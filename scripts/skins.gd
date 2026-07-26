@@ -10,6 +10,9 @@ extends Node
 
 const CATALOG_PATH := "res://resources/skins/catalog.tres"
 const CLASS_DIR := "res://resources/classes/"
+const COMMON_DIR := "res://assets/heroes/common/"
+## Highest common skin number probed for. Common skins are drop-in like class ones.
+const MAX_COMMON := 12
 
 var _by_id: Dictionary = {}          # full id -> SkinData
 var _common_ids: Array[String] = []  # catalog ids beginning with "common/"
@@ -38,7 +41,21 @@ func full_id(class_id: String, skin: String) -> String:
 func for_class(class_id: String) -> Array:
 	var cd := load(CLASS_DIR + "%s.tres" % class_id) as ClassData
 	var out: Array = cd.all_skins()
-	out.append_array(_common_ids)
+	out.append_array(common_skins())
+	return out
+
+
+## Common skins available to every class, as full ids ("common/1", "common/2",
+## …). Auto-discovered by probing assets/heroes/common/<n>.png (drop-in, like
+## per-class skins), plus any named common skins declared in the catalog.
+func common_skins() -> Array[String]:
+	var out: Array[String] = []
+	for n in range(1, MAX_COMMON + 1):
+		if ResourceLoader.exists(COMMON_DIR + "%d.png" % n):
+			out.append("common/%d" % n)
+	for id in _common_ids:
+		if not out.has(id):
+			out.append(id)
 	return out
 
 
