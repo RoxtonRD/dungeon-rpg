@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "amulet_ward"
+tier = 2
 display_name = "ITEM_AMULET_WARD"
 slot = 2
 value = 130

@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "elixir_full"
+tier = 1
 display_name = "ITEM_ELIXIR_FULL"
 slot = 3
 value = 90

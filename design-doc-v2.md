@@ -83,7 +83,17 @@
 - Save versão 3: `custom_name`, `skin_id`, `is_main` por herói. Saves v2
   são rejeitados (começa jogo novo).
 
+## Loot (tiers + drops)
+
+- **Tiers de raridade** por item (Comum/Incomum/Raro/Épico) em `ItemData.tier`;
+  coloridos na Loja e em Personagens.
+- **Drops de combate** (`scripts/util/loot.gd`): um pool único ponderado por
+  profundidade da masmorra. Lutas comuns têm chance (`DROP_CHANCE`) de soltar 1
+  item de tier apropriado; chefes soltam 1 garantido de um pool melhor. Itens
+  caem no inventário compartilhado e aparecem no painel de recompensa.
+- Fora de escopo por ora: tabelas de drop por inimigo, tiers na Loja, affixes.
+
 ## Fora de escopo da v2
 
 Tile art das salas (usa chips/retângulos temáticos por enquanto),
-som, novas classes, loot affixes, hardcore.
+som, loot affixes, hardcore.

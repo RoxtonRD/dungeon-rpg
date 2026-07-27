@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "armor_plate"
+tier = 3
 display_name = "ITEM_ARMOR_PLATE"
 slot = 1
 value = 400

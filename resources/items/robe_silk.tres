@@ -4,9 +4,12 @@
 
 [resource]
 script = ExtResource("1")
-id = "amulet_swift"
+id = "robe_silk"
+display_name = "ITEM_ROBE_SILK"
+slot = 1
 tier = 1
-display_name = "ITEM_AMULET_SWIFT"
-slot = 2
-value = 100
-mod_spd = 3
+value = 80
+mod_hp = 6
+mod_mp = 6
+mod_def = 2
+class_restriction = Array[String](["mage", "cleric"])

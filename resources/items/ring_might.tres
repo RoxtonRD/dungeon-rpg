@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "ring_might"
+tier = 1
 display_name = "ITEM_RING_MIGHT"
 slot = 2
 value = 80
