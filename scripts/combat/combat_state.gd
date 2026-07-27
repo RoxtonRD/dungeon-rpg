@@ -256,6 +256,14 @@ func _tick_statuses() -> void:
 				_log(tr("LOG_DOT") % [b.display_name(), st.dot_damage, tr(st.source_name)], LogKind.DAMAGE)
 				hp_changed.emit(b)
 				damage_popup.emit(b, st.dot_damage, PopupKind.MAG)
+			elif st.kind == CombatStatus.Kind.REGEN:
+				var before := b.get_hp()
+				b.set_hp(before + st.heal_per_turn)
+				var healed := b.get_hp() - before
+				if healed > 0:
+					_log(tr("LOG_REGEN_TICK") % [b.display_name(), healed, tr(st.source_name)], LogKind.HEAL)
+					hp_changed.emit(b)
+					damage_popup.emit(b, healed, PopupKind.HEAL)
 			st.duration -= 1
 			if st.duration <= 0:
 				b.statuses.remove_at(i)
@@ -344,6 +352,7 @@ func _apply_buff(target: Battler, skill: SkillData) -> void:
 	st.duration = skill.mod_duration
 	st.taunt = skill.taunt
 	target.statuses.append(st)
+	_apply_regen(target, skill)
 
 
 func _apply_debuff(target: Battler, skill: SkillData) -> void:
@@ -364,6 +373,20 @@ func _apply_heal(caster: Battler, caster_stats: Dictionary, skill: SkillData, ta
 	_log(tr("LOG_HEAL") % [caster.display_name(), target.display_name(), heal_amount], LogKind.HEAL)
 	hp_changed.emit(target)
 	damage_popup.emit(target, heal_amount, PopupKind.HEAL)
+	_apply_regen(target, skill)
+
+
+## Attaches a heal-over-time status when the skill carries one. Mirrors the DoT
+## rider; ticked at round end by _tick_statuses.
+func _apply_regen(target: Battler, skill: SkillData) -> void:
+	if skill.heal_over_time <= 0 or skill.hot_duration <= 0:
+		return
+	var st := CombatStatus.new()
+	st.kind = CombatStatus.Kind.REGEN
+	st.source_name = skill.display_name
+	st.heal_per_turn = skill.heal_over_time
+	st.duration = skill.hot_duration
+	target.statuses.append(st)
 
 
 func _apply_revive(caster: Battler, target: Battler) -> void:
@@ -380,8 +403,15 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 	if target.consume_barrier():
 		_log(tr("LOG_BARRIER") % target.display_name(), LogKind.BARRIER)
 		return
+	# is_mag decides how the hit resolves against DEF; damage_stat decides which
+	# caster stat scales it. They're independent so a physically-resolved skill
+	# can scale off MAG (Conjurer's "physical spells").
 	var is_mag := dmg_kind == SkillData.SkillType.MAG
-	var raw_attack := float(caster_stats["mag"] if is_mag else caster_stats["atk"])
+	var use_mag := is_mag
+	match skill.damage_stat:
+		SkillData.DamageStat.ATK: use_mag = false
+		SkillData.DamageStat.MAG: use_mag = true
+	var raw_attack := float(caster_stats["mag"] if use_mag else caster_stats["atk"])
 	var raw := raw_attack * skill.power + randf_range(0.0, 3.0)
 	# Finisher: double power when target is under 25% HP.
 	if skill.finisher and target.get_hp() <= int(target.max_hp * 0.25):

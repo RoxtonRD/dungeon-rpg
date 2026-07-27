@@ -3,7 +3,7 @@
 class_name CombatStatus
 extends RefCounted
 
-enum Kind { BUFF, DEBUFF, DOT, BARRIER }
+enum Kind { BUFF, DEBUFF, DOT, BARRIER, REGEN }
 
 var kind: Kind = Kind.BUFF
 ## Display name of the skill that applied this status — used in log lines.
@@ -17,6 +17,9 @@ var mod_spd: int = 0
 
 ## Per-turn damage (DoT only).
 var dot_damage: int = 0
+
+## Per-turn healing (REGEN only).
+var heal_per_turn: int = 0
 
 ## Turns remaining. 99 means "until consumed" (used by barrier).
 var duration: int = 0
