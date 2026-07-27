@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "grand_elixir"
+display_name = "SKILL_ALCHEMIST_ELIXIR"
+description = "SKILLD_ALCHEMIST_ELIXIR"
+mp_cost = 18
+unlock_level = 5
+max_upgrade_level = 4
+skill_type = 2
+target = 4
+power = 0.7
+heal_over_time = 4
+hot_duration = 3

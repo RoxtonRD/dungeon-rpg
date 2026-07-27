@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "acid_flask"
+display_name = "SKILL_ALCHEMIST_ACID"
+description = "SKILLD_ALCHEMIST_ACID"
+mp_cost = 4
+unlock_level = 1
+max_upgrade_level = 3
+skill_type = 1
+target = 0
+power = 1.0
+mod_def = -3
+mod_duration = 3

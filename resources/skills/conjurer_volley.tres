@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "blade_volley"
+display_name = "SKILL_CONJURER_VOLLEY"
+description = "SKILLD_CONJURER_VOLLEY"
+mp_cost = 8
+unlock_level = 1
+max_upgrade_level = 3
+skill_type = 5
+target = 6
+power = 0.5
+damage_stat = 2
+hits = 3
+multi_hit_type = 0

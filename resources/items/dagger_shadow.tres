@@ -11,4 +11,4 @@ slot = 0
 value = 140
 mod_atk = 6
 mod_spd = 3
-class_restriction = Array[String](["rogue"])
+class_restriction = Array[String](["rogue", "conjurer"])
