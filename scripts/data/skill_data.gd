@@ -12,6 +12,10 @@ enum TargetType { ONE, ALL, SELF, ALLY, ALLIES, DEAD_ALLY, RANDOM }
 enum HitType { PHYS, MAG }
 ## Restricts when enemy AI is allowed to pick the skill.
 enum UseCondition { NONE, LOW_HP, NOT_LOW_HP }
+## Which caster stat scales the damage. AUTO follows skill_type (MAG for magic,
+## ATK otherwise) — the historic behaviour. Overriding lets a physically-resolved
+## skill scale off MAG ("physical spells": conjured weapons still take full DEF).
+enum DamageStat { AUTO, ATK, MAG }
 
 ## Stable internal key, e.g. "slash". Used in save files — never translate.
 @export var id: String = ""
@@ -31,6 +35,9 @@ enum UseCondition { NONE, LOW_HP, NOT_LOW_HP }
 @export var target: TargetType = TargetType.ONE
 ## Damage/heal multiplier applied to the caster's ATK or MAG.
 @export var power: float = 1.0
+## Overrides which caster stat scales the damage, without changing how the hit
+## resolves against DEF. AUTO keeps the historic behaviour.
+@export var damage_stat: DamageStat = DamageStat.AUTO
 ## Chance, 0..1, to land a critical hit.
 @export var crit_chance: float = 0.0
 ## Doubles power when the target is below 25% HP.
@@ -60,6 +67,11 @@ enum UseCondition { NONE, LOW_HP, NOT_LOW_HP }
 @export_group("Damage Over Time")
 @export var dot_damage: int = 0
 @export var dot_duration: int = 0
+
+@export_group("Heal Over Time")
+## HP restored to the target at the end of each round while active.
+@export var heal_over_time: int = 0
+@export var hot_duration: int = 0
 
 @export_group("Enemy AI")
 @export var use_condition: UseCondition = UseCondition.NONE

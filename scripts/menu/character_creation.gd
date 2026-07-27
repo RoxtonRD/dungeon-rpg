@@ -9,8 +9,8 @@ const CITY_SCENE := "res://scripts/city/city_hub.tscn"
 const MENU_SCENE := "res://scenes/main.tscn"
 const CLASS_DIR := "res://resources/classes/"
 
-## Class order shown in the picker.
-const CLASS_IDS: Array[String] = ["warrior", "cleric", "rogue", "mage"]
+## Class order shown in the picker — the full playable roster.
+const CLASS_IDS: Array[String] = Party.ALL_CLASS_IDS
 
 @onready var slot_tabs: HBoxContainer = %SlotTabs
 @onready var name_input: LineEdit = %NameInput

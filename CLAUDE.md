@@ -54,7 +54,10 @@ Any system that does not directly serve this loop is out of scope.
 
 ## v2 scope — IN (Fases 1 e 2)
 
-4 classes (Guerreiro, Clerigo, Ladino, Mago); **customizable party:
+6 classes (Guerreiro, Clerigo, Ladino, Mago, **Conjurador** — dano
+fisico que escala com Magia via `SkillData.damage_stat` — e **Alquimista**
+— suporte com buffs e cura ao longo do tempo via `CombatStatus.REGEN`);
+**customizable party:
 character creation on New Adventure builds all four heroes, each with a
 typed name, chosen class and chosen skin, with at most 2 heroes of any
 one class; heroes can be renamed and reskinned (cosmetic only, class

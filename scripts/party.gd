@@ -2,13 +2,20 @@
 ## XP / level / Skill-Point logic. Registered as the "Party" autoload.
 extends Node
 
-## The v1 party is fixed: one hero per class, in this order. The order is
-## stable — formation (step 9) and combat rows depend on it.
+## The classes the default (non-created) party is built from — exactly
+## PARTY_SIZE of them, one hero each. This is NOT the full roster: see
+## ALL_CLASS_IDS. The order is stable — formation and combat rows depend on it.
 const CLASS_PATHS: Array[String] = [
 	"res://resources/classes/warrior.tres",
 	"res://resources/classes/cleric.tres",
 	"res://resources/classes/rogue.tres",
 	"res://resources/classes/mage.tres",
+]
+
+## Every playable class, in character-creation display order. Adding a class
+## here must NOT grow the default party — start_new_game() clamps to PARTY_SIZE.
+const ALL_CLASS_IDS: Array[String] = [
+	"warrior", "cleric", "rogue", "mage", "conjurer", "alchemist",
 ]
 
 const CLASS_DIR := "res://resources/classes/"
@@ -32,8 +39,10 @@ var heroes: Array[Hero] = []
 ## standalone bootstraps and as the fallback when no custom party was created.
 func start_new_game() -> void:
 	heroes.clear()
-	for path in CLASS_PATHS:
-		var class_data := load(path) as ClassData
+	# Clamped to PARTY_SIZE: the roster can grow past four classes, the party
+	# cannot (the 2x2 formation grid and combat rows assume exactly four).
+	for i in mini(PARTY_SIZE, CLASS_PATHS.size()):
+		var class_data := load(CLASS_PATHS[i]) as ClassData
 		heroes.append(Hero.create(class_data))
 
 
@@ -222,6 +231,11 @@ func get_upgraded_skill(hero: Hero, skill: SkillData) -> SkillData:
 		s.dot_damage = roundi(s.dot_damage * mult)
 		if tier >= 3:
 			s.dot_duration = mini(5, s.dot_duration + 1)
+	# Heal-over-time scales the same way.
+	if s.heal_over_time > 0:
+		s.heal_over_time = roundi(s.heal_over_time * mult)
+		if tier >= 3:
+			s.hot_duration = mini(5, s.hot_duration + 1)
 	# Multi-hit: prototype adds `bonus` hits (+1/+2/+3 at tiers 2/3/4). Note:
 	# party.js's comment on this block disagrees with the code — code wins.
 	if s.skill_type == SkillData.SkillType.MULTI:

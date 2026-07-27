@@ -11,4 +11,4 @@ tier = 1
 value = 65
 mod_atk = 4
 mod_spd = 2
-class_restriction = Array[String](["rogue"])
+class_restriction = Array[String](["rogue", "conjurer"])

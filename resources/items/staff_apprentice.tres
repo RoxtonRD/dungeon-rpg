@@ -9,4 +9,4 @@ display_name = "ITEM_STAFF_APPRENTICE"
 slot = 0
 value = 25
 mod_mag = 3
-class_restriction = Array[String](["cleric", "mage"])
+class_restriction = Array[String](["cleric", "mage", "conjurer", "alchemist"])

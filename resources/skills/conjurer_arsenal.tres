@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arsenal"
+display_name = "SKILL_CONJURER_ARSENAL"
+description = "SKILLD_CONJURER_ARSENAL"
+mp_cost = 20
+unlock_level = 5
+max_upgrade_level = 4
+skill_type = 0
+target = 1
+power = 1.2
+damage_stat = 2

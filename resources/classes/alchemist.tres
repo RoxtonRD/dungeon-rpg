@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/class_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/alchemist_acid.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/skills/alchemist_salve.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/skills/alchemist_brew.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/skills/alchemist_elixir.tres" id="6"]
+
+[resource]
+script = ExtResource("1")
+id = "alchemist"
+display_name = "CLASS_ALCHEMIST"
+role = 1
+base_hp = 30
+base_mp = 24
+atk = 4
+def = 4
+mag = 6
+spd = 5
+hp_per_level = 7
+mp_per_level = 4
+atk_per_level = 1
+def_per_level = 1
+mag_per_level = 2
+spd_per_level = 1
+skills = Array[ExtResource("2")]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])

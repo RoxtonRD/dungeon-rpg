@@ -233,10 +233,12 @@ func _apply_style(active: bool) -> void:
 ## (e.g. the formation screen) can reuse the same colours for their fallbacks.
 static func color_for_class(class_id: String) -> Color:
 	match class_id:
-		"warrior": return Color(0.65, 0.32, 0.32)
-		"cleric":  return Color(0.62, 0.58, 0.30)
-		"rogue":   return Color(0.32, 0.55, 0.32)
-		"mage":    return Color(0.34, 0.36, 0.70)
+		"warrior":   return Color(0.65, 0.32, 0.32)
+		"cleric":    return Color(0.62, 0.58, 0.30)
+		"rogue":     return Color(0.32, 0.55, 0.32)
+		"mage":      return Color(0.34, 0.36, 0.70)
+		"conjurer":  return Color(0.24, 0.55, 0.58)
+		"alchemist": return Color(0.70, 0.48, 0.22)
 	return Color(0.3, 0.3, 0.4)
 
 

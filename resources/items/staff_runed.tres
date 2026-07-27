@@ -11,4 +11,4 @@ slot = 0
 value = 120
 mod_mp = 4
 mod_mag = 7
-class_restriction = Array[String](["cleric", "mage"])
+class_restriction = Array[String](["cleric", "mage", "conjurer", "alchemist"])

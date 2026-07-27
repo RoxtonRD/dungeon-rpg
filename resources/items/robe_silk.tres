@@ -12,4 +12,4 @@ value = 80
 mod_hp = 6
 mod_mp = 6
 mod_def = 2
-class_restriction = Array[String](["mage", "cleric"])
+class_restriction = Array[String](["mage", "cleric", "conjurer", "alchemist"])

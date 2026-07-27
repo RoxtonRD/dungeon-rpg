@@ -83,6 +83,23 @@
 - Save versão 3: `custom_name`, `skin_id`, `is_main` por herói. Saves v2
   são rejeitados (começa jogo novo).
 
+## Classes novas (Conjuradora e Alquimista)
+
+- **Conjuradora** (frente ou fundo): luta com "magias físicas" — armas
+  conjuradas que **escalam com MAG mas resolvem como dano físico** (DEF
+  cheia, ao contrário da magia que sofre 40% da DEF). Habilita-se pelo
+  novo `SkillData.damage_stat` (AUTO/ATK/MAG); `AUTO` mantém o
+  comportamento histórico de todas as habilidades existentes.
+- **Alquimista** (fundo): buffs, cura leve e **auto-buff** (Poção de
+  Batalha, +ATQ/+DEF) que a deixa segurar a linha de frente. Usa o novo
+  **REGEN** (`CombatStatus.Kind.REGEN` + `heal_over_time`/`hot_duration`),
+  cura por rodada que espelha o DoT e escala por tier igual.
+- O grupo continua com **4 heróis**: `Party.CLASS_PATHS` é só o grupo
+  padrão (limitado a `PARTY_SIZE`), enquanto `Party.ALL_CLASS_IDS` lista
+  as 6 classes jogáveis para a criação.
+- Arte: sem `assets/heroes/<classe>/`, `HeroArt` cai no placeholder
+  colorido por classe — as classes já são jogáveis; a arte entra depois.
+
 ## Loot (tiers + drops)
 
 - **Tiers de raridade** por item (Comum/Incomum/Raro/Épico) em `ItemData.tier`;
