@@ -1,0 +1,27 @@
+# Line-ending normalization for the Godot project.
+# The Windows editor rewrites text resources with CRLF; storing everything as
+# LF stops those rewrites from showing up as spurious "modified" churn.
+* text=auto eol=lf
+
+# Godot text resources — always LF.
+*.gd     text eol=lf
+*.tres   text eol=lf
+*.tscn   text eol=lf
+*.godot  text eol=lf
+*.cfg    text eol=lf
+*.import text eol=lf
+*.csv    text eol=lf
+*.md     text eol=lf
+*.uid    text eol=lf
+
+# Binary assets — never normalize or diff as text.
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.webp        binary
+*.ttf         binary
+*.otf         binary
+*.ogg         binary
+*.wav         binary
+*.mp3         binary
+*.translation binary
