@@ -309,7 +309,7 @@ func _start_combat(encounter: Array[EnemyData]) -> void:
 	_combat_overlay = scene.instantiate() as CombatScreen
 	add_child(_combat_overlay)
 	_combat_overlay.combat_finished.connect(_on_combat_finished)
-	_combat_overlay.setup(Party.heroes, encounter)
+	_combat_overlay.setup(Party.heroes, encounter, run.level)
 
 
 func _on_combat_finished(result: int) -> void:

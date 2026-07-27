@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "dagger_shadow"
+tier = 2
 display_name = "ITEM_DAGGER_SHADOW"
 slot = 0
 value = 140

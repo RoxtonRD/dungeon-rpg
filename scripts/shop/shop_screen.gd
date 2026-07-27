@@ -87,6 +87,7 @@ func _add_buy_row(item: ItemData, stock_index: int) -> void:
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_font_size_override("font_size", 16)
+	name_lbl.add_theme_color_override("font_color", item.tier_color())
 	if sold_out:
 		name_lbl.modulate = Color(0.6, 0.6, 0.6)
 	row.add_child(name_lbl)
@@ -161,6 +162,7 @@ func _rebuild_sell_list() -> void:
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 16)
+		name_lbl.add_theme_color_override("font_color", item.tier_color())
 		row.add_child(name_lbl)
 
 		var price_lbl := Label.new()

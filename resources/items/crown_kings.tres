@@ -4,9 +4,12 @@
 
 [resource]
 script = ExtResource("1")
-id = "amulet_swift"
-tier = 1
-display_name = "ITEM_AMULET_SWIFT"
+id = "crown_kings"
+display_name = "ITEM_CROWN_KINGS"
 slot = 2
-value = 100
-mod_spd = 3
+tier = 3
+value = 350
+mod_hp = 12
+mod_atk = 3
+mod_def = 3
+mod_mag = 3

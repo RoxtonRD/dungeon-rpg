@@ -73,7 +73,10 @@ event-exclusive skin); **city hub between dungeons
 potions + limited-stock random equipment, restocking when a run ends
 (complete/abandon/TPK); leaving a dungeon abandons the run**; 4 skills
 per class; XP/levels with 1 Skill Point per level (surplus converts to
-+2 max MP); equipment slots with stat modifiers; versioned file-based
++2 max MP); equipment slots with stat modifiers; **item rarity tiers
+(Common/Uncommon/Rare/Epic) with depth-scaled combat drops (a chance on
+common fights, guaranteed from bosses) via `scripts/util/loot.gd`**;
+versioned file-based
 save (run layouts, explored rooms, player position, market stock) with
 a TPK rule (revive at 25% HP, lose 20% gold); **pt-BR/English
 localization; settings screen (language + combat speed) and credits
@@ -83,8 +86,9 @@ screen from the main menu**.
 
 Tile art for rooms and city art (themed chips / placeholder backgrounds
 for now); 4x3 tactical grid with distance-based accuracy; Hardcore mode;
-scaling shop tiers; sound; animations beyond combat particles; loot
-affixes; save migration from v1.
+tier-gated Market stock and per-enemy drop tables (drops use one
+depth-scaled shared pool for now); sound; animations beyond combat
+particles; procedural loot affixes; save migration from v1.
 
 ## Out of bounds
 

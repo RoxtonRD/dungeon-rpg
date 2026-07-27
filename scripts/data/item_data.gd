@@ -5,12 +5,16 @@ class_name ItemData
 extends Resource
 
 enum Slot { WEAPON, ARMOR, TRINKET, CONSUMABLE }
+## Rarity tier. Drives drop pools, UI labelling/colour. Appended-safe ordering.
+enum Tier { COMMON, UNCOMMON, RARE, EPIC }
 
 ## Stable internal key, e.g. "sword_iron". Used in save files — never translate.
 @export var id: String = ""
 ## Name shown in the UI (pt-BR).
 @export var display_name: String = ""
 @export var slot: Slot = Slot.WEAPON
+## Rarity tier (default COMMON so untouched items stay common).
+@export var tier: Tier = Tier.COMMON
 ## Shop buy price in gold. Sell value is derived from this at runtime.
 @export var value: int = 0
 
@@ -35,6 +39,24 @@ enum Slot { WEAPON, ARMOR, TRINKET, CONSUMABLE }
 @export_group("Art")
 ## Hand-drawn icon. Left empty in v1 — the UI shows a placeholder.
 @export var icon: Texture2D
+
+
+## Translated rarity-tier name (a translation key resolves the label).
+func tier_name() -> String:
+	match tier:
+		Tier.UNCOMMON: return tr("TIER_UNCOMMON")
+		Tier.RARE: return tr("TIER_RARE")
+		Tier.EPIC: return tr("TIER_EPIC")
+		_: return tr("TIER_COMMON")
+
+
+## UI accent colour for the tier (standard loot palette).
+func tier_color() -> Color:
+	match tier:
+		Tier.UNCOMMON: return Color(0.45, 0.85, 0.45)  # green
+		Tier.RARE: return Color(0.4, 0.6, 1.0)          # blue
+		Tier.EPIC: return Color(0.78, 0.45, 0.95)       # purple
+		_: return Color(0.82, 0.82, 0.86)               # common grey-white
 
 
 ## Returns the per-item icon Texture2D at assets/icons/items/{id}.png, or null

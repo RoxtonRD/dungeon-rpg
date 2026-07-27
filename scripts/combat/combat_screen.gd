@@ -64,6 +64,8 @@ var _pending_item: String = ""
 var _picking_target: bool = false
 var _pending_result: int = 0
 var _pending_rewards: Dictionary = {}
+## Dungeon level the fight was entered at — drives loot-drop tier weighting.
+var _loot_level: int = 1
 
 
 func _ready() -> void:
@@ -94,9 +96,10 @@ func _bootstrap_if_needed() -> void:
 
 ## External entry point. Call after add_child(combat_scene) and before
 ## _ready's deferred bootstrap fires.
-func setup(heroes: Array[Hero], enemies: Array[EnemyData]) -> void:
+func setup(heroes: Array[Hero], enemies: Array[EnemyData], loot_level: int = 1) -> void:
 	if state != null:
 		return
+	_loot_level = loot_level
 	state = CombatState.build(heroes, enemies)
 	# Swap to the boss background when the encounter contains a boss.
 	if _encounter_has_boss():
@@ -562,6 +565,11 @@ func _show_end_panel() -> void:
 		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
 			GameState.add_item("tome_sp")
 			lines.append(tr("UI_TOME_DROP") % _tome_display_name())
+		# Depth-scaled loot: a chance on common fights, guaranteed from bosses.
+		for drop_id in Loot.roll_drops(_loot_level, _encounter_has_boss()):
+			GameState.add_item(drop_id)
+			var di := load(ITEM_DIR + drop_id + ".tres") as ItemData
+			lines.append(tr("UI_DROP_ITEM") % (tr(di.display_name) if di != null else drop_id))
 		rewards_label.text = "\n".join(lines)
 		_refresh_all_panels()
 	elif _pending_result == CombatState.Result.DEFEAT:

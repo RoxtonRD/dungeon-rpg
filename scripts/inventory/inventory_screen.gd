@@ -233,6 +233,8 @@ func _rebuild_equipment_rows(hero: Hero) -> void:
 		item_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		item_lbl.add_theme_font_size_override("font_size", 16)
 		item_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		if item != null:
+			item_lbl.add_theme_color_override("font_color", item.tier_color())
 		row.add_child(item_lbl)
 
 		if item != null:
@@ -346,6 +348,7 @@ func _rebuild_item_list(hero: Hero) -> void:
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 16)
+		name_lbl.add_theme_color_override("font_color", item.tier_color())
 		row.add_child(name_lbl)
 
 		var action_btn := Button.new()

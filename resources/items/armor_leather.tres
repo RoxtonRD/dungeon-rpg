@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "armor_leather"
+tier = 1
 display_name = "ITEM_ARMOR_LEATHER"
 slot = 1
 value = 70
