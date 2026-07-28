@@ -106,7 +106,7 @@ Revived with 25% HP.
 "EVT_CHEST_TRAP","Armadilha! Cada herói perde 8 HP.","A trap! Each hero loses 8 HP."
 "EVT_CHEST_LEAVE","Melhor não arriscar.","Better not to risk it."
 "EVT_MOVE_ON","Vocês seguem em frente.","You press on."
-"UI_HERO_INFO","%s  Nv.%d  HP: %d/%d  MP: %d/%d  SP: %d","%s  Lv.%d  HP: %d/%d  MP: %d/%d  SP: %d"
+"UI_HERO_INFO","%s — %s  Nv.%d  HP: %d/%d  MP: %d/%d  SP: %d","%s — %s  Lv.%d  HP: %d/%d  MP: %d/%d  SP: %d"
 "UI_EQUIPMENT","Equipamentos","Equipment"
 "UI_SKILLS","Habilidades","Skills"
 "UI_INVENTORY","Inventário","Inventory"

@@ -188,7 +188,7 @@ func _render_full_body(class_id: String, skin: String) -> void:
 
 func _update_hero_info(hero: Hero) -> void:
 	hero_info_label.text = tr("UI_HERO_INFO") % [
-		hero.display_name(), hero.level,
+		hero.display_name(), tr(hero.class_data.display_name), hero.level,
 		hero.hp, hero.max_hp(),
 		hero.mp, hero.max_mp(),
 		hero.sp_available,
