@@ -289,7 +289,7 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 				_apply_heal(caster, caster_stats, skill, t)
 		SkillData.SkillType.REVIVE:
 			if not targets.is_empty():
-				_apply_revive(caster, targets[0])
+				_apply_revive(caster, skill, targets[0])
 		SkillData.SkillType.MULTI:
 			_log(tr("LOG_USE") % [caster.display_name(), tr(skill.display_name)])
 			var hit_kind := SkillData.SkillType.PHYS \
@@ -341,17 +341,29 @@ func _gather_targets(caster: Battler, skill: SkillData, picked: Battler) -> Arra
 	return out
 
 
+## Applies a buff skill's effects. A barrier and a stat buff are separate
+## statuses because Battler.effective_stats only reads BUFF/DEBUFF mods — a
+## skill granting both (e.g. Sanctuary) needs one of each.
 func _apply_buff(target: Battler, skill: SkillData) -> void:
-	var st := CombatStatus.new()
-	st.kind = CombatStatus.Kind.BARRIER if skill.barrier else CombatStatus.Kind.BUFF
-	st.source_name = skill.display_name
-	st.mod_atk = skill.mod_atk
-	st.mod_def = skill.mod_def
-	st.mod_mag = skill.mod_mag
-	st.mod_spd = skill.mod_spd
-	st.duration = skill.mod_duration
-	st.taunt = skill.taunt
-	target.statuses.append(st)
+	if skill.barrier:
+		var bar := CombatStatus.new()
+		bar.kind = CombatStatus.Kind.BARRIER
+		bar.source_name = skill.display_name
+		bar.duration = skill.mod_duration
+		target.statuses.append(bar)
+	var has_mods := skill.mod_atk != 0 or skill.mod_def != 0 \
+		or skill.mod_mag != 0 or skill.mod_spd != 0 or skill.taunt
+	if has_mods or not skill.barrier:
+		var st := CombatStatus.new()
+		st.kind = CombatStatus.Kind.BUFF
+		st.source_name = skill.display_name
+		st.mod_atk = skill.mod_atk
+		st.mod_def = skill.mod_def
+		st.mod_mag = skill.mod_mag
+		st.mod_spd = skill.mod_spd
+		st.duration = skill.mod_duration
+		st.taunt = skill.taunt
+		target.statuses.append(st)
 	_apply_regen(target, skill)
 
 
@@ -389,9 +401,13 @@ func _apply_regen(target: Battler, skill: SkillData) -> void:
 	target.statuses.append(st)
 
 
-func _apply_revive(caster: Battler, target: Battler) -> void:
-	# 30% of max HP, prototype value.
-	var amount := maxi(1, int(floor(target.max_hp * 0.3)))
+## Revives a fallen ally at `skill.power` of their max HP. Reading the fraction
+## from power (rather than the old hardcoded 30%) is what makes Revive's SP
+## upgrade tiers meaningful — get_upgraded_skill scales power, so each tier
+## brings the ally back with more HP. Clamped so it can never exceed full.
+func _apply_revive(caster: Battler, skill: SkillData, target: Battler) -> void:
+	var frac := clampf(skill.power, 0.05, 1.0)
+	var amount := maxi(1, int(floor(target.max_hp * frac)))
 	target.set_hp(amount)
 	_log(tr("LOG_REVIVE") % [caster.display_name(), target.display_name()], LogKind.HEAL)
 	hp_changed.emit(target)

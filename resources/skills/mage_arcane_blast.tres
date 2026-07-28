@@ -11,5 +11,5 @@ mp_cost = 15
 unlock_level = 5
 max_upgrade_level = 4
 skill_type = 1
-target = 1
-power = 1.4
+target = 0
+power = 2.4
