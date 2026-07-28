@@ -4,12 +4,15 @@
 
 [resource]
 script = ExtResource("1")
-id = "heal_all"
-display_name = "SKILL_CLERIC_HEAL_ALL"
-description = "SKILLD_CLERIC_HEAL_ALL"
+id = "sanctuary"
+display_name = "SKILL_CLERIC_SANCTUARY"
+description = "SKILLD_CLERIC_SANCTUARY"
 mp_cost = 16
 unlock_level = 3
 max_upgrade_level = 3
-skill_type = 2
+skill_type = 3
 target = 4
 power = 1.0
+mod_def = 4
+mod_duration = 3
+barrier = true

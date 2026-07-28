@@ -5,7 +5,7 @@
 [ext_resource type="Resource" uid="uid://4gx1ljsyt648" path="res://resources/skills/cleric_smite.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/cleric_heal.tres" id="3"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_t3wra"]
-[ext_resource type="Resource" path="res://resources/skills/cleric_heal_all.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/skills/cleric_sanctuary.tres" id="4"]
 [ext_resource type="Resource" path="res://resources/skills/cleric_revive.tres" id="5"]
 
 [resource]
