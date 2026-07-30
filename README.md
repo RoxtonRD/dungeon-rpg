@@ -105,4 +105,4 @@ Released under the [MIT License](LICENSE).
 
 Full-stack developer (TypeScript / Python) based in Brazil.
 
-[GitHub](https://github.com/RoxtonRD) · [itch.io](https://roxtonrd.itch.io) · [LinkedIn](https://www.linkedin.com/in/roberto-pedroso-de-barros-3746b566/)
+[GitHub](https://github.com/RoxtonRD) · [itch.io](https://roxtonrd.itch.io) · [LinkedIn](https://www.linkedin.com/in/roberto-pedroso-de-barros/)
