@@ -22,3 +22,6 @@ Thumbs.db
 # Keep the Android export template config tracked, but ignore generated Android build
 # (only relevant once you set up Android export — uncomment if needed)
 # /android/
+
+# Claude Code local settings (machine-specific)
+.claude/
