@@ -391,9 +391,12 @@ func _can_equip(hero: Hero, item: ItemData) -> bool:
 
 
 func _can_use_consumable(hero: Hero, item: ItemData) -> bool:
-	if item.use_heal > 0 and hero.hp < hero.max_hp():
+	# Heal/mana only apply to a living hero — a healing potion must never double
+	# as a resurrection (that made the revival elixir pointless). Combat already
+	# enforces this via CombatState.item_targets(), which lists living allies.
+	if item.use_heal > 0 and hero.is_alive() and hero.hp < hero.max_hp():
 		return true
-	if item.use_mp > 0 and hero.mp < hero.max_mp():
+	if item.use_mp > 0 and hero.is_alive() and hero.mp < hero.max_mp():
 		return true
 	if item.use_sp > 0:
 		return true
@@ -459,9 +462,14 @@ func _on_use(inv_idx: int) -> void:
 	if item == null:
 		return
 	var hero: Hero = Party.heroes[_selected_hero_idx]
-	if item.use_heal > 0:
+	# Never consume an item that would have no effect (e.g. a healing potion on
+	# a downed hero, which the is_alive() guards below now correctly refuse).
+	if not _can_use_consumable(hero, item):
+		return
+	# Guarded by is_alive() so healing can never resurrect — only a revive item can.
+	if item.use_heal > 0 and hero.is_alive():
 		hero.hp = mini(hero.max_hp(), hero.hp + item.use_heal)
-	if item.use_mp > 0:
+	if item.use_mp > 0 and hero.is_alive():
 		hero.mp = mini(hero.max_mp(), hero.mp + item.use_mp)
 	if item.use_sp > 0:
 		var mp_gain := Party.award_sp(hero, item.use_sp)
