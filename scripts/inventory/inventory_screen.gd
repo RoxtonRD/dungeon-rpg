@@ -305,6 +305,16 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(name_lbl)
 
+		# Cast button — healing magic is usable outside combat, spending MP.
+		# Turns the healers into the party's sustain engine between fights.
+		if skill.skill_type == SkillData.SkillType.HEAL:
+			var cast_btn := Button.new()
+			cast_btn.text = tr("UI_USE")
+			cast_btn.custom_minimum_size = Vector2(80, 0)
+			cast_btn.disabled = not _can_cast_heal(hero, skill)
+			cast_btn.pressed.connect(_on_cast_heal.bind(hero, skill))
+			row.add_child(cast_btn)
+
 		# Upgrade button — only shown when the skill can ever be upgraded
 		if skill.max_upgrade_level > 1:
 			var up_btn := Button.new()
@@ -318,6 +328,47 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		if not skill.description.is_empty():
 			entry.add_child(_make_desc_label(tr(skill.description)))
 		skill_rows.add_child(entry)
+
+
+# ── Out-of-combat healing ─────────────────────────────────────────────────────
+
+## Living allies below full HP — who an out-of-combat heal would actually help.
+## Downed heroes are excluded: only a revive brings them back.
+func _heal_targets() -> Array[Hero]:
+	var out: Array[Hero] = []
+	for h in Party.heroes:
+		if h.is_alive() and h.hp < h.max_hp():
+			out.append(h)
+	return out
+
+
+func _can_cast_heal(hero: Hero, skill: SkillData) -> bool:
+	if not hero.is_alive() or hero.mp < skill.mp_cost:
+		return false
+	return not _heal_targets().is_empty()
+
+
+## Casts a healing skill outside combat: spends MP and applies the same direct
+## heal combat uses (CombatState._apply_heal). ALLIES skills hit every wounded
+## living ally; single-target ones go to the most wounded. The heal-over-time
+## rider is combat-only, so it is not applied here.
+func _on_cast_heal(hero: Hero, skill: SkillData) -> void:
+	if not _can_cast_heal(hero, skill):
+		return
+	var scaled := Party.get_upgraded_skill(hero, skill)
+	var targets := _heal_targets()
+	if skill.target != SkillData.TargetType.ALLIES:
+		var lowest: Hero = targets[0]
+		for t in targets:
+			if t.hp < lowest.hp:
+				lowest = t
+		targets = [lowest] as Array[Hero]
+	hero.mp -= scaled.mp_cost
+	var amount := int(floor(float(hero.mag()) * scaled.power + 5.0))
+	for t in targets:
+		t.hp = mini(t.max_hp(), t.hp + amount)
+	GameState.save_game()
+	_refresh()
 
 
 func _on_upgrade_skill(hero: Hero, skill: SkillData) -> void:
