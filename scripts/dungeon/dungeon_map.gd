@@ -138,22 +138,23 @@ func _begin_run() -> void:
 		run = DungeonRun.generate(GameState.dungeon_level)
 		GameState.current_run = run
 		GameState.save_game()
-	_rebuild_map()
+	_refresh_all()
 
 
 # ── Map rendering ─────────────────────────────────────────────────────────────
 
-## Redraws the current floor. The layout is anchored to the bounding box of
-## ALL rooms on the floor (stable as fog lifts); only visible rooms render.
+## Redraws the current floor's room grid. The layout is anchored to the bounding
+## box of ALL rooms on the floor (stable as fog lifts); only visible rooms render.
+##
+## This is what map_area.resized is wired to, so it must NOT touch the header:
+## the party strip shares a VBox with the map, so changing its height resizes
+## map_area, which re-fires resized and spins forever. (Persistent statuses made
+## that strip's height variable, which is what first exposed this.)
 func _rebuild_map() -> void:
 	if run == null:
 		return
 	for child in map_area.get_children():
 		child.queue_free()
-	title_label.text = tr("UI_DUNGEON_TITLE") % [
-		run.level, run.current_floor + 1, DungeonRun.NUM_FLOORS]
-	gold_label.text = tr("UI_GOLD") % GameState.gold
-	PartyBar.fill(party_status)
 
 	# Fixed bounding box over the whole floor, so positions don't shift.
 	var all_rooms: Array = run.rooms_on_floor().values()
@@ -210,6 +211,23 @@ func _rebuild_map() -> void:
 		map_area.add_child(btn)
 		if room.pos == run.player_pos:
 			btn.add_child(_make_player_marker())
+
+
+## Title, gold and the party strip. Kept out of _rebuild_map so a map resize can
+## never change the header's height (see the note on _rebuild_map).
+func _refresh_header() -> void:
+	if run == null:
+		return
+	title_label.text = tr("UI_DUNGEON_TITLE") % [
+		run.level, run.current_floor + 1, DungeonRun.NUM_FLOORS]
+	gold_label.text = tr("UI_GOLD") % GameState.gold
+	PartyBar.fill(party_status)
+
+
+## Full redraw: grid + header. Use after anything that changes run/party state.
+func _refresh_all() -> void:
+	_rebuild_map()
+	_refresh_header()
 
 
 func _variation_for(room: DungeonRoom) -> String:
@@ -270,7 +288,7 @@ func _on_room_pressed(pos: Vector2i) -> void:
 		return
 	run.move_to(pos)
 	GameState.save_game()
-	_rebuild_map()
+	_refresh_all()
 	_trigger_room(run.current_room())
 
 
@@ -299,7 +317,7 @@ func _trigger_room(room: DungeonRoom) -> void:
 func _clear_current_room() -> void:
 	run.current_room().cleared = true
 	GameState.save_game()
-	_rebuild_map()
+	_refresh_all()
 
 
 # ── Combat ────────────────────────────────────────────────────────────────────
@@ -328,7 +346,7 @@ func _on_combat_finished(result: int) -> void:
 			# Persist HP/MP spent in the fled fight (movement saves don't
 			# cover damage taken after the last save point).
 			GameState.save_game()
-			_rebuild_map()
+			_refresh_all()
 
 
 # ── Treasure popup ────────────────────────────────────────────────────────────
@@ -440,7 +458,7 @@ func _on_descend_pressed() -> void:
 	stairs_panel.visible = false
 	run.descend()
 	GameState.save_game()
-	_rebuild_map()
+	_refresh_all()
 
 
 func _on_stay_pressed() -> void:
