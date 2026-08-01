@@ -26,10 +26,16 @@ const BOSS_ENCOUNTERS := [
 ]
 
 ## Difficulty scaling per step. Enemy stats and rewards are multiplied by
-## 1 + (floor-1)*FLOOR_SCALE + (dungeon_level-1)*DUNGEON_SCALE.
+##   pow(DUNGEON_GROWTH, dungeon_level-1) * (1 + (floor-1)*FLOOR_SCALE)
 ## Floor 1 of dungeon 1 is the 1.0 baseline.
+##
+## Dungeon scaling is exponential, not linear, because hero power compounds:
+## levels stack stat growth AND unlock ultimates at level 5. A linear
+## `1 + (n-1)*s` ramp shrinks in ratio each step (D2->D3 is only 1.26x at
+## s=0.35), so deeper dungeons kept getting *easier*. A constant growth factor
+## keeps each dungeon a fixed step harder than the last.
 const FLOOR_SCALE := 0.15
-const DUNGEON_SCALE := 0.20
+const DUNGEON_GROWTH := 1.5
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.
@@ -300,7 +306,7 @@ func _load_enemy(id: String) -> EnemyData:
 ## The baseline (floor 1, dungeon 1) returns the base resource unchanged;
 ## any higher step duplicates it so the original .tres asset is never mutated.
 func _scale_enemy(base: EnemyData, floor_num: int) -> EnemyData:
-	var mult := 1.0 + (floor_num - 1) * FLOOR_SCALE + (level - 1) * DUNGEON_SCALE
+	var mult := pow(DUNGEON_GROWTH, level - 1) * (1.0 + (floor_num - 1) * FLOOR_SCALE)
 	if mult <= 1.0:
 		return base
 	var scaled := base.duplicate() as EnemyData

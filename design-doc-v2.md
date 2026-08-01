@@ -39,7 +39,10 @@
   (fonte, mercador, altar, baú), descanso, tesouro. A sala de combate
   abre a tela de combate atual sem mudanças.
 - Scaling de dificuldade: manter a fórmula
-  `1 + (andar−1)×0.15 + (dungeon_level−1)×0.20` — agora com 4 andares.
+  `pow(1.5, dungeon_level−1) × (1 + (andar−1)×0.15)` — agora com 4 andares.
+  O escalonamento por masmorra é **exponencial** porque o poder do grupo
+  é composto (níveis + ultimates no nível 5); com a rampa linear antiga
+  as masmorras profundas ficavam *mais fáceis* que a primeira.
 
 ### Fim de dungeon
 

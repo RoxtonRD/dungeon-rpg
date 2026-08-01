@@ -105,8 +105,9 @@ func award_xp(hero: Hero, amount: int) -> Array[SkillData]:
 func level_up(hero: Hero) -> Array[SkillData]:
 	hero.level += 1
 	award_sp(hero, 1)
-	hero.hp = hero.max_hp()
-	hero.mp = hero.max_mp()
+	# Deliberately no HP/MP restore: levelling mid-run used to wipe out all
+	# accumulated attrition, which is what made deep runs trivial. The hero
+	# still gains max HP/MP from the level, they just don't get topped up.
 	_grant_level_skins(hero.level)
 	var newly: Array[SkillData] = []
 	for skill in hero.class_data.skills:

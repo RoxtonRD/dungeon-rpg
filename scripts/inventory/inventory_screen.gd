@@ -9,6 +9,8 @@ const ITEM_DIR := "res://resources/items/"
 @onready var full_body_tex: TextureRect = %FullBodyTex
 @onready var full_body_bg: ColorRect = %FullBodyBg
 @onready var hero_info_label: Label = %HeroInfoLabel
+@onready var hp_bar: ProgressBar = %HpBar
+@onready var mp_bar: ProgressBar = %MpBar
 @onready var stats_label: Label = %StatsLabel
 @onready var equip_rows: VBoxContainer = %EquipmentRows
 @onready var skill_rows: VBoxContainer = %SkillRows
@@ -187,12 +189,22 @@ func _render_full_body(class_id: String, skin: String) -> void:
 
 
 func _update_hero_info(hero: Hero) -> void:
+	# "Name — Class", or just the class when the hero was never renamed (in which
+	# case display_name() already returns the class name and would read twice).
+	var class_name_str := tr(hero.class_data.display_name)
+	var title := hero.display_name()
+	if title != class_name_str:
+		title = "%s — %s" % [title, class_name_str]
 	hero_info_label.text = tr("UI_HERO_INFO") % [
-		hero.display_name(), tr(hero.class_data.display_name), hero.level,
+		title, hero.level,
 		hero.hp, hero.max_hp(),
 		hero.mp, hero.max_mp(),
 		hero.sp_available,
 	]
+	hp_bar.max_value = maxi(1, hero.max_hp())
+	hp_bar.value = hero.hp
+	mp_bar.max_value = maxi(1, hero.max_mp())
+	mp_bar.value = hero.mp
 	stats_label.text = "%s: %d   %s: %d   %s: %d   %s: %d" % [
 		tr("STAT_ATK"), hero.atk(), tr("STAT_DEF"), hero.def(),
 		tr("STAT_MAG"), hero.mag(), tr("STAT_SPD"), hero.spd(),

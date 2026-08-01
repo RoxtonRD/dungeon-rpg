@@ -20,6 +20,16 @@ const MARKET_EQUIPMENT_POOL: Array[String] = [
 ]
 ## How many random equipment items each restock puts on the shelves.
 const MARKET_SLOTS: int = 5
+
+## Consumables the market carries, with the per-restock stock range for each.
+## Limited stock (rather than the old unlimited supply) is what stops potion
+## spam from erasing dungeon attrition. Restocked on every run end.
+const MARKET_POTIONS: Array = [
+	{"id": "potion_heal", "min": 2, "max": 4},
+	{"id": "potion_mana", "min": 1, "max": 3},
+	{"id": "elixir_full", "min": 0, "max": 2},
+	{"id": "elixir_revival", "min": 0, "max": 1},
+]
 const SAVE_PATH: String = "user://save.json"
 ## v2: room-based dungeon (floors of rooms, player position, explored state).
 ## v3: customizable party (hero custom_name / skin_id / is_main).
@@ -42,6 +52,9 @@ var dungeon_level: int = 1
 ## The market's random limited-stock shelf: Dictionaries {"id": String,
 ## "qty": int}. Restocked whenever a dungeon run ends (complete/abandon/TPK).
 var market_stock: Array = []
+## The market's consumable shelf: Dictionaries {"id": String, "qty": int},
+## rolled from MARKET_POTIONS. Restocked alongside market_stock.
+var potion_stock: Array = []
 ## Where Personagens/Formação should return to when closed. Set by whichever
 ## screen opened them (city hub or dungeon map). Never persisted.
 var nav_return_scene: String = "res://scripts/city/city_hub.tscn"
@@ -75,6 +88,18 @@ func restock_market() -> void:
 	market_stock = []
 	for i in mini(MARKET_SLOTS, pool.size()):
 		market_stock.append({"id": pool[i], "qty": 1})
+	restock_potions()
+
+
+## Rolls a fresh, random consumable shelf. Quantities vary per restock so the
+## player cannot count on stocking up to the same depth every trip.
+func restock_potions() -> void:
+	potion_stock = []
+	for entry in MARKET_POTIONS:
+		potion_stock.append({
+			"id": str(entry["id"]),
+			"qty": randi_range(int(entry["min"]), int(entry["max"])),
+		})
 
 
 func add_item(item_id: String) -> void:
@@ -113,6 +138,7 @@ func save_game() -> void:
 		"run": run_data,
 		"dungeon_level": dungeon_level,
 		"market": market_stock.duplicate(true),
+		"potions": potion_stock.duplicate(true),
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
@@ -163,6 +189,14 @@ func load_game() -> bool:
 	else:
 		# Save predates the market (Fase 1) — just stock the shelves.
 		restock_market()
+	var potion_data = data.get("potions", null)
+	if potion_data is Array and not potion_data.is_empty():
+		potion_stock = []
+		for entry in potion_data:
+			potion_stock.append({"id": str(entry.get("id", "")), "qty": int(entry.get("qty", 0))})
+	else:
+		# Save predates limited potion stock — roll a fresh shelf.
+		restock_potions()
 	return true
 
 
