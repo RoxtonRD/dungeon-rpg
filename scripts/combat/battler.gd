@@ -27,6 +27,10 @@ static func for_hero(h: Hero, idx: int) -> Battler:
 	b.hero = h
 	b.max_hp = h.max_hp()
 	b.index = idx
+	# Share the hero's status list by reference rather than copying: buffs and
+	# debuffs persist outside combat, so what combat applies/ticks/reads here IS
+	# the hero's persistent list. Enemies keep their own per-fight array.
+	b.statuses = h.statuses
 	return b
 
 

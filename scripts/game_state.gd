@@ -58,6 +58,10 @@ var potion_stock: Array = []
 ## Where Personagens/Formação should return to when closed. Set by whichever
 ## screen opened them (city hub or dungeon map). Never persisted.
 var nav_return_scene: String = "res://scripts/city/city_hub.tscn"
+## Global turn counter — advances on every combat round and every room the party
+## walks into. Status durations are measured in these turns, so buffs decay while
+## exploring as well as while fighting.
+var turn_counter: int = 0
 
 
 ## Resets gold and inventory for a new game. Party.start_new_game() handles heroes.
@@ -67,6 +71,8 @@ func start_new_game() -> void:
 	owned_skins = []
 	current_run = null
 	dungeon_level = 1
+	turn_counter = 0
+	Party.clear_statuses()
 	restock_market()
 
 
@@ -137,6 +143,7 @@ func save_game() -> void:
 		"heroes": Party.serialize(),
 		"run": run_data,
 		"dungeon_level": dungeon_level,
+		"turn_counter": turn_counter,
 		"market": market_stock.duplicate(true),
 		"potions": potion_stock.duplicate(true),
 	}
@@ -168,6 +175,7 @@ func load_game() -> bool:
 		return false
 	gold = int(data.get("gold", STARTING_GOLD))
 	dungeon_level = int(data.get("dungeon_level", 1))
+	turn_counter = int(data.get("turn_counter", 0))
 	var inv: Array = data.get("inventory", [])
 	inventory.clear()
 	for item_id in inv:
@@ -208,4 +216,5 @@ func apply_tpk_penalty() -> void:
 		h.hp = maxi(1, roundi(h.max_hp() * 0.25))
 	gold = roundi(gold * 0.8)
 	current_run = null
+	Party.clear_statuses()
 	restock_market()

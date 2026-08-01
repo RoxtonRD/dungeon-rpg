@@ -236,10 +236,15 @@ func can_move_to(pos: Vector2i) -> bool:
 	return current_room().connects_to(pos)
 
 
-func move_to(pos: Vector2i) -> void:
+## Moves the party into an adjacent room. Walking advances the global turn, so
+## buffs/debuffs decay and regen/DoT tick while exploring, not just in combat.
+## Returns any status log lines so the caller can surface them.
+func move_to(pos: Vector2i) -> Array[String]:
 	player_pos = pos
 	current_room().explored = true
 	_mark_adjacent_seen()
+	GameState.turn_counter += 1
+	return Party.tick_statuses()
 
 
 ## Flags every room connected to the player's room as seen. Once seen, a
@@ -349,6 +354,8 @@ func resolve_rest() -> void:
 	for h in Party.heroes:
 		h.hp = h.max_hp()
 		h.mp = h.max_mp()
+	# A full rest clears lingering effects — debuffs included.
+	Party.clear_statuses()
 
 
 # ── Shrine ────────────────────────────────────────────────────────────────────

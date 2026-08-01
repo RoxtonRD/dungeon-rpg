@@ -305,14 +305,14 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(name_lbl)
 
-		# Cast button — healing magic is usable outside combat, spending MP.
-		# Turns the healers into the party's sustain engine between fights.
-		if skill.skill_type == SkillData.SkillType.HEAL:
+		# Cast button — heals and buffs are usable outside combat, spending MP.
+		# Healers become the sustain engine; buffs enable pre-buffing a fight.
+		if _castable_out_of_combat(skill):
 			var cast_btn := Button.new()
 			cast_btn.text = tr("UI_USE")
 			cast_btn.custom_minimum_size = Vector2(80, 0)
-			cast_btn.disabled = not _can_cast_heal(hero, skill)
-			cast_btn.pressed.connect(_on_cast_heal.bind(hero, skill))
+			cast_btn.disabled = not _can_cast(hero, skill)
+			cast_btn.pressed.connect(_on_cast.bind(hero, skill))
 			row.add_child(cast_btn)
 
 		# Upgrade button — only shown when the skill can ever be upgraded
@@ -342,31 +342,55 @@ func _heal_targets() -> Array[Hero]:
 	return out
 
 
-func _can_cast_heal(hero: Hero, skill: SkillData) -> bool:
+## Skills usable while exploring: healing, and buffs (so the party can pre-buff
+## before stepping into a combat room — statuses now persist into the fight).
+func _castable_out_of_combat(skill: SkillData) -> bool:
+	return skill.skill_type == SkillData.SkillType.HEAL \
+		or skill.skill_type == SkillData.SkillType.BUFF
+
+
+func _can_cast(hero: Hero, skill: SkillData) -> bool:
 	if not hero.is_alive() or hero.mp < skill.mp_cost:
 		return false
-	return not _heal_targets().is_empty()
+	if skill.skill_type == SkillData.SkillType.HEAL:
+		return not _heal_targets().is_empty()
+	return true   # buffs are always worth casting
 
 
-## Casts a healing skill outside combat: spends MP and applies the same direct
-## heal combat uses (CombatState._apply_heal). ALLIES skills hit every wounded
-## living ally; single-target ones go to the most wounded. The heal-over-time
-## rider is combat-only, so it is not applied here.
-func _on_cast_heal(hero: Hero, skill: SkillData) -> void:
-	if not _can_cast_heal(hero, skill):
+## Casts a heal or buff outside combat, spending MP. Heals use the same formula
+## as combat and carry their regen rider; buffs build the same statuses combat
+## does (CombatStatus.build_for_skill), so they behave identically either side of
+## a fight. Both decay on the global turn counter as the party walks.
+func _on_cast(hero: Hero, skill: SkillData) -> void:
+	if not _can_cast(hero, skill):
 		return
 	var scaled := Party.get_upgraded_skill(hero, skill)
-	var targets := _heal_targets()
-	if skill.target != SkillData.TargetType.ALLIES:
-		var lowest: Hero = targets[0]
-		for t in targets:
-			if t.hp < lowest.hp:
-				lowest = t
-		targets = [lowest] as Array[Hero]
 	hero.mp -= scaled.mp_cost
-	var amount := int(floor(float(hero.mag()) * scaled.power + 5.0))
-	for t in targets:
-		t.hp = mini(t.max_hp(), t.hp + amount)
+	if skill.skill_type == SkillData.SkillType.HEAL:
+		var targets := _heal_targets()
+		if skill.target != SkillData.TargetType.ALLIES:
+			var lowest: Hero = targets[0]
+			for t in targets:
+				if t.hp < lowest.hp:
+					lowest = t
+			targets = [lowest] as Array[Hero]
+		var amount := int(floor(float(hero.mag()) * scaled.power + 5.0))
+		for t in targets:
+			t.hp = mini(t.max_hp(), t.hp + amount)
+			if scaled.heal_over_time > 0 and scaled.hot_duration > 0:
+				for st in CombatStatus.build_for_skill(scaled):
+					if st.kind == CombatStatus.Kind.REGEN:
+						t.statuses.append(st)
+	else:
+		var targets: Array[Hero] = [hero]
+		if skill.target == SkillData.TargetType.ALLIES:
+			targets = []
+			for h in Party.heroes:
+				if h.is_alive():
+					targets.append(h)
+		for t in targets:
+			for st in CombatStatus.build_for_skill(scaled):
+				t.statuses.append(st)
 	GameState.save_game()
 	_refresh()
 

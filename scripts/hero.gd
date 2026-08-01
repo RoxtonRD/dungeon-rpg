@@ -30,6 +30,11 @@ var bonus_mp: int = 0
 var hp: int = 0
 var mp: int = 0
 
+## Active status effects. These live on the Hero (not the per-fight Battler) so
+## buffs, debuffs and regen persist between combats and while exploring; the
+## combat Battler shares this array by reference. See Party.tick_statuses.
+var statuses: Array[CombatStatus] = []
+
 ## Formation row chosen by the player. 0 = front, 1 = back.
 ## Initialised from class_data.role in create(); player can override it.
 var row: int = 0
@@ -132,7 +137,15 @@ func to_dict() -> Dictionary:
 		"mp": mp,
 		"row": row,
 		"equipment": equip,
+		"statuses": _statuses_to_array(),
 	}
+
+
+func _statuses_to_array() -> Array:
+	var out: Array = []
+	for st in statuses:
+		out.append(st.to_dict())
+	return out
 
 
 static func from_dict(data: Dictionary) -> Hero:
@@ -151,6 +164,9 @@ static func from_dict(data: Dictionary) -> Hero:
 	h.hp = int(data.get("hp", 0))
 	h.mp = int(data.get("mp", 0))
 	h.row = int(data.get("row", int(h.class_data.role)))
+	h.statuses.clear()
+	for sd in data.get("statuses", []):   # absent in pre-persistence saves
+		h.statuses.append(CombatStatus.from_dict(sd))
 	var equip_in: Dictionary = data.get("equipment", {})
 	for slot in ["weapon", "armor", "trinket"]:
 		var item_id: String = equip_in.get(slot, "")

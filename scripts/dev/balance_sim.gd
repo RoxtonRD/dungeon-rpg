@@ -232,6 +232,10 @@ static func encounter_report(class_ids: Array, trials: int = 100, levels: Array 
 		var bhp := 0.0
 		var bdmg: Dictionary = {}
 		for i in trials:
+			# Cycle every boss: a DungeonRun fixes one boss at generation, so
+			# sampling run.roll_boss() repeatedly would measure a single randomly
+			# chosen boss and make the numbers jump between report runs.
+			run.boss = i % DungeonRun.BOSS_ENCOUNTERS.size()
 			var heroes := make_party(class_ids, level, gear)
 			var res := fight(heroes, run.roll_boss(), bdmg)
 			if int(res["result"]) == int(CombatState.Result.VICTORY):
