@@ -18,6 +18,9 @@ var combat_speed: float = 1.0
 func _ready() -> void:
 	_load()
 	TranslationServer.set_locale(locale)
+	# Drop-in custom font, if one was placed in assets/fonts/ (see UiFont).
+	# Done here because this autoload already runs before any scene loads.
+	UiFont.apply()
 
 
 func set_locale(new_locale: String) -> void:
