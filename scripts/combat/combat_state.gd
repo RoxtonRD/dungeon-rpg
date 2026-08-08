@@ -341,30 +341,11 @@ func _gather_targets(caster: Battler, skill: SkillData, picked: Battler) -> Arra
 	return out
 
 
-## Applies a buff skill's effects. A barrier and a stat buff are separate
-## statuses because Battler.effective_stats only reads BUFF/DEBUFF mods — a
-## skill granting both (e.g. Sanctuary) needs one of each.
+## Applies a buff skill's effects, built by the shared factory so in-combat and
+## out-of-combat casting stay identical.
 func _apply_buff(target: Battler, skill: SkillData) -> void:
-	if skill.barrier:
-		var bar := CombatStatus.new()
-		bar.kind = CombatStatus.Kind.BARRIER
-		bar.source_name = skill.display_name
-		bar.duration = skill.mod_duration
-		target.statuses.append(bar)
-	var has_mods := skill.mod_atk != 0 or skill.mod_def != 0 \
-		or skill.mod_mag != 0 or skill.mod_spd != 0 or skill.taunt
-	if has_mods or not skill.barrier:
-		var st := CombatStatus.new()
-		st.kind = CombatStatus.Kind.BUFF
-		st.source_name = skill.display_name
-		st.mod_atk = skill.mod_atk
-		st.mod_def = skill.mod_def
-		st.mod_mag = skill.mod_mag
-		st.mod_spd = skill.mod_spd
-		st.duration = skill.mod_duration
-		st.taunt = skill.taunt
+	for st in CombatStatus.build_for_skill(skill):
 		target.statuses.append(st)
-	_apply_regen(target, skill)
 
 
 func _apply_debuff(target: Battler, skill: SkillData) -> void:

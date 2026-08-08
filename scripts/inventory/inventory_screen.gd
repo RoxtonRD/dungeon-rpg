@@ -9,6 +9,8 @@ const ITEM_DIR := "res://resources/items/"
 @onready var full_body_tex: TextureRect = %FullBodyTex
 @onready var full_body_bg: ColorRect = %FullBodyBg
 @onready var hero_info_label: Label = %HeroInfoLabel
+@onready var hp_bar: ProgressBar = %HpBar
+@onready var mp_bar: ProgressBar = %MpBar
 @onready var stats_label: Label = %StatsLabel
 @onready var equip_rows: VBoxContainer = %EquipmentRows
 @onready var skill_rows: VBoxContainer = %SkillRows
@@ -187,12 +189,22 @@ func _render_full_body(class_id: String, skin: String) -> void:
 
 
 func _update_hero_info(hero: Hero) -> void:
+	# "Name — Class", or just the class when the hero was never renamed (in which
+	# case display_name() already returns the class name and would read twice).
+	var class_name_str := tr(hero.class_data.display_name)
+	var title := hero.display_name()
+	if title != class_name_str:
+		title = "%s — %s" % [title, class_name_str]
 	hero_info_label.text = tr("UI_HERO_INFO") % [
-		hero.display_name(), tr(hero.class_data.display_name), hero.level,
+		title, hero.level,
 		hero.hp, hero.max_hp(),
 		hero.mp, hero.max_mp(),
 		hero.sp_available,
 	]
+	hp_bar.max_value = maxi(1, hero.max_hp())
+	hp_bar.value = hero.hp
+	mp_bar.max_value = maxi(1, hero.max_mp())
+	mp_bar.value = hero.mp
 	stats_label.text = "%s: %d   %s: %d   %s: %d   %s: %d" % [
 		tr("STAT_ATK"), hero.atk(), tr("STAT_DEF"), hero.def(),
 		tr("STAT_MAG"), hero.mag(), tr("STAT_SPD"), hero.spd(),
@@ -293,6 +305,16 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_child(name_lbl)
 
+		# Cast button — heals and buffs are usable outside combat, spending MP.
+		# Healers become the sustain engine; buffs enable pre-buffing a fight.
+		if _castable_out_of_combat(skill):
+			var cast_btn := Button.new()
+			cast_btn.text = tr("UI_USE")
+			cast_btn.custom_minimum_size = Vector2(80, 0)
+			cast_btn.disabled = not _can_cast(hero, skill)
+			cast_btn.pressed.connect(_on_cast.bind(hero, skill))
+			row.add_child(cast_btn)
+
 		# Upgrade button — only shown when the skill can ever be upgraded
 		if skill.max_upgrade_level > 1:
 			var up_btn := Button.new()
@@ -306,6 +328,71 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		if not skill.description.is_empty():
 			entry.add_child(_make_desc_label(tr(skill.description)))
 		skill_rows.add_child(entry)
+
+
+# ── Out-of-combat healing ─────────────────────────────────────────────────────
+
+## Living allies below full HP — who an out-of-combat heal would actually help.
+## Downed heroes are excluded: only a revive brings them back.
+func _heal_targets() -> Array[Hero]:
+	var out: Array[Hero] = []
+	for h in Party.heroes:
+		if h.is_alive() and h.hp < h.max_hp():
+			out.append(h)
+	return out
+
+
+## Skills usable while exploring: healing, and buffs (so the party can pre-buff
+## before stepping into a combat room — statuses now persist into the fight).
+func _castable_out_of_combat(skill: SkillData) -> bool:
+	return skill.skill_type == SkillData.SkillType.HEAL \
+		or skill.skill_type == SkillData.SkillType.BUFF
+
+
+func _can_cast(hero: Hero, skill: SkillData) -> bool:
+	if not hero.is_alive() or hero.mp < skill.mp_cost:
+		return false
+	if skill.skill_type == SkillData.SkillType.HEAL:
+		return not _heal_targets().is_empty()
+	return true   # buffs are always worth casting
+
+
+## Casts a heal or buff outside combat, spending MP. Heals use the same formula
+## as combat and carry their regen rider; buffs build the same statuses combat
+## does (CombatStatus.build_for_skill), so they behave identically either side of
+## a fight. Both decay on the global turn counter as the party walks.
+func _on_cast(hero: Hero, skill: SkillData) -> void:
+	if not _can_cast(hero, skill):
+		return
+	var scaled := Party.get_upgraded_skill(hero, skill)
+	hero.mp -= scaled.mp_cost
+	if skill.skill_type == SkillData.SkillType.HEAL:
+		var targets := _heal_targets()
+		if skill.target != SkillData.TargetType.ALLIES:
+			var lowest: Hero = targets[0]
+			for t in targets:
+				if t.hp < lowest.hp:
+					lowest = t
+			targets = [lowest] as Array[Hero]
+		var amount := int(floor(float(hero.mag()) * scaled.power + 5.0))
+		for t in targets:
+			t.hp = mini(t.max_hp(), t.hp + amount)
+			if scaled.heal_over_time > 0 and scaled.hot_duration > 0:
+				for st in CombatStatus.build_for_skill(scaled):
+					if st.kind == CombatStatus.Kind.REGEN:
+						t.statuses.append(st)
+	else:
+		var targets: Array[Hero] = [hero]
+		if skill.target == SkillData.TargetType.ALLIES:
+			targets = []
+			for h in Party.heroes:
+				if h.is_alive():
+					targets.append(h)
+		for t in targets:
+			for st in CombatStatus.build_for_skill(scaled):
+				t.statuses.append(st)
+	GameState.save_game()
+	_refresh()
 
 
 func _on_upgrade_skill(hero: Hero, skill: SkillData) -> void:
@@ -379,9 +466,12 @@ func _can_equip(hero: Hero, item: ItemData) -> bool:
 
 
 func _can_use_consumable(hero: Hero, item: ItemData) -> bool:
-	if item.use_heal > 0 and hero.hp < hero.max_hp():
+	# Heal/mana only apply to a living hero — a healing potion must never double
+	# as a resurrection (that made the revival elixir pointless). Combat already
+	# enforces this via CombatState.item_targets(), which lists living allies.
+	if item.use_heal > 0 and hero.is_alive() and hero.hp < hero.max_hp():
 		return true
-	if item.use_mp > 0 and hero.mp < hero.max_mp():
+	if item.use_mp > 0 and hero.is_alive() and hero.mp < hero.max_mp():
 		return true
 	if item.use_sp > 0:
 		return true
@@ -447,9 +537,14 @@ func _on_use(inv_idx: int) -> void:
 	if item == null:
 		return
 	var hero: Hero = Party.heroes[_selected_hero_idx]
-	if item.use_heal > 0:
+	# Never consume an item that would have no effect (e.g. a healing potion on
+	# a downed hero, which the is_alive() guards below now correctly refuse).
+	if not _can_use_consumable(hero, item):
+		return
+	# Guarded by is_alive() so healing can never resurrect — only a revive item can.
+	if item.use_heal > 0 and hero.is_alive():
 		hero.hp = mini(hero.max_hp(), hero.hp + item.use_heal)
-	if item.use_mp > 0:
+	if item.use_mp > 0 and hero.is_alive():
 		hero.mp = mini(hero.max_mp(), hero.mp + item.use_mp)
 	if item.use_sp > 0:
 		var mp_gain := Party.award_sp(hero, item.use_sp)

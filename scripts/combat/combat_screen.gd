@@ -540,13 +540,16 @@ func _show_end_panel() -> void:
 		GameState.gold += int(_pending_rewards["gold"])
 		var lines: Array[String] = []
 		lines.append(tr("UI_REWARDS") % [_pending_rewards["xp"], _pending_rewards["gold"]])
+		# XP is split across the party rather than paid in full to every hero —
+		# paying full to each made a 4-hero party level ~4x too fast, which is
+		# what let heroes outscale enemy growth entirely.
+		var xp_share := int(_pending_rewards["xp"]) / maxi(1, Party.heroes.size())
 		for h in Party.heroes:
-			# Downed heroes still earn XP, at half rate, so a hero KO'd early in a
-			# run doesn't spiral levels behind the survivors. A level-up must not
-			# revive them, though — award_xp()'s level_up() full-heals, so we
-			# re-down them afterwards to preserve the "dead until rest/item" rule.
+			# Downed heroes still earn XP, at half share, so a hero KO'd early in
+			# a run doesn't spiral levels behind the survivors. They must not be
+			# revived by it, so we re-down them after awarding.
 			var was_down := not h.is_alive()
-			var xp_award := int(_pending_rewards["xp"])
+			var xp_award := xp_share
 			if was_down:
 				xp_award /= 2
 			var prev_level := h.level

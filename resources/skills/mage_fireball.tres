@@ -12,4 +12,4 @@ unlock_level = 1
 max_upgrade_level = 3
 skill_type = 1
 target = 1
-power = 1.0
+power = 0.6

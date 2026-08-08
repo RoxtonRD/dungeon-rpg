@@ -98,6 +98,20 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 autowrap_mode = 2
 
+[node name="HpBar" type="ProgressBar" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+theme_type_variation = &"HpBar"
+show_percentage = false
+
+[node name="MpBar" type="ProgressBar" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+theme_type_variation = &"MpBar"
+show_percentage = false
+
 [node name="StatsLabel" type="Label" parent="VBox/HeroCardPanel/HeroCard/HeroTextCol" unique_id=7742766]
 unique_name_in_owner = true
 layout_mode = 2

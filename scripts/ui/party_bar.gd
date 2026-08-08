@@ -50,4 +50,15 @@ static func fill(container: Container) -> void:
 		mp_lbl.modulate = Color(0.8, 0.8, 0.85)
 		col.add_child(mp_lbl)
 
+		# Active buffs/debuffs — they persist outside combat now, so the player
+		# needs to see what is running while exploring.
+		if not h.statuses.is_empty():
+			var st_lbl := Label.new()
+			st_lbl.text = BattlerPanel.format_statuses(h.statuses)
+			st_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			st_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			st_lbl.add_theme_font_size_override("font_size", 10)
+			st_lbl.modulate = Color(0.72, 0.86, 0.72)
+			col.add_child(st_lbl)
+
 		container.add_child(col)

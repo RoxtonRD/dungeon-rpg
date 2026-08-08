@@ -39,7 +39,10 @@
   (fonte, mercador, altar, baú), descanso, tesouro. A sala de combate
   abre a tela de combate atual sem mudanças.
 - Scaling de dificuldade: manter a fórmula
-  `1 + (andar−1)×0.15 + (dungeon_level−1)×0.20` — agora com 4 andares.
+  `pow(1.5, dungeon_level−1) × (1 + (andar−1)×0.15)` — agora com 4 andares.
+  O escalonamento por masmorra é **exponencial** porque o poder do grupo
+  é composto (níveis + ultimates no nível 5); com a rampa linear antiga
+  as masmorras profundas ficavam *mais fáceis* que a primeira.
 
 ### Fim de dungeon
 
@@ -99,6 +102,22 @@
   as 6 classes jogáveis para a criação.
 - Arte: sem `assets/heroes/<classe>/`, `HeroArt` cai no placeholder
   colorido por classe — as classes já são jogáveis; a arte entra depois.
+
+## Status effects persistentes + contador global de turnos
+
+- Buffs, debuffs e regeneração **vivem no Hero**, não no Battler descartado a
+  cada combate: o Battler compartilha a lista por referência, então tudo que o
+  combate aplica/consome já é a lista persistente.
+- `GameState.turn_counter` avança a cada rodada de combate **e a cada sala
+  percorrida**; as durações caem junto (`Party.tick_statuses`).
+- Andar aplica regeneração e veneno. Veneno nunca mata fora de combate (piso de
+  1 HP) — não existe caminho de derrota fora do combate.
+- **Pré-buff é intencional**: curas e buffs podem ser lançados na tela
+  Personagens gastando MP, e permanecem ao entrar na sala de combate.
+- Limpos ao descansar, ao terminar/abandonar a run e no TPK.
+- Compromisso aceito: como revisitar salas é grátis, andar entre duas salas
+  conhecidas re-aplica regeneração. Se incomodar, basta condicionar o tick a
+  salas ainda não exploradas.
 
 ## Loot (tiers + drops)
 

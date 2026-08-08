@@ -66,7 +66,11 @@ fixed) from the city Characters screen; hero skins are drop-in via
 skins and skins unlockable by gold/level/event through a skin catalog
 (`resources/skins/catalog.tres`) with per-save ownership
 (`GameState.owned_skins`)**; turn-based combat
-with front/back rows (skills + **usable consumables mid-combat**); 2x2
+with front/back rows (skills + **usable consumables mid-combat**);
+**status effects persist outside combat on a global turn counter that
+advances per combat round and per room walked — heals and buffs are
+castable from the Characters screen, so pre-buffing a fight is a real
+tactic**; 2x2
 formation grid; **room-based dungeon: 4 floors
 of orthogonally connected grid rooms, fog of war (seen rooms persist),
 stairs room per floor, boss room on floor 4**; room types (combat,

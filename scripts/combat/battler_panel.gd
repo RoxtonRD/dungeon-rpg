@@ -243,13 +243,19 @@ static func color_for_class(class_id: String) -> Color:
 
 
 func _format_statuses(b: Battler) -> String:
+	return format_statuses(b.statuses)
+
+
+## Shared formatter for a status list — also used by the party bar, which shows
+## the same effects while exploring (they persist outside combat).
+static func format_statuses(statuses: Array) -> String:
 	var s := ""
-	for st in b.statuses:
+	for st in statuses:
 		if not s.is_empty():
 			s += ", "
 		if st.kind == CombatStatus.Kind.BARRIER:
-			s += tr("UI_STATUS_BARRIER")
+			s += TranslationServer.translate("UI_STATUS_BARRIER")
 		else:
 			# source_name is a skill display_name, i.e. a translation key.
-			s += "%s (%d)" % [tr(st.source_name), st.duration]
+			s += "%s (%d)" % [TranslationServer.translate(st.source_name), st.duration]
 	return s

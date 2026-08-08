@@ -12,5 +12,5 @@ unlock_level = 1
 max_upgrade_level = 3
 skill_type = 0
 target = 0
-power = 1.1
+power = 1.35
 damage_stat = 2

@@ -74,6 +74,44 @@ func build_party(specs: Array) -> void:
 		heroes.append(h)
 
 
+# ── Status effects (persist outside combat) ───────────────────────────────────
+
+## Advances every living hero's statuses by one turn: regen heals, DoT damages,
+## durations count down and expired effects drop off. Called when the party moves
+## between rooms; combat ticks its own via CombatState._tick_statuses.
+## Returns log lines describing what happened, for the dungeon UI.
+##
+## DoT is floored at 1 HP out of combat: there is no non-combat defeat path, so
+## dying while walking would leave the game in a state nothing handles.
+func tick_statuses() -> Array[String]:
+	var lines: Array[String] = []
+	for h in heroes:
+		if not h.is_alive():
+			continue
+		for i in range(h.statuses.size() - 1, -1, -1):
+			var st: CombatStatus = h.statuses[i]
+			if st.kind == CombatStatus.Kind.REGEN and st.heal_per_turn > 0:
+				var before := h.hp
+				h.hp = mini(h.max_hp(), h.hp + st.heal_per_turn)
+				if h.hp > before:
+					lines.append(tr("LOG_REGEN_TICK") % [h.display_name(), h.hp - before, tr(st.source_name)])
+			elif st.kind == CombatStatus.Kind.DOT and st.dot_damage > 0:
+				var before_dot := h.hp
+				h.hp = maxi(1, h.hp - st.dot_damage)
+				if before_dot > h.hp:
+					lines.append(tr("LOG_DOT") % [h.display_name(), before_dot - h.hp, tr(st.source_name)])
+			st.duration -= 1
+			if st.duration <= 0:
+				h.statuses.remove_at(i)
+	return lines
+
+
+## Drops every hero's statuses — used by rest rooms, run end and TPK.
+func clear_statuses() -> void:
+	for h in heroes:
+		h.statuses.clear()
+
+
 # ── XP & leveling ─────────────────────────────────────────────────────────────
 
 ## Verbatim from prototype party.js: floor(20 * level^1.5).
@@ -105,8 +143,9 @@ func award_xp(hero: Hero, amount: int) -> Array[SkillData]:
 func level_up(hero: Hero) -> Array[SkillData]:
 	hero.level += 1
 	award_sp(hero, 1)
-	hero.hp = hero.max_hp()
-	hero.mp = hero.max_mp()
+	# Deliberately no HP/MP restore: levelling mid-run used to wipe out all
+	# accumulated attrition, which is what made deep runs trivial. The hero
+	# still gains max HP/MP from the level, they just don't get topped up.
 	_grant_level_skins(hero.level)
 	var newly: Array[SkillData] = []
 	for skill in hero.class_data.skills:

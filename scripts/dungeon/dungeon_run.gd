@@ -26,10 +26,16 @@ const BOSS_ENCOUNTERS := [
 ]
 
 ## Difficulty scaling per step. Enemy stats and rewards are multiplied by
-## 1 + (floor-1)*FLOOR_SCALE + (dungeon_level-1)*DUNGEON_SCALE.
+##   pow(DUNGEON_GROWTH, dungeon_level-1) * (1 + (floor-1)*FLOOR_SCALE)
 ## Floor 1 of dungeon 1 is the 1.0 baseline.
+##
+## Dungeon scaling is exponential, not linear, because hero power compounds:
+## levels stack stat growth AND unlock ultimates at level 5. A linear
+## `1 + (n-1)*s` ramp shrinks in ratio each step (D2->D3 is only 1.26x at
+## s=0.35), so deeper dungeons kept getting *easier*. A constant growth factor
+## keeps each dungeon a fixed step harder than the last.
 const FLOOR_SCALE := 0.15
-const DUNGEON_SCALE := 0.20
+const DUNGEON_GROWTH := 1.5
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.
@@ -230,10 +236,15 @@ func can_move_to(pos: Vector2i) -> bool:
 	return current_room().connects_to(pos)
 
 
-func move_to(pos: Vector2i) -> void:
+## Moves the party into an adjacent room. Walking advances the global turn, so
+## buffs/debuffs decay and regen/DoT tick while exploring, not just in combat.
+## Returns any status log lines so the caller can surface them.
+func move_to(pos: Vector2i) -> Array[String]:
 	player_pos = pos
 	current_room().explored = true
 	_mark_adjacent_seen()
+	GameState.turn_counter += 1
+	return Party.tick_statuses()
 
 
 ## Flags every room connected to the player's room as seen. Once seen, a
@@ -300,7 +311,7 @@ func _load_enemy(id: String) -> EnemyData:
 ## The baseline (floor 1, dungeon 1) returns the base resource unchanged;
 ## any higher step duplicates it so the original .tres asset is never mutated.
 func _scale_enemy(base: EnemyData, floor_num: int) -> EnemyData:
-	var mult := 1.0 + (floor_num - 1) * FLOOR_SCALE + (level - 1) * DUNGEON_SCALE
+	var mult := pow(DUNGEON_GROWTH, level - 1) * (1.0 + (floor_num - 1) * FLOOR_SCALE)
 	if mult <= 1.0:
 		return base
 	var scaled := base.duplicate() as EnemyData
@@ -343,6 +354,8 @@ func resolve_rest() -> void:
 	for h in Party.heroes:
 		h.hp = h.max_hp()
 		h.mp = h.max_mp()
+	# A full rest clears lingering effects — debuffs included.
+	Party.clear_statuses()
 
 
 # ── Shrine ────────────────────────────────────────────────────────────────────

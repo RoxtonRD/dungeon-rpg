@@ -6,14 +6,6 @@ extends Control
 const ITEM_DIR := "res://resources/items/"
 const CITY_SCENE := "res://scripts/city/city_hub.tscn"
 
-## Always in stock, unlimited quantity.
-const FIXED_MARKET: Array[String] = [
-	"potion_heal",
-	"potion_mana",
-	"elixir_full",
-	"elixir_revival",
-]
-
 @onready var gold_label: Label = %GoldLabel
 @onready var buy_tab_button: Button = %BuyTabButton
 @onready var sell_tab_button: Button = %SellTabButton
@@ -55,35 +47,35 @@ func _refresh() -> void:
 
 func _rebuild_buy_list() -> void:
 	_clear_list()
-	# Section 1: fixed potions, always available.
+	# Section 1: consumables — limited stock, rerolled on every run end.
 	item_list_vbox.add_child(_make_section_label(tr("UI_POTIONS")))
-	for item_id in FIXED_MARKET:
-		var item := load(ITEM_DIR + item_id + ".tres") as ItemData
+	for i in GameState.potion_stock.size():
+		var entry: Dictionary = GameState.potion_stock[i]
+		var item := load(ITEM_DIR + str(entry["id"]) + ".tres") as ItemData
 		if item == null:
 			continue
-		_add_buy_row(item, -1)
-	# Section 2: the random limited-stock shelf.
+		_add_buy_row(item, GameState.potion_stock, i)
+	# Section 2: the random limited-stock equipment shelf.
 	item_list_vbox.add_child(_make_section_label(tr("UI_EQUIPMENT")))
 	for i in GameState.market_stock.size():
 		var entry: Dictionary = GameState.market_stock[i]
 		var item := load(ITEM_DIR + str(entry["id"]) + ".tres") as ItemData
 		if item == null:
 			continue
-		_add_buy_row(item, i)
+		_add_buy_row(item, GameState.market_stock, i)
 
 
-## Builds one buy row. `stock_index` is -1 for fixed potions (unlimited) or
-## the market_stock index for limited equipment (sold out → "Esgotado").
-func _add_buy_row(item: ItemData, stock_index: int) -> void:
-	var sold_out := false
-	if stock_index >= 0:
-		sold_out = int(GameState.market_stock[stock_index]["qty"]) <= 0
+## Builds one buy row against a limited-stock shelf (`stock` is the potion or
+## equipment array, `stock_index` the entry). Sold out → "Esgotado".
+func _add_buy_row(item: ItemData, stock: Array, stock_index: int) -> void:
+	var qty := int(stock[stock_index]["qty"])
+	var sold_out := qty <= 0
 
 	var row := _make_row()
 	row.add_child(_make_icon(item.icon_or_null()))
 
 	var name_lbl := Label.new()
-	name_lbl.text = tr(item.display_name)
+	name_lbl.text = tr(item.display_name) if sold_out else "%s  x%d" % [tr(item.display_name), qty]
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_font_size_override("font_size", 16)
@@ -108,7 +100,7 @@ func _add_buy_row(item: ItemData, stock_index: int) -> void:
 	else:
 		buy_btn.text = tr("UI_BUY")
 		buy_btn.disabled = GameState.gold < item.value
-		buy_btn.pressed.connect(_on_buy.bind(item.id, item.value, stock_index))
+		buy_btn.pressed.connect(_on_buy.bind(item.id, item.value, stock, stock_index))
 	row.add_child(buy_btn)
 
 	_add_entry(row, item.short_description())
@@ -122,14 +114,13 @@ func _make_section_label(text: String) -> Label:
 	return lbl
 
 
-func _on_buy(item_id: String, price: int, stock_index: int) -> void:
+func _on_buy(item_id: String, price: int, stock: Array, stock_index: int) -> void:
 	if GameState.gold < price:
 		return
-	if stock_index >= 0:
-		var entry: Dictionary = GameState.market_stock[stock_index]
-		if int(entry["qty"]) <= 0:
-			return
-		entry["qty"] = int(entry["qty"]) - 1
+	var entry: Dictionary = stock[stock_index]
+	if int(entry["qty"]) <= 0:
+		return
+	entry["qty"] = int(entry["qty"]) - 1
 	GameState.gold -= price
 	GameState.add_item(item_id)
 	GameState.save_game()
