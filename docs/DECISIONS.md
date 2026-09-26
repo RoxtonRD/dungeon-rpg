@@ -121,3 +121,23 @@ compiled out of release builds (`OS.is_debug_build()`) and is dev-only
 UI, so it is **English-only with hardcoded strings**: the i18n rule
 applies to player-facing text. It is not a player feature and never ships.
 
+---
+
+## 2026-09-26 — Phase 0 reviews (#33, #34)
+
+**D-016 · A save from a newer build stops the load; there's no fallback
+to the backup.**
+If `save.json` has a version above `SAVE_VERSION`, `load_game()` returns
+false and leaves every file untouched. Falling back to the backup would let
+an old build play on and then overwrite the newer save. This was the #28
+engineer's call where the brief was silent, and it is accepted. It's only
+half the protection, though: the main menu still starts a new game, which
+overwrites that save. That fix is scheduled before the save freeze line
+(`PLAN.md` Phase 3).
+
+**D-017 · Only the advisor edits `PLAN.md` and `DECISIONS.md`.**
+Workers report status, findings and brief problems in their final message
+and PR; the advisor folds them into the docs. This keeps the planning docs
+out of every worker's diff, which avoids merge conflicts between parallel
+PRs.
+

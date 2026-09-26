@@ -34,8 +34,16 @@ Use the sections in `.github/ISSUE_TEMPLATE/brief.md`:
 - **Required behaviour**: numbered, each one testable.
 - **Out of scope**: name the tempting neighbours explicitly (save format,
   UI, balance numbers, other classes…).
+- **Decisions already made**: settle the edge cases up front ("if the
+  primary is newer *and* a backup exists, do X"). Ask yourself what a
+  careful worker would have to guess at, and decide it here. Workers do
+  choose sensibly when a brief is silent, but that's the worker making a
+  design call.
 - **How to verify**: exact steps and the tool to use (MCP `game_eval`,
-  `tools/godot.sh`, a test, the smoke-test skill).
+  `tools/test.sh`, a test, the smoke-test skill). If the task can touch
+  the real `user://` save, include a checksum-before-and-after step.
+- **Hand-offs from earlier reports**: carry forward tips that previous
+  workers put in their "what was wrong in the brief" notes.
 - **Start prompt**: always begins with "Read `.claude/agents/<role>.md`.
   That is your role…". Say **worktree or not**: editor drivers work in
   `C:\Dev\dungeon-rpg` without a worktree; everyone else uses a worktree.
@@ -49,6 +57,6 @@ Use the sections in `.github/ISSUE_TEMPLATE/brief.md`:
 3. Replace `<N>` in the start prompt with the real number, then
    `gh issue edit <N> --body-file <file>`.
 4. Update the **Now** block in `docs/PLAN.md` so the issue appears in
-   *Next up*.
+   *Next up*. Only the advisor edits `PLAN.md` and `DECISIONS.md`.
 5. Give Roxton the issue link and the start prompt, and say whether it
    can run now or must wait for something.

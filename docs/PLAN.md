@@ -9,19 +9,22 @@
 
 ## Now
 
-*Update this block at the end of every session. It is the re-entry point:
-if you come back after weeks away, this is the only thing you need to read.*
+*The advisor updates this block after every merge or decision. Workers
+report back instead of editing it. It is the re-entry point: if you come
+back after weeks away, this is the only thing you need to read.*
 
 - **Phase:** 1 — Find the fun (Phase 0 runs alongside, delegated)
-- **Focus:** Phase 0 safety net, then the Warrior slice (D-013)
+- **Focus:** finish the Phase 0 safety net, then the Warrior slice (D-013)
+- **Done:** save hardening (#28 → PR #33), tests + CI (#30 → PR #34)
 - **Next up:**
-  1. gameplay-engineer: save hardening, #28 (editor)
-  2. qa-balance: gdUnit4 tests + CI, #30 (worktree, parallel with #28)
-  3. qa-balance: gdformat pass + format hook, #31 (after #28 and #30)
-  4. gameplay-engineer: dev cheat panel, #32 (editor, after #28 and #31)
-  5. advisor: brief the Warrior slice (step 1.2)
-  6. release-engineer: target SDK 36 + a build on the phone, brief not
+  1. qa-balance: gdformat pass + format hook, #31 (worktree), **now**
+  2. After #31, in parallel:
+     - gameplay-engineer: dev cheat panel, #32 (editor)
+     - qa-balance: save tests, #35 (worktree)
+  3. advisor: brief the Warrior slice (step 1.2)
+  4. release-engineer: target SDK 36 + a build on the phone, brief not
      written yet
+  5. Roxton: branch protection on `main` (require PR + the gdUnit4 check)
 - **Blocked on:** nothing
 
 ---
@@ -59,9 +62,10 @@ the fun work.
 |---|---|
 | ✅ Docs restructure: this plan, decisions log, agent team, CLAUDE.md | advisor |
 | Commit the `addons/godot_ai` plugin update as its own commit | Roxton |
-| **Save hardening:** write to a temp file then rename; keep the last good save as `save.bak.json`; loading falls back to the backup; replace "reject on version mismatch" with a migration chain (`_migrate_v3_to_v4()` …), even if it is empty for now | gameplay-engineer |
+| ✅ **Save hardening** (#28 → PR #33): atomic write via tmp + rotation, `save.bak.json` fallback, `save.corrupt.json` kept as evidence, migration chain (D-016) | gameplay-engineer |
 | ✅ Dev tooling: shared `.claude/settings.json` (permissions, deny `gh pr merge` and pushes to `main`), session-start hook, issue and PR templates, skills (`write-brief`, `review-pr`, `add-content`, `smoke-test`), `tools/godot.sh` (D-014) | advisor |
-| **Tests + CI:** gdUnit4 in `test/` (not `tests/`, which the Godot AI plugin's editor-only runner scans). First tests: every `.gd`/`.tres` loads, save round-trip, every i18n key has pt_BR and en. A GitHub Action runs them on every PR with Godot 4.7.2 | qa-balance |
+| ✅ **Tests + CI** (#30 → PR #34): gdUnit4 6.2.1 in `test/`; every `.gd`/`.tres` loads, i18n complete; `tools/test.sh`; GitHub Action on every PR | qa-balance |
+| **Save tests** (#35): round-trip, crash-safety, v3 fixture, isolated `user://` | qa-balance |
 | **Format + syntax hook:** one-time `gdformat` pass over the codebase (after #28 merges), then a hook that formats and syntax-checks every `.gd` an agent edits. Lint optional, non-blocking | qa-balance |
 | Branch protection on `main`: require a PR and the CI check | Roxton |
 | Target SDK 34 → 36; confirm the Godot 4.7 export template; install a build on the phone | release-engineer |
@@ -131,6 +135,7 @@ Can start once Phase 2 is underway.
 | Privacy policy page (the game collects nothing, but the page is still required), Data safety form, IARC rating | release-engineer |
 | Store listing in pt-BR and English: icon, feature graphic, screenshots | ui-assets + content-data |
 | itch.io page (already exists) gets a web build as a public playtest channel | release-engineer |
+| **Newer-save guard:** when `load_game()` refuses a save from a newer build, the main menu must say so instead of silently starting a new game, which would overwrite that save (found in the #28 review) | gameplay-engineer + ui-assets |
 | **Cross the save freeze line**: fixture saves captured; migrations mandatory from here on | gameplay-engineer + qa-balance |
 
 **Exit:** the production release is live on Google Play.
