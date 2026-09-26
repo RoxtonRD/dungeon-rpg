@@ -42,6 +42,8 @@ Use the sections in `.github/ISSUE_TEMPLATE/brief.md`:
 - **How to verify**: exact steps and the tool to use (MCP `game_eval`,
   `tools/test.sh`, a test, the smoke-test skill). If the task can touch
   the real `user://` save, include a checksum-before-and-after step.
+  **Every editor-driver brief touches it**: running the game can save
+  (D-018).
 - **Hand-offs from earlier reports**: carry forward tips that previous
   workers put in their "what was wrong in the brief" notes.
 - **Start prompt**: always begins with "Read `.claude/agents/<role>.md`.

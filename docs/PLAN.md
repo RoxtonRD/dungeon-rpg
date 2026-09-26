@@ -17,7 +17,7 @@ back after weeks away, this is the only thing you need to read.*
 - **Focus:** finish the Phase 0 safety net, then the Warrior slice (D-013)
 - **Done:** save hardening (#28 → PR #33), tests + CI (#30 → PR #34),
   format hook (#31 → PR #37)
-- **In progress:** dev cheat panel #32 (editor), save tests #35 (worktree)
+- **In review:** dev cheat panel #32 → PR #41, save tests #35 → PR #40
 - **Next up:**
   1. gameplay-engineer: Warrior slice 1/3, Rage + cooldowns, #38
      (editor, after #32)
@@ -64,6 +64,7 @@ the fun work.
 |---|---|
 | ✅ Docs restructure: this plan, decisions log, agent team, CLAUDE.md | advisor |
 | Commit the `addons/godot_ai` plugin update as its own commit | Roxton |
+| **DevTools save safety net:** the first state-changing DevTools call per session copies the real save to `save.pre_devtools.json`, so a playtest can never lose Roxton's progress (D-018) | gameplay-engineer |
 | ✅ **Save hardening** (#28 → PR #33): atomic write via tmp + rotation, `save.bak.json` fallback, `save.corrupt.json` kept as evidence, migration chain (D-016) | gameplay-engineer |
 | ✅ Dev tooling: shared `.claude/settings.json` (permissions, deny `gh pr merge` and pushes to `main`), session-start hook, issue and PR templates, skills (`write-brief`, `review-pr`, `add-content`, `smoke-test`), `tools/godot.sh` (D-014) | advisor |
 | ✅ **Tests + CI** (#30 → PR #34): gdUnit4 6.2.1 in `test/`; every `.gd`/`.tres` loads, i18n complete; `tools/test.sh`; GitHub Action on every PR | qa-balance |
@@ -137,6 +138,7 @@ Can start once Phase 2 is underway.
 | Privacy policy page (the game collects nothing, but the page is still required), Data safety form, IARC rating | release-engineer |
 | Store listing in pt-BR and English: icon, feature graphic, screenshots | ui-assets + content-data |
 | itch.io page (already exists) gets a web build as a public playtest channel | release-engineer |
+| **Export filters:** exclude `test/`, `test/fixtures/`, `scripts/dev/` and `addons/gdUnit4/` from release exports (found in the #35 review) | release-engineer |
 | **Newer-save guard:** when `load_game()` refuses a save from a newer build, the main menu must say so instead of silently starting a new game, which would overwrite that save (found in the #28 review) | gameplay-engineer + ui-assets |
 | **Cross the save freeze line**: fixture saves captured; migrations mandatory from here on | gameplay-engineer + qa-balance |
 
