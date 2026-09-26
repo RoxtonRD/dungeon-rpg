@@ -24,4 +24,5 @@ Thumbs.db
 # /android/
 
 # Claude Code local settings (machine-specific)
-.claude/
+.claude/*
+!.claude/agents/
