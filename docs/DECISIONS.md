@@ -9,10 +9,6 @@
 
 ## Open
 
-- **O-1 · Combat v3 direction.** Draft in `docs/design/combat-v3.md`:
-  class resources, cooldowns, skill forks and synergies, with stamina and
-  overexertion as the alternative. Its open questions (§6) need Roxton's
-  answers before the Warrior slice is briefed.
 - **O-2 · pt-BR class gender.** All six class names are feminine in pt-BR
   (Guerreira, Sacerdotisa…) while English is neutral. With player-named
   heroes this reads oddly. Needs a deliberate call before Phase 2 ends.
@@ -96,3 +92,32 @@ With several agents opening PRs, a cheap automatic check catches broken
 scripts and `.tres` files before they reach Roxton. It runs Godot 4.7.2
 headless: everything loads, save tests pass, every i18n key has both
 languages. Lint is optional and non-blocking until the codebase is clean.
+
+**D-013 · Combat v3 direction for the Warrior slice.**
+Resolves O-1. The Warrior is rebuilt first under v3-A: Rage on a 0–100
+scale, cooldowns on big skills only, A-or-B skill forks, and one
+cross-class synergy with the Rogue. Stamina with overexertion (v3-B) is
+the fallback if Rage feels flat. Fork choices can be reset in the city
+for gold plus a semi-rare ingredient item, built with the rollout rather
+than the slice. A dungeon run should last 15–20 minutes on a phone. The
+design is in `docs/design/combat-v3.md`; we choose by prototyping, so
+what the slice shows can override the doc.
+
+**D-014 · Dev tooling: enforce rules with tools, not instructions.**
+Adopted from the dev-experience research (2026-09-26). Rules that must
+hold are enforced by permissions, hooks and CI; how-to knowledge lives in
+skills that load only when relevant, keeping `CLAUDE.md` short. Tests use
+**gdUnit4** in `test/`: it runs headless and has an official GitHub
+Action. The Godot AI plugin's own runner was ruled out because it only
+runs inside the editor. Formatting uses gdtoolkit. Recommended against for
+now: Claude's GitHub app reviewing every PR (API cost; the advisor
+reviews with `/code-review`), third-party Godot skill packs, and one
+`CLAUDE.md` per folder.
+
+**D-015 · Dev cheat panel for debug builds only.**
+It exists so Roxton can test a feel change in minutes instead of a full
+run, and so agents can set up game states through `game_eval`. It is
+compiled out of release builds (`OS.is_debug_build()`) and is dev-only
+UI, so it is **English-only with hardcoded strings**: the i18n rule
+applies to player-facing text. It is not a player feature and never ships.
+
