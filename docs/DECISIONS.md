@@ -102,3 +102,22 @@ for gold plus a semi-rare ingredient item, built with the rollout rather
 than the slice. A dungeon run should last 15–20 minutes on a phone. The
 design is in `docs/design/combat-v3.md`; we choose by prototyping, so
 what the slice shows can override the doc.
+
+**D-014 · Dev tooling: enforce rules with tools, not instructions.**
+Adopted from the dev-experience research (2026-09-26). Rules that must
+hold are enforced by permissions, hooks and CI; how-to knowledge lives in
+skills that load only when relevant, keeping `CLAUDE.md` short. Tests use
+**gdUnit4** in `test/`: it runs headless and has an official GitHub
+Action. The Godot AI plugin's own runner was ruled out because it only
+runs inside the editor. Formatting uses gdtoolkit. Recommended against for
+now: Claude's GitHub app reviewing every PR (API cost; the advisor
+reviews with `/code-review`), third-party Godot skill packs, and one
+`CLAUDE.md` per folder.
+
+**D-015 · Dev cheat panel for debug builds only.**
+It exists so Roxton can test a feel change in minutes instead of a full
+run, and so agents can set up game states through `game_eval`. It is
+compiled out of release builds (`OS.is_debug_build()`) and is dev-only
+UI, so it is **English-only with hardcoded strings**: the i18n rule
+applies to player-facing text. It is not a player feature and never ships.
+

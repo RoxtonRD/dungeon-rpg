@@ -84,6 +84,17 @@ Any system that does not directly serve this loop is out of scope.
 - After completing a slice, suggest a concise commit message.
 - At the end of a session, update the **Now** block in `docs/PLAN.md`.
 
+## Tooling
+
+- Headless Godot: `tools/godot.sh <args>`. Tests: gdUnit4 in `test/`, and
+  CI runs them on every PR.
+- Skills in `.claude/skills/`: `write-brief`, `review-pr`, `add-content`,
+  `smoke-test`. Use them when the task matches.
+- A session-start hook prints the **Now** block and open briefs, and
+  `.claude/settings.json` blocks merging and pushing to `main`.
+- The dev cheat panel (debug builds only) is English-only by design
+  (D-015).
+
 ## Multi-agent rules
 
 Full rules are in `docs/PLAN.md` § Team. The short version:

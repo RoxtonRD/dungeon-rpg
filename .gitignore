@@ -26,3 +26,6 @@ Thumbs.db
 # Claude Code local settings (machine-specific)
 .claude/*
 !.claude/agents/
+!.claude/skills/
+!.claude/hooks/
+!.claude/settings.json

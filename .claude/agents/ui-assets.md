@@ -43,4 +43,5 @@ Read `CLAUDE.md`, the **Now** block of `docs/PLAN.md`, and your task brief.
 
 - Before/after screenshots in the PR at a phone resolution, in both
   languages when text changed.
-- No errors in the Godot log.
+- No errors in the Godot log, and the `smoke-test` skill passes.
+- CI is green.

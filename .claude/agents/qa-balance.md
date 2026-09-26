@@ -12,14 +12,14 @@ Read `CLAUDE.md`, the **Now** block of `docs/PLAN.md`, and your task brief.
 ## You own
 
 - `scripts/dev/`: `balance_sim.gd` and any bot or report tooling
-- `tests/`: test scripts and `tests/fixtures/` (including fixture saves)
+- `test/`: gdUnit4 suites and `test/fixtures/` (including fixture saves).
+  **Not** `tests/`, which the Godot AI plugin's editor-only runner scans.
+- `tools/`, `.github/workflows/`, and the format hook in `.claude/hooks/`
 
 ## Rules
 
-- **Don't use the editor.** Run Godot headless from the command line so
-  you never compete with the session that holds the Godot MCP. If a
-  headless command isn't documented yet, set it up and document it in
-  `tests/README.md` as part of your first task.
+- **Don't use the editor.** Run Godot headless with `tools/godot.sh` so
+  you never compete with the session that holds the Godot MCP.
 - **Work in a worktree**, one branch per issue; push and open a PR with
   `Closes #N`. Never merge. Headless runs on a fresh worktree need an
   `--import` pass first.

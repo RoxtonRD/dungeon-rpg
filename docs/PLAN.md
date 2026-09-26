@@ -15,11 +15,12 @@ if you come back after weeks away, this is the only thing you need to read.*
 - **Phase:** 1 — Find the fun (Phase 0 runs alongside, delegated)
 - **Focus:** Phase 0 safety net, then the Warrior slice (D-013)
 - **Next up:**
-  1. gameplay-engineer: save hardening, #28
-  2. advisor: dev-experience proposal (tests, CI, hooks, skills); needs
-     Roxton's pick before the briefs are written
-  3. advisor: brief the Warrior slice (step 1.2) once #28 is merged
-  4. release-engineer: target SDK 36 + a build on the phone, brief not
+  1. gameplay-engineer: save hardening, #28 (editor)
+  2. qa-balance: gdUnit4 tests + CI (worktree, parallel with #28)
+  3. gameplay-engineer: dev cheat panel (editor, after #28)
+  4. qa-balance: gdformat pass + format hook (after #28)
+  5. advisor: brief the Warrior slice (step 1.2)
+  6. release-engineer: target SDK 36 + a build on the phone, brief not
      written yet
 - **Blocked on:** nothing
 
@@ -59,9 +60,10 @@ the fun work.
 | ✅ Docs restructure: this plan, decisions log, agent team, CLAUDE.md | advisor |
 | Commit the `addons/godot_ai` plugin update as its own commit | Roxton |
 | **Save hardening:** write to a temp file then rename; keep the last good save as `save.bak.json`; loading falls back to the backup; replace "reject on version mismatch" with a migration chain (`_migrate_v3_to_v4()` …), even if it is empty for now | gameplay-engineer |
-| **Headless test runner:** a documented Godot CLI command that runs tests without the editor; first tests are "every `.tres` and `.gd` loads", a save round-trip, loading fixture saves from `tests/fixtures/saves/`, and "every i18n key has pt_BR and en" | qa-balance |
-| **CI:** a GitHub Action that runs the headless tests on every PR with Godot 4.7.2. Lint (gdtoolkit) is optional and non-blocking at first | qa-balance |
-| Mark the CI check as required on `main` (GitHub branch protection) | Roxton |
+| ✅ Dev tooling: shared `.claude/settings.json` (permissions, deny `gh pr merge` and pushes to `main`), session-start hook, issue and PR templates, skills (`write-brief`, `review-pr`, `add-content`, `smoke-test`), `tools/godot.sh` (D-014) | advisor |
+| **Tests + CI:** gdUnit4 in `test/` (not `tests/`, which the Godot AI plugin's editor-only runner scans). First tests: every `.gd`/`.tres` loads, save round-trip, every i18n key has pt_BR and en. A GitHub Action runs them on every PR with Godot 4.7.2 | qa-balance |
+| **Format + syntax hook:** one-time `gdformat` pass over the codebase (after #28 merges), then a hook that formats and syntax-checks every `.gd` an agent edits. Lint optional, non-blocking | qa-balance |
+| Branch protection on `main`: require a PR and the CI check | Roxton |
 | Target SDK 34 → 36; confirm the Godot 4.7 export template; install a build on the phone | release-engineer |
 | Log in to Play Console: check the account is active, identity verification is done, and note the account creation date | Roxton |
 
@@ -92,7 +94,8 @@ unknown.
 | 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
 | 1.2 | **Vertical slice**: one class (Warrior) fully rebuilt under v3, end to end. You play it. **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
-| 1.4 | **Autoplay bot**: extend `scripts/dev/balance_sim.gd` from single fights to whole runs. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
+| 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
+| 1.4 | **Autoplay bot**: extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
 | 1.5 | **Dungeon pressure**: combat quota per floor, rests restore partially, the Fountain stops being a free full heal, close the walk-back regen loop (P1–P4 in `archive/roadmap-v3.md`). Per-floor enemy pools (`cultist` and `ogre` exist but never spawn) | gameplay-engineer + content-data |
 | 1.6 | **Combat readability**: turn-order strip, round counter, resource bars that read differently per resource | ui-assets |
 
@@ -203,8 +206,10 @@ definitions live in `.claude/agents/`.
    fun.
 
 **Headless Godot** (for tests, the sim and CI; never competes with the
-editor):
+editor): `tools/godot.sh <args>`. It wraps the Steam executable and runs
+against the checkout it lives in; set `GODOT_BIN` to override.
 
-```
-"/c/Program Files (x86)/Steam/steamapps/common/Godot Engine/godot.windows.opt.tools.64.exe" --headless --path <checkout> …
-```
+**Tooling that enforces the rules** (D-014): `.claude/settings.json`
+denies `gh pr merge` and pushes to `main`; a session-start hook prints
+the **Now** block and open briefs; skills in `.claude/skills/` hold the
+how-tos (`write-brief`, `review-pr`, `add-content`, `smoke-test`).
