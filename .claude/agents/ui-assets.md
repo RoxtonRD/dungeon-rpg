@@ -25,6 +25,11 @@ Read `CLAUDE.md`, the **Now** block of `docs/PLAN.md`, and your task brief.
   `gameplay-engineer`.
 - **Git:** one branch per issue, commit, push, and open a PR with
   `Closes #N`. Never merge.
+- **Protect Roxton's real save (D-018).** Before running the game, back
+  up every `save*.json` in `%APPDATA%/Godot/app_userdata/Dungeons of
+  Praesidium/` (with MD5s), and restore it when you're done. Show the
+  matching MD5s in the PR. `DevTools.quick_party()` and any new game
+  overwrite it.
 - **Icons (D-002):** use [game-icons.net](https://game-icons.net) SVGs
   (CC BY 3.0). Pick by concept name, recolour or tint consistently (by
   rarity or element), and add every author to the credits screen. Keep a

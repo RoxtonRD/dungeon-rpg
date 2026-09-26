@@ -27,6 +27,11 @@ stop and report back instead of guessing.
   up-to-date `main`.
 - **Git:** one branch per issue, commit, push, and open a PR with
   `Closes #N`. Never merge; Roxton merges.
+- **Protect Roxton's real save (D-018).** Before running the game, back
+  up every `save*.json` in `%APPDATA%/Godot/app_userdata/Dungeons of
+  Praesidium/` (with MD5s), and restore it when you're done. Show the
+  matching MD5s in the PR. `DevTools.quick_party()` and any new game
+  overwrite it.
 - **Data-driven:** numbers and content go in `.tres` resources, not in
   code. If a brief needs new content authored, add the fields and leave
   authoring to `content-data` unless the brief says otherwise.

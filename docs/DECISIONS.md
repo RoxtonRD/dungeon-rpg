@@ -141,3 +141,18 @@ and PR; the advisor folds them into the docs. This keeps the planning docs
 out of every worker's diff, which avoids merge conflicts between parallel
 PRs.
 
+---
+
+## 2026-09-26 — Reviews of #40 (save tests) and #41 (dev panel)
+
+**D-018 · Agents that run the game back up Roxton's save and restore it.**
+During #32, the dev-panel session's `quick_party()` overwrote Roxton's
+real save and its backup. The #32 brief was written before the
+checksum-the-real-save rule existed. Every editor-driving task now backs
+up `save*.json` before running the game and restores it afterwards, with
+MD5s shown in the PR (agent role files and the `write-brief` skill). A
+code safety net follows: DevTools copies the save aside before its first
+state-changing call (`PLAN.md` Phase 0). Parallel sessions share the same
+`user://` folder: the #35 guard caught the #32 session saving mid-run.
+The save tests themselves are isolated in `user://test_saves/`.
+

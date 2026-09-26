@@ -82,7 +82,9 @@ closer to Skyrim; the cost is that it is harder to balance and to read.
 One class, end to end, to find out whether this is more fun. It's built
 in three parts, each followed by Roxton playing it: **1/3** Rage +
 cooldowns (#38); **2/3** skill forks; **3/3** the Backstab synergy.
-Rage is gained **once per damaging action** (not per hit, so AOE doesn't
+Part 2 also fixes `Hero.sp_spent` values loading back as floats (`1` →
+`1.0`; harmless today, found in the #35 review), since forks rework that
+data. Rage is gained **once per damaging action** (not per hit, so AOE doesn't
 spike it) and per hit taken. The numbers
 are placeholders for the sim to tune; the fork options are examples.
 
