@@ -1,11 +1,15 @@
 ## Reusable widget for one battler (party or enemy). Shows a portrait
 ## (TextureRect when a Texture2D is assigned to ClassData/EnemyData, otherwise
-## a coloured ColorRect placeholder), name, HP/MP bars and active statuses.
+## a coloured ColorRect placeholder), name, HP bar, an MP or Rage bar (none for
+## enemies or a hero with no MP) and active statuses.
 ## Tapping the panel emits `tapped` when the panel is in selectable mode.
 class_name BattlerPanel
 extends PanelContainer
 
 signal tapped(battler: Battler)
+
+## Rage bar fill: orange, so it never reads as the blue MP bar.
+const RAGE_FILL_COLOR := Color(0.95, 0.5, 0.1)
 
 var battler: Battler = null
 
@@ -19,6 +23,8 @@ var _hp_label: Label
 var _hp_bar: ProgressBar
 var _mp_label: Label
 var _mp_bar: ProgressBar
+## Fill style swapped onto _mp_bar when it shows Rage instead of MP.
+var _rage_fill: StyleBoxFlat
 var _status_label: Label
 ## Transient border glow shown while this battler is acting. Its own modulate
 ## is animated independently, so panel refreshes don't interrupt the flash.
@@ -84,6 +90,10 @@ func _init() -> void:
 	_mp_bar.theme_type_variation = "MpBar"
 	_vbox.add_child(_mp_bar)
 
+	_rage_fill = StyleBoxFlat.new()
+	_rage_fill.bg_color = RAGE_FILL_COLOR
+	_rage_fill.set_corner_radius_all(2)
+
 	_status_label = Label.new()
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.add_theme_font_size_override("font_size", 11)
@@ -130,12 +140,7 @@ func refresh() -> void:
 	if battler.side == Battler.Side.PARTY:
 		_portrait_bg.color = color_for_class(battler.hero.class_data.id)
 		portrait_tex = HeroArt.portrait_for(battler.hero)
-		_mp_label.visible = true
-		_mp_bar.visible = true
-		var mp_max := battler.hero.max_mp()
-		_mp_label.text = "MP %d/%d" % [battler.hero.mp, mp_max]
-		_mp_bar.max_value = max(1, mp_max)
-		_mp_bar.value = battler.hero.mp
+		_refresh_resource_bar()
 	else:
 		_portrait_bg.color = Color(0.45, 0.2, 0.2)
 		portrait_tex = battler.enemy_data.portrait
@@ -153,6 +158,26 @@ func refresh() -> void:
 	_status_label.text = _format_statuses(battler)
 	# Dim dead battlers; reset modulate otherwise (selectable mode tints separately).
 	modulate = Color(0.4, 0.4, 0.4) if not battler.is_alive() else Color.WHITE
+
+
+## The bar under HP: Rage for a rage class, MP for everyone else, hidden when
+## the hero has no MP at all.
+func _refresh_resource_bar() -> void:
+	if battler.uses_rage():
+		_mp_label.visible = true
+		_mp_bar.visible = true
+		_mp_label.text = "%s %d/%d" % [tr("RES_RAGE"), battler.rage, Battler.RAGE_MAX]
+		_mp_bar.max_value = Battler.RAGE_MAX
+		_mp_bar.value = battler.rage
+		_mp_bar.add_theme_stylebox_override("fill", _rage_fill)
+		return
+	_mp_bar.remove_theme_stylebox_override("fill")
+	var mp_max := battler.hero.max_mp()
+	_mp_label.visible = mp_max > 0
+	_mp_bar.visible = mp_max > 0
+	_mp_label.text = "%s %d/%d" % [tr("RES_MP"), battler.hero.mp, mp_max]
+	_mp_bar.max_value = max(1, mp_max)
+	_mp_bar.value = battler.hero.mp
 
 
 func set_active(active: bool) -> void:

@@ -6,6 +6,14 @@ extends RefCounted
 
 enum Side { PARTY, ENEMY }
 
+## Rage cap for rage classes (see ClassData.ResourceType.RAGE).
+const RAGE_MAX := 100
+## Rage gained once per action that deals at least 1 damage, however many
+## targets it hits.
+const RAGE_PER_DAMAGING_ACTION := 10
+## Rage gained each time a rage class takes a hit that deals at least 1 damage.
+const RAGE_PER_HIT_TAKEN := 20
+
 var side: Battler.Side = Battler.Side.PARTY
 ## Set when side == PARTY; null otherwise.
 var hero: Hero = null
@@ -19,6 +27,11 @@ var max_hp: int = 0
 var statuses: Array[CombatStatus] = []
 ## Slot index within its own side (0..3 for party, 0..N for enemies).
 var index: int = 0
+## Rage for rage classes. Starts at 0 every fight and is never saved.
+var rage: int = 0
+## Turns left before a skill is usable again, keyed by cooldown_key().
+## Combat-only, never saved.
+var cooldowns: Dictionary = {}
 
 
 static func for_hero(h: Hero, idx: int) -> Battler:
@@ -117,3 +130,56 @@ func consume_barrier() -> bool:
 			statuses.remove_at(i)
 			return true
 	return false
+
+
+## True for a party hero whose class spends Rage instead of MP.
+func uses_rage() -> bool:
+	return (
+		side == Battler.Side.PARTY and hero.class_data.resource_type == ClassData.ResourceType.RAGE
+	)
+
+
+## Adds Rage, clamped to 0..RAGE_MAX. No-op for anyone who doesn't use it.
+func gain_rage(amount: int) -> void:
+	if uses_rage():
+		rage = clampi(rage + amount, 0, RAGE_MAX)
+
+
+## The amount of this battler's class resource available to pay skill costs.
+func resource_amount() -> int:
+	if uses_rage():
+		return rage
+	return hero.mp if side == Battler.Side.PARTY else 0
+
+
+## Pays a skill cost from Rage or MP.
+func spend_resource(amount: int) -> void:
+	if uses_rage():
+		rage = clampi(rage - amount, 0, RAGE_MAX)
+	elif side == Battler.Side.PARTY:
+		hero.mp -= amount
+
+
+## Puts a skill on its cooldown (no-op when it has none).
+func start_cooldown(skill: SkillData) -> void:
+	if skill.cooldown > 0:
+		cooldowns[cooldown_key(skill)] = skill.cooldown
+
+
+## Turns left on a skill's cooldown (0 = ready).
+func cooldown_left(skill: SkillData) -> int:
+	return int(cooldowns.get(cooldown_key(skill), 0))
+
+
+## Counts every cooldown down by one. Called at the start of this battler's turn.
+func tick_cooldowns() -> void:
+	for key in cooldowns:
+		cooldowns[key] = maxi(0, int(cooldowns[key]) - 1)
+
+
+## The skill's .tres basename, like Party._skill_key; falls back to its id for
+## a skill built in code (no resource_path).
+static func cooldown_key(skill: SkillData) -> String:
+	if skill.resource_path.is_empty():
+		return skill.id
+	return skill.resource_path.get_file().get_basename()
