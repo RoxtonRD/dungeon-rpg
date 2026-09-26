@@ -82,7 +82,10 @@ Any system that does not directly serve this loop is out of scope.
 - Prefer clear, readable GDScript over clever code. This is a learning
   project as much as a shipping one.
 - After completing a slice, suggest a concise commit message.
-- At the end of a session, update the **Now** block in `docs/PLAN.md`.
+- At the end of a task, report what changed, the verification results and
+  anything in the brief that was wrong. **Workers don't edit
+  `docs/PLAN.md` or `docs/DECISIONS.md`**; the advisor keeps them
+  current.
 
 ## Tooling
 
