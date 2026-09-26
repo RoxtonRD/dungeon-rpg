@@ -9,12 +9,20 @@ const TestUtil := preload("res://test/support/test_util.gd")
 ## Collects every engine error (and script error) logged while it is attached.
 ## gdUnit4 only fails a test on script errors by default; a broken .tres logs a
 ## plain engine error, so we listen for those ourselves.
-class ErrorCatcher extends Logger:
+class ErrorCatcher:
+	extends Logger
 	var errors: PackedStringArray = []
 
-	func _log_error(function: String, file: String, line: int, code: String,
-			rationale: String, _editor_notify: bool, error_type: int,
-			_script_backtraces: Array[ScriptBacktrace]) -> void:
+	func _log_error(
+		function: String,
+		file: String,
+		line: int,
+		code: String,
+		rationale: String,
+		_editor_notify: bool,
+		error_type: int,
+		_script_backtraces: Array[ScriptBacktrace]
+	) -> void:
 		if error_type == ERROR_TYPE_WARNING:
 			return
 		var text := rationale if not rationale.is_empty() else code
@@ -38,14 +46,22 @@ func test_all_resources_load() -> void:
 	var paths := TestUtil.find_files("res://resources", ".tres")
 	assert_array(paths).is_not_empty()
 	var failures := _load_failures(paths)
-	assert_array(failures) 			.override_failure_message(TestUtil.problem_list("Resources that fail to load", failures)) 			.is_empty()
+	(
+		assert_array(failures)
+		. override_failure_message(TestUtil.problem_list("Resources that fail to load", failures))
+		. is_empty()
+	)
 
 
 func test_all_scripts_load() -> void:
 	var paths := TestUtil.find_files("res://scripts", ".gd")
 	assert_array(paths).is_not_empty()
 	var failures := _load_failures(paths)
-	assert_array(failures) 			.override_failure_message(TestUtil.problem_list("Scripts that fail to load", failures)) 			.is_empty()
+	(
+		assert_array(failures)
+		. override_failure_message(TestUtil.problem_list("Scripts that fail to load", failures))
+		. is_empty()
+	)
 
 
 ## Loads each path fresh (bypassing the cache, so files the autoloads already

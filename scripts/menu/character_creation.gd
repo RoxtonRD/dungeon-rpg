@@ -35,7 +35,7 @@ var _slot_buttons: Array[Button] = []
 var _slot_portraits: Array[TextureRect] = []
 var _slot_portrait_bgs: Array[ColorRect] = []
 var _slot_class_labels: Array[Label] = []
-var _class_buttons: Dictionary = {}   # class_id -> Button
+var _class_buttons: Dictionary = {}  # class_id -> Button
 
 
 func _ready() -> void:
@@ -54,6 +54,7 @@ func _ready() -> void:
 
 
 # ── Slots ─────────────────────────────────────────────────────────────────────
+
 
 ## Each slot is a small card: the name button (selector), a portrait and the
 ## class name — a live party overview while building.
@@ -115,6 +116,7 @@ func _select_slot(i: int) -> void:
 
 
 # ── Editor (class / skin / preview for the current slot) ──────────────────────
+
 
 func _build_class_buttons() -> void:
 	var group := ButtonGroup.new()
@@ -216,11 +218,12 @@ func _refresh_editor() -> void:
 
 func _on_name_changed(new_text: String) -> void:
 	_names[_slot] = new_text
-	_slot_buttons[_slot].text = _slot_title(_slot)   # portrait/class unchanged
+	_slot_buttons[_slot].text = _slot_title(_slot)  # portrait/class unchanged
 	_refresh_validity()
 
 
 # ── Validity ──────────────────────────────────────────────────────────────────
+
 
 func _refresh_validity() -> void:
 	var all_named := true
@@ -249,11 +252,16 @@ func _on_confirm() -> void:
 	var specs: Array = []
 	for i in Party.PARTY_SIZE:
 		var skins := _class_skins(_class_ids[i])
-		specs.append({
-			"name": _names[i],
-			"class_id": _class_ids[i],
-			"skin_id": skins[clampi(_skin_idx[i], 0, skins.size() - 1)],
-		})
+		(
+			specs
+			. append(
+				{
+					"name": _names[i],
+					"class_id": _class_ids[i],
+					"skin_id": skins[clampi(_skin_idx[i], 0, skins.size() - 1)],
+				}
+			)
+		)
 	Party.build_party(specs)
 	GameState.start_new_game()
 	GameState.save_game()

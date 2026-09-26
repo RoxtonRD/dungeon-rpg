@@ -70,7 +70,7 @@ func display_name() -> String:
 ## for enemies it falls back to the EnemyData default role.
 func is_front_row() -> bool:
 	if side == Battler.Side.PARTY:
-		return hero.row == 0   # 0 = ClassData.Role.FRONT
+		return hero.row == 0  # 0 = ClassData.Role.FRONT
 	return enemy_data.role == EnemyData.Role.FRONT
 
 
@@ -78,12 +78,16 @@ func is_front_row() -> bool:
 func base_stats() -> Dictionary:
 	if side == Battler.Side.PARTY:
 		return {
-			"atk": hero.atk(), "def": hero.def(),
-			"mag": hero.mag(), "spd": hero.spd(),
+			"atk": hero.atk(),
+			"def": hero.def(),
+			"mag": hero.mag(),
+			"spd": hero.spd(),
 		}
 	return {
-		"atk": enemy_data.atk, "def": enemy_data.def,
-		"mag": enemy_data.mag, "spd": enemy_data.spd,
+		"atk": enemy_data.atk,
+		"def": enemy_data.def,
+		"mag": enemy_data.mag,
+		"spd": enemy_data.spd,
 	}
 
 

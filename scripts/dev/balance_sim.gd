@@ -20,8 +20,8 @@ const MAX_ROUNDS := 60
 ## is roughly a quarter as fast as the old pay-full-to-everyone behaviour.
 const LEVEL_BY_DUNGEON := [2, 3, 4, 5]
 
-
 # ── Party / enemy construction ────────────────────────────────────────────────
+
 
 ## Builds a party at `level`, geared to `gear_tier` (ItemData.Tier, -1 = naked).
 ## Gearing matters: a real party at dungeon 4 is carrying rare/epic loot, so
@@ -34,7 +34,7 @@ static func make_party(class_ids: Array, level: int, gear_tier: int = -1) -> Arr
 		h.level = level
 		if gear_tier >= 0:
 			_equip_best(h, gear_tier)
-		h.hp = h.max_hp()   # after level+gear, so maxima are correct
+		h.hp = h.max_hp()  # after level+gear, so maxima are correct
 		h.mp = h.max_mp()
 		out.append(h)
 	return out
@@ -50,8 +50,11 @@ static var _gear_cache: Dictionary = {}
 static func _equip_best(h: Hero, max_tier: int) -> void:
 	var key := "%s:%d" % [h.class_data.id, max_tier]
 	if not _gear_cache.has(key):
-		var slots := {"weapon": ItemData.Slot.WEAPON, "armor": ItemData.Slot.ARMOR,
-			"trinket": ItemData.Slot.TRINKET}
+		var slots := {
+			"weapon": ItemData.Slot.WEAPON,
+			"armor": ItemData.Slot.ARMOR,
+			"trinket": ItemData.Slot.TRINKET
+		}
 		var loadout: Dictionary = {}
 		for slot_name in slots:
 			var want: ItemData.Slot = slots[slot_name]
@@ -60,14 +63,17 @@ static func _equip_best(h: Hero, max_tier: int) -> void:
 				var it := load("res://resources/items/%s.tres" % id) as ItemData
 				if it == null or it.slot != want or int(it.tier) > max_tier:
 					continue
-				if it.class_restriction.size() > 0 and not it.class_restriction.has(h.class_data.id):
+				if (
+					it.class_restriction.size() > 0
+					and not it.class_restriction.has(h.class_data.id)
+				):
 					continue
 				if best == null or it.value > best.value:
 					best = it
 			if best != null:
 				loadout[slot_name] = best
 		_gear_cache[key] = loadout
-	for slot_name in (_gear_cache[key] as Dictionary):
+	for slot_name in _gear_cache[key] as Dictionary:
 		h.equipment[slot_name] = _gear_cache[key][slot_name]
 
 
@@ -79,9 +85,12 @@ static func heal_party(heroes: Array[Hero]) -> void:
 
 # ── One fight ─────────────────────────────────────────────────────────────────
 
+
 ## Fights `enemy_list` with `heroes` (HP/MP carry in and out). Accumulates
 ## damage dealt per class id into `dmg_by_class`. Returns {result, rounds}.
-static func fight(heroes: Array[Hero], enemy_list: Array[EnemyData], dmg_by_class: Dictionary) -> Dictionary:
+static func fight(
+	heroes: Array[Hero], enemy_list: Array[EnemyData], dmg_by_class: Dictionary
+) -> Dictionary:
 	var st := CombatState.build(heroes, enemy_list)
 	st.start()
 	var guard := 0
@@ -160,8 +169,7 @@ static func _player_turn(st: CombatState, actor: Battler, dmg_by_class: Dictiona
 ## Rough expected-damage heuristic used to choose a skill.
 static func _damage_score(s: SkillData, st: CombatState) -> float:
 	match s.skill_type:
-		SkillData.SkillType.HEAL, SkillData.SkillType.BUFF, \
-		SkillData.SkillType.DEBUFF, SkillData.SkillType.REVIVE:
+		SkillData.SkillType.HEAL, SkillData.SkillType.BUFF, SkillData.SkillType.DEBUFF, SkillData.SkillType.REVIVE:
 			return 0.0
 	var targets := 1
 	if s.target == SkillData.TargetType.ALL:
@@ -196,13 +204,15 @@ static func _party_hp_pct(heroes: Array[Hero]) -> float:
 
 # ── Reports ───────────────────────────────────────────────────────────────────
 
+
 ## Per-fight difficulty at every (dungeon_level, floor), each fight starting
 ## from full HP/MP — isolates "how hard is one encounter".
 ## `gear_offset` shifts how well-equipped the party is assumed to be:
 ##  0 = best-in-slot for the depth (optimistic), -1 = one tier behind
 ##  (realistic), -2 = two behind / naked early (pessimistic).
-static func encounter_report(class_ids: Array, trials: int = 100, levels: Array = [],
-		gear_offset: int = -1) -> Dictionary:
+static func encounter_report(
+	class_ids: Array, trials: int = 100, levels: Array = [], gear_offset: int = -1
+) -> Dictionary:
 	var by_dungeon: Array = levels if levels.size() == 4 else LEVEL_BY_DUNGEON
 	var out: Dictionary = {}
 	for dl in range(1, 5):
@@ -253,8 +263,13 @@ static func encounter_report(class_ids: Array, trials: int = 100, levels: Array 
 ## Attrition: consecutive fights on one party with no healing between them.
 ## `restore_on_level` models the current level-up full-restore by topping the
 ## party up every `fights_per_level` fights — set false to see the difference.
-static func gauntlet(class_ids: Array, dungeon_level: int, trials: int = 100,
-		restore_on_level: bool = true, fights_per_level: int = 3) -> Dictionary:
+static func gauntlet(
+	class_ids: Array,
+	dungeon_level: int,
+	trials: int = 100,
+	restore_on_level: bool = true,
+	fights_per_level: int = 3
+) -> Dictionary:
 	var level: int = LEVEL_BY_DUNGEON[clampi(dungeon_level, 1, 4) - 1]
 	var run := DungeonRun.generate(dungeon_level)
 	var survived_total := 0
@@ -263,7 +278,7 @@ static func gauntlet(class_ids: Array, dungeon_level: int, trials: int = 100,
 		var heroes := make_party(class_ids, level)
 		var dmg: Dictionary = {}
 		var cleared := 0
-		for f in 12:   # cap: 12 fights is a very long run
+		for f in 12:  # cap: 12 fights is a very long run
 			var res := fight(heroes, run.roll_encounter(mini(f / 3, 3)), dmg)
 			if int(res["result"]) != int(CombatState.Result.VICTORY):
 				break

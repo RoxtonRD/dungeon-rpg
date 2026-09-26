@@ -53,6 +53,7 @@ static func build(heroes: Array[Hero], enemy_data_list: Array[EnemyData]) -> Com
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+
 func start() -> void:
 	_log(tr("LOG_BEGIN"))
 	_roll_initiative()
@@ -82,10 +83,12 @@ func valid_targets_for(actor: Battler, skill: SkillData) -> Array[Battler]:
 
 
 func skill_is_auto_targeted(skill: SkillData) -> bool:
-	return skill.target == SkillData.TargetType.SELF \
-		or skill.target == SkillData.TargetType.ALL \
-		or skill.target == SkillData.TargetType.ALLIES \
+	return (
+		skill.target == SkillData.TargetType.SELF
+		or skill.target == SkillData.TargetType.ALL
+		or skill.target == SkillData.TargetType.ALLIES
 		or skill.target == SkillData.TargetType.RANDOM
+	)
 
 
 ## Resolves the player's chosen action. `target` may be null when the skill
@@ -168,6 +171,7 @@ func step() -> void:
 
 
 # ── Turn-order machinery ──────────────────────────────────────────────────────
+
 
 func _advance_to_next_actor() -> void:
 	while not ended:
@@ -253,7 +257,10 @@ func _tick_statuses() -> void:
 			var st: CombatStatus = b.statuses[i]
 			if st.kind == CombatStatus.Kind.DOT:
 				b.set_hp(b.get_hp() - st.dot_damage)
-				_log(tr("LOG_DOT") % [b.display_name(), st.dot_damage, tr(st.source_name)], LogKind.DAMAGE)
+				_log(
+					tr("LOG_DOT") % [b.display_name(), st.dot_damage, tr(st.source_name)],
+					LogKind.DAMAGE
+				)
 				hp_changed.emit(b)
 				damage_popup.emit(b, st.dot_damage, PopupKind.MAG)
 			elif st.kind == CombatStatus.Kind.REGEN:
@@ -261,7 +268,10 @@ func _tick_statuses() -> void:
 				b.set_hp(before + st.heal_per_turn)
 				var healed := b.get_hp() - before
 				if healed > 0:
-					_log(tr("LOG_REGEN_TICK") % [b.display_name(), healed, tr(st.source_name)], LogKind.HEAL)
+					_log(
+						tr("LOG_REGEN_TICK") % [b.display_name(), healed, tr(st.source_name)],
+						LogKind.HEAL
+					)
 					hp_changed.emit(b)
 					damage_popup.emit(b, healed, PopupKind.HEAL)
 			st.duration -= 1
@@ -271,6 +281,7 @@ func _tick_statuses() -> void:
 
 
 # ── Skill resolution ──────────────────────────────────────────────────────────
+
 
 func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 	var caster_stats := caster.effective_stats()
@@ -292,9 +303,11 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 				_apply_revive(caster, skill, targets[0])
 		SkillData.SkillType.MULTI:
 			_log(tr("LOG_USE") % [caster.display_name(), tr(skill.display_name)])
-			var hit_kind := SkillData.SkillType.PHYS \
-				if skill.multi_hit_type == SkillData.HitType.PHYS \
+			var hit_kind := (
+				SkillData.SkillType.PHYS
+				if skill.multi_hit_type == SkillData.HitType.PHYS
 				else SkillData.SkillType.MAG
+			)
 			for h in skill.hits:
 				var ht: Battler = null
 				if skill.target == SkillData.TargetType.RANDOM:
@@ -360,7 +373,9 @@ func _apply_debuff(target: Battler, skill: SkillData) -> void:
 	target.statuses.append(st)
 
 
-func _apply_heal(caster: Battler, caster_stats: Dictionary, skill: SkillData, target: Battler) -> void:
+func _apply_heal(
+	caster: Battler, caster_stats: Dictionary, skill: SkillData, target: Battler
+) -> void:
 	var heal_amount := int(floor(float(caster_stats["mag"]) * skill.power + 5.0))
 	target.set_hp(target.get_hp() + heal_amount)
 	_log(tr("LOG_HEAL") % [caster.display_name(), target.display_name(), heal_amount], LogKind.HEAL)
@@ -395,7 +410,13 @@ func _apply_revive(caster: Battler, skill: SkillData, target: Battler) -> void:
 	damage_popup.emit(target, amount, PopupKind.HEAL)
 
 
-func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillData, target: Battler, dmg_kind: SkillData.SkillType) -> void:
+func _apply_damage_hit(
+	caster: Battler,
+	caster_stats: Dictionary,
+	skill: SkillData,
+	target: Battler,
+	dmg_kind: SkillData.SkillType
+) -> void:
 	# Barrier eats the hit before damage is rolled.
 	if target.consume_barrier():
 		_log(tr("LOG_BARRIER") % target.display_name(), LogKind.BARRIER)
@@ -406,8 +427,10 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 	var is_mag := dmg_kind == SkillData.SkillType.MAG
 	var use_mag := is_mag
 	match skill.damage_stat:
-		SkillData.DamageStat.ATK: use_mag = false
-		SkillData.DamageStat.MAG: use_mag = true
+		SkillData.DamageStat.ATK:
+			use_mag = false
+		SkillData.DamageStat.MAG:
+			use_mag = true
 	var raw_attack := float(caster_stats["mag"] if use_mag else caster_stats["atk"])
 	var raw := raw_attack * skill.power + randf_range(0.0, 3.0)
 	# Finisher: double power when target is under 25% HP.
@@ -425,8 +448,19 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 	hp_changed.emit(target)
 	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS)
 	var crit_label := tr("LOG_CRIT_SUFFIX") if crit else ""
-	_log(tr("LOG_DAMAGE") % [caster.display_name(), tr(skill.display_name), target.display_name(), dmg, crit_label],
-		LogKind.CRIT if crit else LogKind.DAMAGE)
+	_log(
+		(
+			tr("LOG_DAMAGE")
+			% [
+				caster.display_name(),
+				tr(skill.display_name),
+				target.display_name(),
+				dmg,
+				crit_label
+			]
+		),
+		LogKind.CRIT if crit else LogKind.DAMAGE
+	)
 	# DoT rider (prototype adds unconditionally — dead targets simply won't tick).
 	if skill.dot_damage > 0:
 		var dot := CombatStatus.new()
@@ -436,7 +470,10 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 		dot.duration = skill.dot_duration
 		target.statuses.append(dot)
 	# Debuff rider on damage skills.
-	if skill.mod_duration > 0 and (skill.mod_atk != 0 or skill.mod_def != 0 or skill.mod_mag != 0 or skill.mod_spd != 0):
+	if (
+		skill.mod_duration > 0
+		and (skill.mod_atk != 0 or skill.mod_def != 0 or skill.mod_mag != 0 or skill.mod_spd != 0)
+	):
 		var deb := CombatStatus.new()
 		deb.kind = CombatStatus.Kind.DEBUFF
 		deb.source_name = skill.display_name
@@ -455,6 +492,7 @@ func _apply_damage_hit(caster: Battler, caster_stats: Dictionary, skill: SkillDa
 
 
 # ── Enemy AI ──────────────────────────────────────────────────────────────────
+
 
 func _enemy_take_turn() -> void:
 	var e := current_actor
@@ -513,6 +551,7 @@ func _enemy_take_turn() -> void:
 
 
 # ── Small helpers ─────────────────────────────────────────────────────────────
+
 
 func _opposing_side(b: Battler) -> Array[Battler]:
 	return enemies if b.side == Battler.Side.PARTY else party

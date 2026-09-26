@@ -44,19 +44,27 @@ enum Tier { COMMON, UNCOMMON, RARE, EPIC }
 ## Translated rarity-tier name (a translation key resolves the label).
 func tier_name() -> String:
 	match tier:
-		Tier.UNCOMMON: return tr("TIER_UNCOMMON")
-		Tier.RARE: return tr("TIER_RARE")
-		Tier.EPIC: return tr("TIER_EPIC")
-		_: return tr("TIER_COMMON")
+		Tier.UNCOMMON:
+			return tr("TIER_UNCOMMON")
+		Tier.RARE:
+			return tr("TIER_RARE")
+		Tier.EPIC:
+			return tr("TIER_EPIC")
+		_:
+			return tr("TIER_COMMON")
 
 
 ## UI accent colour for the tier (standard loot palette).
 func tier_color() -> Color:
 	match tier:
-		Tier.UNCOMMON: return Color(0.45, 0.85, 0.45)  # green
-		Tier.RARE: return Color(0.4, 0.6, 1.0)          # blue
-		Tier.EPIC: return Color(0.78, 0.45, 0.95)       # purple
-		_: return Color(0.82, 0.82, 0.86)               # common grey-white
+		Tier.UNCOMMON:
+			return Color(0.45, 0.85, 0.45)  # green
+		Tier.RARE:
+			return Color(0.4, 0.6, 1.0)  # blue
+		Tier.EPIC:
+			return Color(0.78, 0.45, 0.95)  # purple
+		_:
+			return Color(0.82, 0.82, 0.86)  # common grey-white
 
 
 ## Returns the per-item icon Texture2D at assets/icons/items/{id}.png, or null
@@ -93,12 +101,18 @@ func short_description() -> String:
 
 func _stat_mods_text() -> String:
 	var mods: Array[String] = []
-	if mod_hp != 0:  mods.append("%s %+d" % [tr("STAT_HP"), mod_hp])
-	if mod_mp != 0:  mods.append("%s %+d" % [tr("STAT_MP"), mod_mp])
-	if mod_atk != 0: mods.append("%s %+d" % [tr("STAT_ATK"), mod_atk])
-	if mod_def != 0: mods.append("%s %+d" % [tr("STAT_DEF"), mod_def])
-	if mod_mag != 0: mods.append("%s %+d" % [tr("STAT_MAG"), mod_mag])
-	if mod_spd != 0: mods.append("%s %+d" % [tr("STAT_SPD"), mod_spd])
+	if mod_hp != 0:
+		mods.append("%s %+d" % [tr("STAT_HP"), mod_hp])
+	if mod_mp != 0:
+		mods.append("%s %+d" % [tr("STAT_MP"), mod_mp])
+	if mod_atk != 0:
+		mods.append("%s %+d" % [tr("STAT_ATK"), mod_atk])
+	if mod_def != 0:
+		mods.append("%s %+d" % [tr("STAT_DEF"), mod_def])
+	if mod_mag != 0:
+		mods.append("%s %+d" % [tr("STAT_MAG"), mod_mag])
+	if mod_spd != 0:
+		mods.append("%s %+d" % [tr("STAT_SPD"), mod_spd])
 	return ", ".join(mods)
 
 

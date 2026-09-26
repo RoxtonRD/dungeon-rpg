@@ -12,11 +12,22 @@ const STARTER_ITEMS: Array[String] = ["potion_heal", "potion_heal", "potion_mana
 ## (matching the v1 shop convention) so exports never depend on res://
 ## directory listing.
 const MARKET_EQUIPMENT_POOL: Array[String] = [
-	"sword_rusty", "sword_iron", "sword_steel", "dagger_shadow",
-	"staff_apprentice", "staff_runed", "staff_arcane",
-	"armor_cloth", "armor_leather", "armor_chain", "armor_plate",
-	"ring_might", "ring_focus", "ring_arcane",
-	"amulet_swift", "amulet_ward",
+	"sword_rusty",
+	"sword_iron",
+	"sword_steel",
+	"dagger_shadow",
+	"staff_apprentice",
+	"staff_runed",
+	"staff_arcane",
+	"armor_cloth",
+	"armor_leather",
+	"armor_chain",
+	"armor_plate",
+	"ring_might",
+	"ring_focus",
+	"ring_arcane",
+	"amulet_swift",
+	"amulet_ward",
 ]
 ## How many random equipment items each restock puts on the shelves.
 const MARKET_SLOTS: int = 5
@@ -110,10 +121,15 @@ func restock_market() -> void:
 func restock_potions() -> void:
 	potion_stock = []
 	for entry in MARKET_POTIONS:
-		potion_stock.append({
-			"id": str(entry["id"]),
-			"qty": randi_range(int(entry["min"]), int(entry["max"])),
-		})
+		(
+			potion_stock
+			. append(
+				{
+					"id": str(entry["id"]),
+					"qty": randi_range(int(entry["min"]), int(entry["max"])),
+				}
+			)
+		)
 
 
 func add_item(item_id: String) -> void:
@@ -129,6 +145,7 @@ func remove_item(item_id: String) -> bool:
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────
+
 
 ## True if Continue has something to load: the primary save or its backup.
 ## A leftover tmp file does not count; it is an interrupted write.
@@ -167,7 +184,9 @@ func save_game() -> void:
 	file.store_string(JSON.stringify(payload, "\t"))
 	file.close()
 	if _read_save_dict(TMP_PATH).is_empty():
-		push_error("GameState.save_game: %s did not read back as valid JSON; old save kept" % TMP_PATH)
+		push_error(
+			"GameState.save_game: %s did not read back as valid JSON; old save kept" % TMP_PATH
+		)
 		_remove_file(TMP_PATH)
 		return
 	_rotate_tmp_into_place()
@@ -191,7 +210,12 @@ func _rotate_tmp_into_place() -> void:
 			_remove_file(BACKUP_PATH)
 			_move_file(SAVE_PATH, BACKUP_PATH)
 	if FileAccess.file_exists(SAVE_PATH):
-		push_error("GameState.save_game: could not move the old %s aside; new save left in %s" % [SAVE_PATH, TMP_PATH])
+		push_error(
+			(
+				"GameState.save_game: could not move the old %s aside; new save left in %s"
+				% [SAVE_PATH, TMP_PATH]
+			)
+		)
 		return
 	_move_file(TMP_PATH, SAVE_PATH)
 
@@ -213,7 +237,9 @@ func load_game() -> bool:
 		data = _read_save_dict(BACKUP_PATH)
 		if data.is_empty() or not _is_supported_version(BACKUP_PATH, data):
 			return false
-		push_warning("GameState.load_game: primary save unusable; loaded the backup %s" % BACKUP_PATH)
+		push_warning(
+			"GameState.load_game: primary save unusable; loaded the backup %s" % BACKUP_PATH
+		)
 	data = _migrate(data)
 	if data.is_empty():
 		return false
@@ -246,10 +272,20 @@ static func _save_version(data: Dictionary) -> int:
 static func _is_supported_version(path: String, data: Dictionary) -> bool:
 	var version := _save_version(data)
 	if version > SAVE_VERSION:
-		push_warning("GameState.load_game: %s is v%d, newer than this build (v%d); left untouched" % [path, version, SAVE_VERSION])
+		push_warning(
+			(
+				"GameState.load_game: %s is v%d, newer than this build (v%d); left untouched"
+				% [path, version, SAVE_VERSION]
+			)
+		)
 		return false
 	if version < MIN_SUPPORTED_VERSION:
-		push_warning("GameState.load_game: %s is v%d, older than v%d; not migrated" % [path, version, MIN_SUPPORTED_VERSION])
+		push_warning(
+			(
+				"GameState.load_game: %s is v%d, older than v%d; not migrated"
+				% [path, version, MIN_SUPPORTED_VERSION]
+			)
+		)
 		return false
 	return true
 
@@ -264,7 +300,9 @@ static func _migrate(data: Dictionary) -> Dictionary:
 	# 	data = _migrate_v3_to_v4(data)
 	# 	version = 4
 	if version != SAVE_VERSION:
-		push_error("GameState._migrate: no migration step from v%d to v%d" % [version, SAVE_VERSION])
+		push_error(
+			"GameState._migrate: no migration step from v%d to v%d" % [version, SAVE_VERSION]
+		)
 		return {}
 	data["version"] = version
 	return data
@@ -273,7 +311,9 @@ static func _migrate(data: Dictionary) -> Dictionary:
 ## Renames `from` to `to`, replacing any existing `to`. Not atomic.
 static func _move_file(from: String, to: String) -> void:
 	_remove_file(to)
-	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(from), ProjectSettings.globalize_path(to))
+	var err := DirAccess.rename_absolute(
+		ProjectSettings.globalize_path(from), ProjectSettings.globalize_path(to)
+	)
 	if err != OK:
 		push_error("GameState: could not rename %s to %s (error %d)" % [from, to, err])
 

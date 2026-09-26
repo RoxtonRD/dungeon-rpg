@@ -38,6 +38,7 @@ const ITEM_DIR := "res://resources/items/"
 func _delay(base: float) -> float:
 	return base / Settings.combat_speed
 
+
 @onready var background: TextureRect = $Background
 @onready var back_party_col: VBoxContainer = %BackPartyCol
 @onready var front_party_col: VBoxContainer = %FrontPartyCol
@@ -116,6 +117,7 @@ func setup(heroes: Array[Hero], enemies: Array[EnemyData], loot_level: int = 1) 
 
 # ── Setup ─────────────────────────────────────────────────────────────────────
 
+
 func _populate_panels() -> void:
 	for i in state.party.size():
 		var p := BattlerPanel.new()
@@ -157,6 +159,7 @@ func _refresh_all_panels() -> void:
 
 # ── State signals ─────────────────────────────────────────────────────────────
 
+
 func _on_log_appended(line: String, kind: CombatState.LogKind) -> void:
 	log_label.append_text(_colorize_log_line(line, kind) + "\n")
 
@@ -187,17 +190,17 @@ func _on_damage_popup(b: Battler, amount: int, kind: CombatState.PopupKind) -> v
 	var tint: Color
 	match kind:
 		CombatState.PopupKind.HEAL:
-			color = Color(0.5, 1.0, 0.55)      # green number
+			color = Color(0.5, 1.0, 0.55)  # green number
 			text = "+%d" % amount
 			tint = Color(1.0, 1.0, 1.0, 0.40)  # white wash
 		CombatState.PopupKind.MAG:
-			color = Color(0.62, 0.7, 1.0)      # blue number
+			color = Color(0.62, 0.7, 1.0)  # blue number
 			text = str(amount)
-			tint = Color(0.9, 0.15, 0.15, 0.5) # red wash
+			tint = Color(0.9, 0.15, 0.15, 0.5)  # red wash
 		_:  # PHYS
-			color = Color(1.0, 0.85, 0.45)     # warm number
+			color = Color(1.0, 0.85, 0.45)  # warm number
 			text = str(amount)
-			tint = Color(0.9, 0.15, 0.15, 0.5) # red wash
+			tint = Color(0.9, 0.15, 0.15, 0.5)  # red wash
 	var panel := _panel_for(b)
 	panel.flash_hit(tint)
 	panel.show_popup(text, color)
@@ -218,10 +221,14 @@ func _on_combat_ended(r: CombatState.Result, rewards: Dictionary) -> void:
 
 # ── Turn pacing ───────────────────────────────────────────────────────────────
 
+
 func _process_turn() -> void:
 	await get_tree().create_timer(_delay(TURN_LEAD_DELAY)).timeout
-	while not state.ended and state.current_actor != null \
-			and state.current_actor.side == Battler.Side.ENEMY:
+	while (
+		not state.ended
+		and state.current_actor != null
+		and state.current_actor.side == Battler.Side.ENEMY
+	):
 		_panel_for(state.current_actor).flash_active()
 		state.step()
 		_refresh_all_panels()
@@ -234,6 +241,7 @@ func _process_turn() -> void:
 
 
 # ── Player turn UI ────────────────────────────────────────────────────────────
+
 
 func _show_player_turn_ui() -> void:
 	_picking_target = false
@@ -269,11 +277,11 @@ func _populate_skill_buttons() -> void:
 		hbox.add_theme_constant_override("separation", 8)
 		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(hbox)
-		
+
 		if hero.mp < skill.mp_cost:
-			hbox.add_child(_make_icon(skill.icon_or_null(), 96,0.25))
+			hbox.add_child(_make_icon(skill.icon_or_null(), 96, 0.25))
 		else:
-			hbox.add_child(_make_icon(skill.icon_or_null(), 96,1.0))
+			hbox.add_child(_make_icon(skill.icon_or_null(), 96, 1.0))
 
 		var label := Label.new()
 		label.text = _label_for_skill(hero, skill)
@@ -306,7 +314,6 @@ func _clear_skill_buttons() -> void:
 ## Returns a square icon Control: a TextureRect when `tex` is non-null, else a
 ## small neutral ColorRect placeholder. mouse_filter set to IGNORE.
 func _make_icon(tex: Texture2D, size: int = 64, alpha: float = 1) -> Control:
-	
 	if tex != null:
 		var rect := TextureRect.new()
 		rect.texture = tex
@@ -325,6 +332,7 @@ func _make_icon(tex: Texture2D, size: int = 64, alpha: float = 1) -> Control:
 
 
 # ── Targeting flow ────────────────────────────────────────────────────────────
+
 
 func _on_skill_pressed(skill: SkillData) -> void:
 	if state.ended:
@@ -378,6 +386,7 @@ func _on_panel_tapped(b: Battler) -> void:
 
 # ── Item flow ─────────────────────────────────────────────────────────────────
 
+
 ## True when the shared inventory holds a consumable usable in combat.
 func _has_usable_items() -> bool:
 	for id in GameState.inventory:
@@ -388,8 +397,10 @@ func _has_usable_items() -> bool:
 
 
 func _item_usable_in_combat(item: ItemData) -> bool:
-	return item.slot == ItemData.Slot.CONSUMABLE \
+	return (
+		item.slot == ItemData.Slot.CONSUMABLE
 		and (item.use_heal > 0 or item.use_mp > 0 or item.use_revive_party > 0.0)
+	)
 
 
 ## Replaces the skill grid with the usable-item menu (distinct ids + counts).
@@ -420,7 +431,9 @@ func _on_items_pressed() -> void:
 		btn.add_child(hbox)
 		hbox.add_child(_make_icon(item.icon_or_null(), 96, 1.0))
 		var label := Label.new()
-		label.text = "%s  x%d\n%s" % [tr(item.display_name), int(counts[id]), item.short_description()]
+		label.text = (
+			"%s  x%d\n%s" % [tr(item.display_name), int(counts[id]), item.short_description()]
+		)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -483,6 +496,7 @@ func _resolve_player_action(skill: SkillData, target: Battler) -> void:
 
 # ── Buttons ───────────────────────────────────────────────────────────────────
 
+
 func _on_cancel_pressed() -> void:
 	## Return to the skill grid without spending the turn.
 	for p in _all_panels():
@@ -511,6 +525,7 @@ func _on_standalone_finished(_result: int) -> void:
 
 
 # ── End panel ─────────────────────────────────────────────────────────────────
+
 
 ## True when any enemy in the current encounter was a boss.
 func _encounter_has_boss() -> bool:
@@ -562,8 +577,7 @@ func _show_end_panel() -> void:
 				for skill in unlocked:
 					lines.append(tr("UI_NEW_SKILL") % tr(skill.display_name))
 			if h.bonus_mp > prev_bonus_mp:
-				lines.append(tr("UI_SP_CONVERT") % [
-					h.display_name(), h.bonus_mp - prev_bonus_mp])
+				lines.append(tr("UI_SP_CONVERT") % [h.display_name(), h.bonus_mp - prev_bonus_mp])
 		# Rare boss-only drop: a Tomo de Maestria.
 		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
 			GameState.add_item("tome_sp")

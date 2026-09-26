@@ -19,13 +19,13 @@ const CELL_GAP := 10
 
 # ── Per-room-type styling. Variation names match the theme.tres definitions.
 const ROOM_VARIATION: Dictionary = {
-	DungeonRoom.RoomType.COMBAT:   "CombatNodeButton",
+	DungeonRoom.RoomType.COMBAT: "CombatNodeButton",
 	DungeonRoom.RoomType.TREASURE: "TreasureNodeButton",
-	DungeonRoom.RoomType.EVENT:    "EventNodeButton",
-	DungeonRoom.RoomType.REST:     "RestNodeButton",
-	DungeonRoom.RoomType.STAIRS:   "StairsNodeButton",
-	DungeonRoom.RoomType.BOSS:     "BossNodeButton",
-	DungeonRoom.RoomType.SHRINE:   "ShrineNodeButton",
+	DungeonRoom.RoomType.EVENT: "EventNodeButton",
+	DungeonRoom.RoomType.REST: "RestNodeButton",
+	DungeonRoom.RoomType.STAIRS: "StairsNodeButton",
+	DungeonRoom.RoomType.BOSS: "BossNodeButton",
+	DungeonRoom.RoomType.SHRINE: "ShrineNodeButton",
 }
 # ── Popup backgrounds (treasure / rest / event). ──────────────────────────────
 const BG_TREASURE: Texture2D = preload("res://assets/backgrounds/bg_treasure.png")
@@ -36,8 +36,8 @@ const BG_SHRINE: Texture2D = preload("res://assets/backgrounds/bg_event_altar.pn
 const EVENT_BG: Dictionary = {
 	"fountain": preload("res://assets/backgrounds/bg_event_fountain.png"),
 	"merchant": preload("res://assets/backgrounds/bg_event_merchant.png"),
-	"altar":    preload("res://assets/backgrounds/bg_event_altar.png"),
-	"chest":    preload("res://assets/backgrounds/bg_event_chest.png"),
+	"altar": preload("res://assets/backgrounds/bg_event_altar.png"),
+	"chest": preload("res://assets/backgrounds/bg_event_chest.png"),
 }
 
 @onready var title_label: Label = %TitleLabel
@@ -143,6 +143,7 @@ func _begin_run() -> void:
 
 # ── Map rendering ─────────────────────────────────────────────────────────────
 
+
 ## Redraws the current floor's room grid. The layout is anchored to the bounding
 ## box of ALL rooms on the floor (stable as fog lifts); only visible rooms render.
 ##
@@ -174,8 +175,8 @@ func _rebuild_map() -> void:
 		cell = mini(cell, int((area.y - (rows - 1) * CELL_GAP) / rows))
 		cell = maxi(cell, 48)
 	var grid_size := Vector2(
-		cols * cell + (cols - 1) * CELL_GAP,
-		rows * cell + (rows - 1) * CELL_GAP)
+		cols * cell + (cols - 1) * CELL_GAP, rows * cell + (rows - 1) * CELL_GAP
+	)
 	var origin := (area - grid_size) * 0.5
 
 	var visible := run.visible_rooms()
@@ -193,8 +194,9 @@ func _rebuild_map() -> void:
 			if (room.connections & dir["bit"]) == 0 or not visible_pos.has(npos):
 				continue
 			var from_player := room.pos == run.player_pos or npos == run.player_pos
-			map_area.add_child(_make_connector(
-				room.pos - min_pos, dir["bit"], origin, cell, from_player))
+			map_area.add_child(
+				_make_connector(room.pos - min_pos, dir["bit"], origin, cell, from_player)
+			)
 
 	for room in visible:
 		var btn := Button.new()
@@ -218,8 +220,9 @@ func _rebuild_map() -> void:
 func _refresh_header() -> void:
 	if run == null:
 		return
-	title_label.text = tr("UI_DUNGEON_TITLE") % [
-		run.level, run.current_floor + 1, DungeonRun.NUM_FLOORS]
+	title_label.text = (
+		tr("UI_DUNGEON_TITLE") % [run.level, run.current_floor + 1, DungeonRun.NUM_FLOORS]
+	)
 	gold_label.text = tr("UI_GOLD") % GameState.gold
 	PartyBar.fill(party_status)
 
@@ -233,9 +236,14 @@ func _refresh_all() -> void:
 func _variation_for(room: DungeonRoom) -> String:
 	# Consumed content rooms read as plain empty chips; stairs/boss keep
 	# their identity. EMPTY rooms use the base button style.
-	if room.kind == DungeonRoom.RoomType.EMPTY or \
-			(room.cleared and room.kind != DungeonRoom.RoomType.STAIRS \
-			and room.kind != DungeonRoom.RoomType.BOSS):
+	if (
+		room.kind == DungeonRoom.RoomType.EMPTY
+		or (
+			room.cleared
+			and room.kind != DungeonRoom.RoomType.STAIRS
+			and room.kind != DungeonRoom.RoomType.BOSS
+		)
+	):
 		return ""
 	return ROOM_VARIATION.get(room.kind, "")
 
@@ -243,7 +251,9 @@ func _variation_for(room: DungeonRoom) -> String:
 ## A short corridor bar drawn in the gap between two connected rooms.
 ## Passages leading out of the player's room glow gold (movement options);
 ## the rest render as muted stone. Mouse-transparent, drawn under the chips.
-func _make_connector(local: Vector2i, dir_bit: int, origin: Vector2, cell: int, from_player: bool) -> Control:
+func _make_connector(
+	local: Vector2i, dir_bit: int, origin: Vector2, cell: int, from_player: bool
+) -> Control:
 	var bar := Panel.new()
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var thickness := 20
@@ -277,6 +287,7 @@ func _make_player_marker() -> Control:
 
 
 # ── Movement & room content ───────────────────────────────────────────────────
+
 
 func _on_room_pressed(pos: Vector2i) -> void:
 	if pos == run.player_pos:
@@ -322,6 +333,7 @@ func _clear_current_room() -> void:
 
 # ── Combat ────────────────────────────────────────────────────────────────────
 
+
 func _start_combat(encounter: Array[EnemyData]) -> void:
 	var scene := load(COMBAT_SCENE) as PackedScene
 	_combat_overlay = scene.instantiate() as CombatScreen
@@ -351,6 +363,7 @@ func _on_combat_finished(result: int) -> void:
 
 # ── Treasure popup ────────────────────────────────────────────────────────────
 
+
 func _show_treasure_popup() -> void:
 	var result: Dictionary = run.resolve_treasure()
 	treasure_gold_label.text = tr("UI_TREASURE_GOLD") % result["gold"]
@@ -375,6 +388,7 @@ func _on_treasure_continue() -> void:
 
 
 # ── Event popup ───────────────────────────────────────────────────────────────
+
 
 func _show_event_popup() -> void:
 	_current_event = run.roll_event()
@@ -415,6 +429,7 @@ func _on_event_continue() -> void:
 
 # ── Rest popup ────────────────────────────────────────────────────────────────
 
+
 func _show_rest_popup() -> void:
 	run.resolve_rest()
 	popup_bg.texture = BG_REST
@@ -429,6 +444,7 @@ func _on_rest_continue() -> void:
 
 
 # ── Shrine popup ──────────────────────────────────────────────────────────────
+
 
 func _show_shrine_popup() -> void:
 	var result: Dictionary = run.resolve_shrine()
@@ -449,6 +465,7 @@ func _on_shrine_continue() -> void:
 
 # ── Stairs popup ──────────────────────────────────────────────────────────────
 
+
 func _show_stairs_popup() -> void:
 	stairs_message_label.text = tr("UI_STAIRS_Q") % (run.current_floor + 2)
 	stairs_panel.visible = true
@@ -466,6 +483,7 @@ func _on_stay_pressed() -> void:
 
 
 # ── Run end ───────────────────────────────────────────────────────────────────
+
 
 func _end_run(victory: bool) -> void:
 	if victory:
@@ -488,6 +506,7 @@ func _on_end_voltar_pressed() -> void:
 
 
 # ── Abandon run (Voltar à cidade mid-run) ─────────────────────────────────────
+
 
 func _on_city_pressed() -> void:
 	abandon_panel.visible = true

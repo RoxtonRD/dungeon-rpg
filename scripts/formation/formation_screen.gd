@@ -3,7 +3,6 @@
 ## Rule: each row must have at least one hero.
 extends Control
 
-
 @onready var front_slots: VBoxContainer = %FrontSlots
 @onready var back_slots: VBoxContainer = %BackSlots
 @onready var confirm_button: Button = %ConfirmButton
@@ -25,9 +24,9 @@ func _refresh() -> void:
 	_clear(back_slots)
 	for hero in Party.heroes:
 		var btn := _make_hero_button(hero)
-		if hero.row == 0:   # FRONT
+		if hero.row == 0:  # FRONT
 			front_slots.add_child(btn)
-		else:               # BACK
+		else:  # BACK
 			back_slots.add_child(btn)
 	# Show placeholder when a column is empty.
 	_maybe_add_empty_label(front_slots)
@@ -62,9 +61,10 @@ func _make_hero_button(hero: Hero) -> Button:
 	# Autowrap so the row indicator never clips, regardless of column width.
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var row_indicator := tr("UI_TO_BACK") if hero.row == 0 else tr("UI_TO_FRONT")
-	label.text = "%s\n%d/%d %s\n%s" % [
-		hero.display_name(), hero.hp, hero.max_hp(), tr("STAT_HP"), row_indicator
-	]
+	label.text = (
+		"%s\n%d/%d %s\n%s"
+		% [hero.display_name(), hero.hp, hero.max_hp(), tr("STAT_HP"), row_indicator]
+	)
 	hbox.add_child(label)
 
 	return btn
@@ -104,22 +104,22 @@ func _maybe_add_empty_label(container: VBoxContainer) -> void:
 
 
 func _on_hero_pressed(hero: Hero) -> void:
-	if hero.row == 0:   # FRONT → try to move to BACK
+	if hero.row == 0:  # FRONT → try to move to BACK
 		# Need at least 1 other hero remaining in front.
 		var others_in_front := 0
 		for h in Party.heroes:
 			if h != hero and h.row == 0:
 				others_in_front += 1
 		if others_in_front == 0:
-			return   # Would empty the front row — disallow
+			return  # Would empty the front row — disallow
 		hero.row = 1
-	else:              # BACK → try to move to FRONT
+	else:  # BACK → try to move to FRONT
 		var others_in_back := 0
 		for h in Party.heroes:
 			if h != hero and h.row == 1:
 				others_in_back += 1
 		if others_in_back == 0:
-			return   # Would empty the back row — disallow
+			return  # Would empty the back row — disallow
 		hero.row = 0
 	_refresh()
 

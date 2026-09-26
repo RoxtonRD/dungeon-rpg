@@ -20,14 +20,22 @@ func test_every_row_has_pt_br_and_en() -> void:
 	for row in _rows():
 		var key: String = row.cells[0]
 		if row.cells.size() != HEADER.size():
-			incomplete.append("line %d %s: %d columns, expected %d"
-					% [row.line, key, row.cells.size(), HEADER.size()])
+			incomplete.append(
+				(
+					"line %d %s: %d columns, expected %d"
+					% [row.line, key, row.cells.size(), HEADER.size()]
+				)
+			)
 			continue
 		if row.cells[1].strip_edges().is_empty():
 			incomplete.append("line %d %s: empty pt_BR" % [row.line, key])
 		if row.cells[2].strip_edges().is_empty():
 			incomplete.append("line %d %s: empty en" % [row.line, key])
-	assert_array(incomplete) 			.override_failure_message(TestUtil.problem_list("Incomplete CSV rows", incomplete)) 			.is_empty()
+	(
+		assert_array(incomplete)
+		. override_failure_message(TestUtil.problem_list("Incomplete CSV rows", incomplete))
+		. is_empty()
+	)
 
 
 func test_no_duplicate_keys() -> void:
@@ -38,11 +46,16 @@ func test_no_duplicate_keys() -> void:
 		if key.is_empty():
 			duplicates.append("line %d: empty key" % row.line)
 		elif first_line.has(key):
-			duplicates.append("line %d %s: already defined on line %d"
-					% [row.line, key, first_line[key]])
+			duplicates.append(
+				"line %d %s: already defined on line %d" % [row.line, key, first_line[key]]
+			)
 		else:
 			first_line[key] = row.line
-	assert_array(duplicates) 			.override_failure_message(TestUtil.problem_list("Duplicate or empty keys", duplicates)) 			.is_empty()
+	(
+		assert_array(duplicates)
+		. override_failure_message(TestUtil.problem_list("Duplicate or empty keys", duplicates))
+		. is_empty()
+	)
 
 
 func test_tres_text_keys_exist() -> void:
@@ -53,8 +66,7 @@ func test_tres_text_keys_exist() -> void:
 	# Read the .tres as text rather than loading it, so this test still
 	# reports missing keys when a resource is broken (resources_load_test
 	# reports that), and it sees sub-resources (e.g. the skin catalog) too.
-	var field := RegEx.create_from_string(
-			'^(%s) = "(.*)"$' % "|".join(TEXT_KEY_FIELDS))
+	var field := RegEx.create_from_string('^(%s) = "(.*)"$' % "|".join(TEXT_KEY_FIELDS))
 	var missing: PackedStringArray = []
 	var checked := 0
 	for path in TestUtil.find_files("res://resources", ".tres"):
@@ -65,10 +77,13 @@ func test_tres_text_keys_exist() -> void:
 				continue
 			checked += 1
 			if not keys.has(m.get_string(2)):
-				missing.append("%s:%d %s = %s"
-						% [path, i + 1, m.get_string(1), m.get_string(2)])
+				missing.append("%s:%d %s = %s" % [path, i + 1, m.get_string(1), m.get_string(2)])
 	assert_int(checked).is_greater(0)
-	assert_array(missing) 			.override_failure_message(TestUtil.problem_list("Text keys missing from the CSV", missing)) 			.is_empty()
+	(
+		assert_array(missing)
+		. override_failure_message(TestUtil.problem_list("Text keys missing from the CSV", missing))
+		. is_empty()
+	)
 
 
 ## Data rows of the CSV (header skipped, blank lines skipped), each as
@@ -89,5 +104,5 @@ func _rows() -> Array[Dictionary]:
 			next_line += cell.count("\n")
 		if cells.size() == 1 and cells[0].strip_edges().is_empty():
 			continue
-		rows.append({ "line": line, "cells": cells })
+		rows.append({"line": line, "cells": cells})
 	return rows

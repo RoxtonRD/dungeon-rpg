@@ -15,7 +15,12 @@ const CLASS_PATHS: Array[String] = [
 ## Every playable class, in character-creation display order. Adding a class
 ## here must NOT grow the default party — start_new_game() clamps to PARTY_SIZE.
 const ALL_CLASS_IDS: Array[String] = [
-	"warrior", "cleric", "rogue", "mage", "conjurer", "alchemist",
+	"warrior",
+	"cleric",
+	"rogue",
+	"mage",
+	"conjurer",
+	"alchemist",
 ]
 
 const CLASS_DIR := "res://resources/classes/"
@@ -32,8 +37,8 @@ const LEVEL_CAP: int = 10
 
 var heroes: Array[Hero] = []
 
-
 # ── New game ──────────────────────────────────────────────────────────────────
+
 
 ## Builds a fresh default party: one level-1 hero per class. Used by the F6
 ## standalone bootstraps and as the fallback when no custom party was created.
@@ -47,6 +52,7 @@ func start_new_game() -> void:
 
 
 # ── Custom party ──────────────────────────────────────────────────────────────
+
 
 ## Number of current party heroes belonging to `class_id`.
 func class_count(class_id: String) -> int:
@@ -76,6 +82,7 @@ func build_party(specs: Array) -> void:
 
 # ── Status effects (persist outside combat) ───────────────────────────────────
 
+
 ## Advances every living hero's statuses by one turn: regen heals, DoT damages,
 ## durations count down and expired effects drop off. Called when the party moves
 ## between rooms; combat ticks its own via CombatState._tick_statuses.
@@ -94,12 +101,16 @@ func tick_statuses() -> Array[String]:
 				var before := h.hp
 				h.hp = mini(h.max_hp(), h.hp + st.heal_per_turn)
 				if h.hp > before:
-					lines.append(tr("LOG_REGEN_TICK") % [h.display_name(), h.hp - before, tr(st.source_name)])
+					lines.append(
+						tr("LOG_REGEN_TICK") % [h.display_name(), h.hp - before, tr(st.source_name)]
+					)
 			elif st.kind == CombatStatus.Kind.DOT and st.dot_damage > 0:
 				var before_dot := h.hp
 				h.hp = maxi(1, h.hp - st.dot_damage)
 				if before_dot > h.hp:
-					lines.append(tr("LOG_DOT") % [h.display_name(), before_dot - h.hp, tr(st.source_name)])
+					lines.append(
+						tr("LOG_DOT") % [h.display_name(), before_dot - h.hp, tr(st.source_name)]
+					)
 			st.duration -= 1
 			if st.duration <= 0:
 				h.statuses.remove_at(i)
@@ -113,6 +124,7 @@ func clear_statuses() -> void:
 
 
 # ── XP & leveling ─────────────────────────────────────────────────────────────
+
 
 ## Verbatim from prototype party.js: floor(20 * level^1.5).
 func xp_for_next(level: int) -> int:
@@ -250,8 +262,8 @@ func get_upgraded_skill(hero: Hero, skill: SkillData) -> SkillData:
 	var tier := get_skill_tier(hero, skill)
 	if tier <= 1:
 		return skill
-	var bonus := tier - 1            # 1, 2, or 3
-	var mult := 1.0 + 0.3 * bonus    # 1.3 / 1.6 / 2.0
+	var bonus := tier - 1  # 1, 2, or 3
+	var mult := 1.0 + 0.3 * bonus  # 1.3 / 1.6 / 2.0
 	var s: SkillData = skill.duplicate()
 	s.power = snappedf(s.power * mult, 0.01)
 	# Stat modifier — covers both buff and debuff in the unified SkillData.
@@ -286,6 +298,7 @@ func get_upgraded_skill(hero: Hero, skill: SkillData) -> SkillData:
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────
+
 
 ## Returns a plain Dictionary snapshot of the party. Step 8 (save) will wrap
 ## this with versioning and write it to disk.

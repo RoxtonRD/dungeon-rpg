@@ -79,7 +79,7 @@ func _refresh() -> void:
 	# Heal saves that predate the surplus-SP fix: fold any stranded, unspendable
 	# SP into max MP before drawing the SP count and skill rows.
 	Party.reconcile_surplus_sp(hero)
-	_refresh_appearance(hero)   # owns the full-body preview (browsed skin)
+	_refresh_appearance(hero)  # owns the full-body preview (browsed skin)
 	_update_hero_info(hero)
 	_rebuild_equipment_rows(hero)
 	_rebuild_skill_rows(hero)
@@ -87,6 +87,7 @@ func _refresh() -> void:
 
 
 # ── Appearance: rename + skin (cosmetic; class is never editable) ─────────────
+
 
 ## Refreshes the rename field and the skin browser for the selected hero. The
 ## browser cycles every skin the class can see (owned + locked, incl. common);
@@ -166,10 +167,10 @@ func _on_skin_buy() -> void:
 	if m == null or m.unlock != SkinData.Unlock.GOLD or GameState.gold < m.price:
 		return
 	GameState.gold -= m.price
-	GameState.unlock_skin(full)   # saves owned_skins
-	_show_browsed(hero)           # now owned -> equips + refreshes the line
-	GameState.save_game()         # persist the equip + gold spend
-	_update_hero_info(hero)       # gold changed
+	GameState.unlock_skin(full)  # saves owned_skins
+	_show_browsed(hero)  # now owned -> equips + refreshes the line
+	GameState.save_game()  # persist the equip + gold spend
+	_update_hero_info(hero)  # gold changed
 
 
 ## Renders an arbitrary skin's full body into the preview (temp Hero for HeroArt),
@@ -195,23 +196,39 @@ func _update_hero_info(hero: Hero) -> void:
 	var title := hero.display_name()
 	if title != class_name_str:
 		title = "%s — %s" % [title, class_name_str]
-	hero_info_label.text = tr("UI_HERO_INFO") % [
-		title, hero.level,
-		hero.hp, hero.max_hp(),
-		hero.mp, hero.max_mp(),
-		hero.sp_available,
-	]
+	hero_info_label.text = (
+		tr("UI_HERO_INFO")
+		% [
+			title,
+			hero.level,
+			hero.hp,
+			hero.max_hp(),
+			hero.mp,
+			hero.max_mp(),
+			hero.sp_available,
+		]
+	)
 	hp_bar.max_value = maxi(1, hero.max_hp())
 	hp_bar.value = hero.hp
 	mp_bar.max_value = maxi(1, hero.max_mp())
 	mp_bar.value = hero.mp
-	stats_label.text = "%s: %d   %s: %d   %s: %d   %s: %d" % [
-		tr("STAT_ATK"), hero.atk(), tr("STAT_DEF"), hero.def(),
-		tr("STAT_MAG"), hero.mag(), tr("STAT_SPD"), hero.spd(),
-	]
+	stats_label.text = (
+		"%s: %d   %s: %d   %s: %d   %s: %d"
+		% [
+			tr("STAT_ATK"),
+			hero.atk(),
+			tr("STAT_DEF"),
+			hero.def(),
+			tr("STAT_MAG"),
+			hero.mag(),
+			tr("STAT_SPD"),
+			hero.spd(),
+		]
+	)
 
 
 # ── Equipment slots ───────────────────────────────────────────────────────────
+
 
 func _rebuild_equipment_rows(hero: Hero) -> void:
 	for child in equip_rows.get_children():
@@ -278,6 +295,7 @@ func _on_unequip(slot: String) -> void:
 
 # ── Skill rows ────────────────────────────────────────────────────────────────
 
+
 func _rebuild_skill_rows(hero: Hero) -> void:
 	for child in skill_rows.get_children():
 		child.queue_free()
@@ -332,6 +350,7 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 
 # ── Out-of-combat healing ─────────────────────────────────────────────────────
 
+
 ## Living allies below full HP — who an out-of-combat heal would actually help.
 ## Downed heroes are excluded: only a revive brings them back.
 func _heal_targets() -> Array[Hero]:
@@ -345,8 +364,9 @@ func _heal_targets() -> Array[Hero]:
 ## Skills usable while exploring: healing, and buffs (so the party can pre-buff
 ## before stepping into a combat room — statuses now persist into the fight).
 func _castable_out_of_combat(skill: SkillData) -> bool:
-	return skill.skill_type == SkillData.SkillType.HEAL \
-		or skill.skill_type == SkillData.SkillType.BUFF
+	return (
+		skill.skill_type == SkillData.SkillType.HEAL or skill.skill_type == SkillData.SkillType.BUFF
+	)
 
 
 func _can_cast(hero: Hero, skill: SkillData) -> bool:
@@ -354,7 +374,7 @@ func _can_cast(hero: Hero, skill: SkillData) -> bool:
 		return false
 	if skill.skill_type == SkillData.SkillType.HEAL:
 		return not _heal_targets().is_empty()
-	return true   # buffs are always worth casting
+	return true  # buffs are always worth casting
 
 
 ## Casts a heal or buff outside combat, spending MP. Heals use the same formula
@@ -401,6 +421,7 @@ func _on_upgrade_skill(hero: Hero, skill: SkillData) -> void:
 
 
 # ── Inventory item list ───────────────────────────────────────────────────────
+
 
 func _rebuild_item_list(hero: Hero) -> void:
 	for child in item_list_vbox.get_children():
@@ -484,6 +505,7 @@ func _can_use_consumable(hero: Hero, item: ItemData) -> bool:
 
 # ── Descriptions ──────────────────────────────────────────────────────────────
 
+
 ## Returns a square icon Control: a TextureRect when `tex` is non-null, else
 ## a small neutral ColorRect placeholder. mouse_filter set to IGNORE so the
 ## icon never absorbs row taps.
@@ -515,6 +537,7 @@ func _make_desc_label(text: String) -> Label:
 
 
 # ── Actions ───────────────────────────────────────────────────────────────────
+
 
 func _on_equip(inv_idx: int) -> void:
 	var item_id: String = GameState.inventory[inv_idx]
@@ -549,8 +572,7 @@ func _on_use(inv_idx: int) -> void:
 	if item.use_sp > 0:
 		var mp_gain := Party.award_sp(hero, item.use_sp)
 		if mp_gain > 0:
-			_flash_message(tr("UI_SP_CONVERT") % [
-				hero.display_name(), mp_gain])
+			_flash_message(tr("UI_SP_CONVERT") % [hero.display_name(), mp_gain])
 	if item.use_revive_party > 0:
 		for h in Party.heroes:
 			if not h.is_alive():
@@ -561,9 +583,12 @@ func _on_use(inv_idx: int) -> void:
 
 func _slot_key_for(item: ItemData) -> String:
 	match item.slot:
-		ItemData.Slot.WEAPON:  return "weapon"
-		ItemData.Slot.ARMOR:   return "armor"
-		ItemData.Slot.TRINKET: return "trinket"
+		ItemData.Slot.WEAPON:
+			return "weapon"
+		ItemData.Slot.ARMOR:
+			return "armor"
+		ItemData.Slot.TRINKET:
+			return "trinket"
 	return "weapon"
 
 

@@ -12,12 +12,31 @@ const ITEM_DIR := "res://resources/items/"
 ## Every item a fight may drop. Excludes tome_sp (a boss special) and pure
 ## starter consumables are welcome to appear. Add new droppable items here.
 const DROPPABLE: Array[String] = [
-	"sword_rusty", "staff_apprentice", "armor_cloth", "potion_heal", "potion_mana",
-	"sword_iron", "armor_leather", "ring_might", "ring_focus", "amulet_swift",
-	"elixir_full", "dagger_iron", "robe_silk",
-	"sword_steel", "dagger_shadow", "staff_runed", "armor_chain", "amulet_ward",
-	"ring_arcane", "elixir_revival", "sword_flame", "ring_vitality",
-	"staff_arcane", "armor_plate", "crown_kings",
+	"sword_rusty",
+	"staff_apprentice",
+	"armor_cloth",
+	"potion_heal",
+	"potion_mana",
+	"sword_iron",
+	"armor_leather",
+	"ring_might",
+	"ring_focus",
+	"amulet_swift",
+	"elixir_full",
+	"dagger_iron",
+	"robe_silk",
+	"sword_steel",
+	"dagger_shadow",
+	"staff_runed",
+	"armor_chain",
+	"amulet_ward",
+	"ring_arcane",
+	"elixir_revival",
+	"sword_flame",
+	"ring_vitality",
+	"staff_arcane",
+	"armor_plate",
+	"crown_kings",
 ]
 
 ## Common-fight chance to drop one item. FLAG: tune me.

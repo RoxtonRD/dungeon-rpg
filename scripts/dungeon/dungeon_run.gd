@@ -20,9 +20,9 @@ const ENCOUNTER_POOLS := [
 ## swarm, and a lone hard-hitter (no add — its high stats and AoE offset the
 ## lost action economy).
 const BOSS_ENCOUNTERS := [
-	["boss_necromancer", "skeleton"],        # undead: Necromante + esqueleto
-	["boss_vampire", "bat", "bat"],          # vampiro: Vampiro + morcegos
-	["boss_dragon_hatchling"],               # draconico: Dragao Jovem (sozinho)
+	["boss_necromancer", "skeleton"],  # undead: Necromante + esqueleto
+	["boss_vampire", "bat", "bat"],  # vampiro: Vampiro + morcegos
+	["boss_dragon_hatchling"],  # draconico: Dragao Jovem (sozinho)
 ]
 
 ## Difficulty scaling per step. Enemy stats and rewards are multiplied by
@@ -75,8 +75,8 @@ var current_floor: int = 0
 ## Grid position of the room the player currently occupies.
 var player_pos: Vector2i = Vector2i.ZERO
 
-
 # ── Generation ────────────────────────────────────────────────────────────────
+
 
 static func generate(p_level: int = 1) -> DungeonRun:
 	var run := DungeonRun.new()
@@ -187,8 +187,7 @@ static func _place_stairs(rooms: Dictionary) -> void:
 static func _place_boss(rooms: Dictionary) -> void:
 	var dist := _distances(rooms)
 	var by_distance: Array = rooms.values()
-	by_distance.sort_custom(
-		func(a, b): return int(dist.get(a.pos, 0)) > int(dist.get(b.pos, 0)))
+	by_distance.sort_custom(func(a, b): return int(dist.get(a.pos, 0)) > int(dist.get(b.pos, 0)))
 	for anchor in by_distance:
 		for dir in DungeonRoom.DIRS:
 			var npos: Vector2i = anchor.pos + dir["vec"]
@@ -219,6 +218,7 @@ static func _distances(rooms: Dictionary) -> Dictionary:
 
 
 # ── Navigation ────────────────────────────────────────────────────────────────
+
 
 func rooms_on_floor() -> Dictionary:
 	return floors[current_floor]
@@ -284,6 +284,7 @@ func descend() -> void:
 
 # ── Encounters ────────────────────────────────────────────────────────────────
 
+
 func roll_encounter(floor_index: int) -> Array[EnemyData]:
 	var pool: Array = ENCOUNTER_POOLS[mini(floor_index, ENCOUNTER_POOLS.size() - 1)]
 	var count := randi_range(2, 4)
@@ -315,18 +316,19 @@ func _scale_enemy(base: EnemyData, floor_num: int) -> EnemyData:
 	if mult <= 1.0:
 		return base
 	var scaled := base.duplicate() as EnemyData
-	scaled.max_hp    = roundi(base.max_hp    * mult)
-	scaled.atk       = roundi(base.atk       * mult)
-	scaled.def       = roundi(base.def       * mult)
-	scaled.mag       = roundi(base.mag       * mult)
-	scaled.spd       = roundi(base.spd       * mult)
+	scaled.max_hp = roundi(base.max_hp * mult)
+	scaled.atk = roundi(base.atk * mult)
+	scaled.def = roundi(base.def * mult)
+	scaled.mag = roundi(base.mag * mult)
+	scaled.spd = roundi(base.spd * mult)
 	scaled.xp_reward = roundi(base.xp_reward * mult)
-	scaled.gold_min  = roundi(base.gold_min  * mult)
-	scaled.gold_max  = roundi(base.gold_max  * mult)
+	scaled.gold_min = roundi(base.gold_min * mult)
+	scaled.gold_max = roundi(base.gold_max * mult)
 	return scaled
 
 
 # ── Treasure ──────────────────────────────────────────────────────────────────
+
 
 ## Rolls gold + maybe one item, deposits both into GameState. Returns a summary
 ## {gold:int, items:Array[String]}.
@@ -344,11 +346,27 @@ func resolve_treasure() -> Dictionary:
 
 func _loot_pool() -> Array:
 	if level <= 1:
-		return ["sword_rusty", "staff_apprentice", "armor_cloth", "potion_heal", "potion_heal", "potion_mana"]
-	return ["sword_iron", "staff_apprentice", "armor_leather", "ring_might", "ring_focus", "potion_heal", "potion_mana"]
+		return [
+			"sword_rusty",
+			"staff_apprentice",
+			"armor_cloth",
+			"potion_heal",
+			"potion_heal",
+			"potion_mana"
+		]
+	return [
+		"sword_iron",
+		"staff_apprentice",
+		"armor_leather",
+		"ring_might",
+		"ring_focus",
+		"potion_heal",
+		"potion_mana"
+	]
 
 
 # ── Rest ──────────────────────────────────────────────────────────────────────
+
 
 func resolve_rest() -> void:
 	for h in Party.heroes:
@@ -359,6 +377,7 @@ func resolve_rest() -> void:
 
 
 # ── Shrine ────────────────────────────────────────────────────────────────────
+
 
 ## Grants a random unowned event-exclusive skin. When every event skin is owned,
 ## gives a gold consolation instead. Returns {skin_id, skin_name} or {gold}.
@@ -375,6 +394,7 @@ func resolve_shrine() -> Dictionary:
 
 # ── Events ────────────────────────────────────────────────────────────────────
 
+
 ## Returns a random event as {title:String, desc:String, options:Array}, where
 ## each option is {text:String, available:bool, effect:Callable() -> String}.
 func roll_event() -> Dictionary:
@@ -387,7 +407,8 @@ func _event_fountain() -> Dictionary:
 		"id": "fountain",
 		"title": tr("EVT_FOUNTAIN_TITLE"),
 		"desc": tr("EVT_FOUNTAIN_DESC"),
-		"options": [
+		"options":
+		[
 			{"text": tr("EVT_FOUNTAIN_OPT1"), "available": true, "effect": _fountain_drink},
 			{"text": tr("EVT_FOUNTAIN_OPT2"), "available": true, "effect": _move_on},
 		],
@@ -399,8 +420,13 @@ func _event_merchant() -> Dictionary:
 		"id": "merchant",
 		"title": tr("EVT_MERCHANT_TITLE"),
 		"desc": tr("EVT_MERCHANT_DESC"),
-		"options": [
-			{"text": tr("EVT_MERCHANT_OPT1"), "available": GameState.gold >= 30, "effect": _merchant_buy},
+		"options":
+		[
+			{
+				"text": tr("EVT_MERCHANT_OPT1"),
+				"available": GameState.gold >= 30,
+				"effect": _merchant_buy
+			},
 			{"text": tr("EVT_MERCHANT_OPT2"), "available": true, "effect": _move_on},
 		],
 	}
@@ -411,7 +437,8 @@ func _event_altar() -> Dictionary:
 		"id": "altar",
 		"title": tr("EVT_ALTAR_TITLE"),
 		"desc": tr("EVT_ALTAR_DESC"),
-		"options": [
+		"options":
+		[
 			{"text": tr("EVT_ALTAR_OPT1"), "available": true, "effect": _altar_sacrifice},
 			{"text": tr("EVT_ALTAR_OPT2"), "available": true, "effect": _altar_retreat},
 		],
@@ -423,7 +450,8 @@ func _event_chest() -> Dictionary:
 		"id": "chest",
 		"title": tr("EVT_CHEST_TITLE"),
 		"desc": tr("EVT_CHEST_DESC"),
-		"options": [
+		"options":
+		[
 			{"text": tr("EVT_CHEST_OPT1"), "available": true, "effect": _chest_force},
 			{"text": tr("EVT_CHEST_OPT2"), "available": true, "effect": _chest_leave},
 		],
@@ -473,6 +501,7 @@ func _chest_leave() -> String:
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────
+
 
 func to_dict() -> Dictionary:
 	var floors_data: Array = []
