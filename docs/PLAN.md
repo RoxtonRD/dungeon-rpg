@@ -13,12 +13,14 @@
 if you come back after weeks away, this is the only thing you need to read.*
 
 - **Phase:** 1 — Find the fun (Phase 0 runs alongside, delegated)
-- **Focus:** Roxton reviews the draft `docs/design/combat-v3.md` (O-1)
+- **Focus:** Phase 0 safety net, then the Warrior slice (D-013)
 - **Next up:**
-  1. Roxton merges the re-entry PR (docs, agents, plugin update)
-  2. gameplay-engineer: save hardening (GitHub issue, Phase 0)
-  3. qa-balance: headless test runner + CI (Phase 0), brief not written yet
-  4. release-engineer: target SDK 36 + a build on the phone (Phase 0), brief not written yet
+  1. gameplay-engineer: save hardening, #28
+  2. advisor: dev-experience proposal (tests, CI, hooks, skills); needs
+     Roxton's pick before the briefs are written
+  3. advisor: brief the Warrior slice (step 1.2) once #28 is merged
+  4. release-engineer: target SDK 36 + a build on the phone, brief not
+     written yet
 - **Blocked on:** nothing
 
 ---
@@ -87,7 +89,7 @@ unknown.
 
 | Step | What | Owner |
 |---|---|---|
-| 1.1 | **Combat v3 design**: `docs/design/combat-v3.md` (draft written; Roxton reviews it, then it is finalised) | advisor + Roxton |
+| 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
 | 1.2 | **Vertical slice**: one class (Warrior) fully rebuilt under v3, end to end. You play it. **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
 | 1.4 | **Autoplay bot**: extend `scripts/dev/balance_sim.gd` from single fights to whole runs. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |

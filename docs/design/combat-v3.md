@@ -1,9 +1,9 @@
 # Combat v3 — design draft
 
-> **Status: DRAFT for Roxton's review.** Nothing here is built or decided.
-> The point of this doc is to choose by *prototyping*, not by deciding
-> everything up front. Step 1.2 of `PLAN.md` builds one class under the
-> candidate below, and we keep what feels good.
+> **Status: direction agreed for the Warrior slice (D-013).** Nothing is
+> built yet. We choose by *prototyping*: step 1.2 of `PLAN.md` builds one
+> class under v3-A, and we keep what feels good. Numbers are placeholders
+> for the sim to tune.
 
 ---
 
@@ -56,8 +56,9 @@ resource) and two or three taps per turn.
   2–3 turns. Basic attacks are always free and never cool down.
 - **Skill forks:** each skill has 2 upgrade ranks, and each rank is an
   A-or-B choice that changes *what the skill does*, not just its
-  numbers. Still 1 SP per level. The city offers a paid reset of choices
-  so experimenting is cheap.
+  numbers. Still 1 SP per level. The city offers a **reset of choices
+  for gold plus one semi-rare ingredient item** (a new consumable that
+  drops occasionally), so experimenting is possible but not free.
 - **Synergies:** every class gets at least one *setup* skill and one
   *payoff* skill, designed as a cross-class table (§5).
 - **Stamina is not in v3-A.** The third bar breaks the mobile constraint,
@@ -81,8 +82,9 @@ closer to Skyrim; the cost is that it is harder to balance and to read.
 One class, end to end, to find out whether this is more fun. The numbers
 are placeholders for the sim to tune; the fork options are examples.
 
-**Rage:** 0–10 (small numbers read better on a phone). +1 when dealing
-damage, +2 when taking a hit. Resets at the end of each fight.
+**Rage:** 0–100. Starting values to tune: +10 when dealing damage, +20
+when taking a hit. Resets at the end of each fight. (Energy for the Rogue
+will use the same 0–100 scale.)
 
 | Skill | Today | v3-A |
 |---|---|---|
@@ -123,10 +125,13 @@ small new `SkillData` field such as "bonus against status X".
 
 ---
 
-## 6 · Open questions for Roxton
+## 6 · Answered (2026-09-26)
 
-1. Build the Warrior slice with **Rage (v3-A)** first, and fall back to
-   **Stamina with overexertion (v3-B)** if it feels flat?
-2. Resource numbers: small (0–10) or large (0–100)?
-3. Is a paid reset of fork choices in the city OK?
-4. Target length of one dungeon run on a phone: 15–20 minutes?
+1. **Warrior first, with Rage (v3-A).** Stamina with overexertion (v3-B)
+   is the fallback if Rage feels flat.
+2. **Large numbers:** resources run 0–100.
+3. **Paid reset: yes,** costing gold plus a semi-rare ingredient item.
+   The reset itself isn't part of the Warrior slice; it comes with the
+   rollout (step 1.3).
+4. **A dungeon run targets 15–20 minutes** on a phone. The autoplay bot
+   (step 1.4) measures this, as a number of actions or turns per run.

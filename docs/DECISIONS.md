@@ -9,10 +9,6 @@
 
 ## Open
 
-- **O-1 · Combat v3 direction.** Draft in `docs/design/combat-v3.md`:
-  class resources, cooldowns, skill forks and synergies, with stamina and
-  overexertion as the alternative. Its open questions (§6) need Roxton's
-  answers before the Warrior slice is briefed.
 - **O-2 · pt-BR class gender.** All six class names are feminine in pt-BR
   (Guerreira, Sacerdotisa…) while English is neutral. With player-named
   heroes this reads oddly. Needs a deliberate call before Phase 2 ends.
@@ -96,3 +92,13 @@ With several agents opening PRs, a cheap automatic check catches broken
 scripts and `.tres` files before they reach Roxton. It runs Godot 4.7.2
 headless: everything loads, save tests pass, every i18n key has both
 languages. Lint is optional and non-blocking until the codebase is clean.
+
+**D-013 · Combat v3 direction for the Warrior slice.**
+Resolves O-1. The Warrior is rebuilt first under v3-A: Rage on a 0–100
+scale, cooldowns on big skills only, A-or-B skill forks, and one
+cross-class synergy with the Rogue. Stamina with overexertion (v3-B) is
+the fallback if Rage feels flat. Fork choices can be reset in the city
+for gold plus a semi-rare ingredient item, built with the rollout rather
+than the slice. A dungeon run should last 15–20 minutes on a phone. The
+design is in `docs/design/combat-v3.md`; we choose by prototyping, so
+what the slice shows can override the doc.
