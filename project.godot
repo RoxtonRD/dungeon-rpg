@@ -28,6 +28,7 @@ Skins="*res://scripts/skins.gd"
 SafeArea="*res://scripts/safe_area.gd"
 Fade="*res://scripts/scene_fade.gd"
 _mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
+DevTools="*res://scripts/dev/dev_tools.gd"
 
 [display]
 

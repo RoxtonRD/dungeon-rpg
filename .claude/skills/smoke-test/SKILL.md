@@ -17,15 +17,28 @@ driver).
    scripts failed to load, which is also a failure.
 3. **Main menu.** `game_manage` `get_ui_elements`: the menu buttons exist.
    Screenshot with `editor_screenshot` `source: "game"`.
-4. **Get a party quickly.** Prefer the dev panel's scriptable API through
-   `editor_manage` `game_eval` once it exists (issue: dev cheat panel).
-   Until then, click through character creation: use `get_ui_elements`
-   to find each control's rect, click its centre with `game_manage`
-   `input_mouse`, and type names with `input_key`.
-5. **City hub → Enter Dungeon.** Click through by UI element, then
-   screenshot the city and the dungeon map.
-6. **One fight.** Walk into a combat room (or start one via the dev API),
-   take one action with a hero, and screenshot the combat screen.
+4. **Get a party quickly.** Use the `DevTools` autoload (debug builds
+   only, D-015) through `editor_manage` `game_eval`:
+   ```gdscript
+   var msg := DevTools.quick_party(["warrior", "cleric", "rogue", "mage"], 1)
+   await get_tree().create_timer(1.0).timeout
+   return [msg, get_tree().current_scene.scene_file_path]
+   ```
+   It builds a named party, starts a new game and opens the city hub. Every
+   `DevTools` call returns a String; one starting with `Error:` is a fail.
+   Type locals explicitly (`var f: String = ...`) in eval code: a `:=` that
+   can't infer a type is a parse error that parks the game in a debugger
+   break, and you must `project_manage` `stop` and relaunch.
+5. **City hub → Enter Dungeon.** Screenshot the city. Click Enter Dungeon
+   by UI element (`get_ui_elements`, then `input_mouse` on its centre), so
+   the real button stays covered, then screenshot the dungeon map.
+6. **One fight.** Start one via the dev API:
+   ```gdscript
+   return DevTools.start_fight(["goblin", "bat"])
+   ```
+   (`DevTools.list_enemies()` lists valid ids; boss ids work too.) Wait
+   about a second, take one action with a hero, and screenshot the combat
+   screen.
 7. **Final log check.** `logs_read` again: no new errors or warnings from
    the project's scripts.
 8. **Stop.** `project_manage` `stop`.
