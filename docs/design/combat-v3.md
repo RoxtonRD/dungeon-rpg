@@ -79,11 +79,15 @@ closer to Skyrim; the cost is that it is harder to balance and to read.
 
 ## 4 · The Warrior slice (PLAN step 1.2)
 
-One class, end to end, to find out whether this is more fun. The numbers
+One class, end to end, to find out whether this is more fun. It's built
+in three parts, each followed by Roxton playing it: **1/3** Rage +
+cooldowns (#38); **2/3** skill forks; **3/3** the Backstab synergy.
+Rage is gained **once per damaging action** (not per hit, so AOE doesn't
+spike it) and per hit taken. The numbers
 are placeholders for the sim to tune; the fork options are examples.
 
-**Rage:** 0–100. Starting values to tune: +10 when dealing damage, +20
-when taking a hit. Resets at the end of each fight. (Energy for the Rogue
+**Rage:** 0–100. Starting values to tune: +10 per damaging action, +20
+per hit taken. Resets at the end of each fight. (Energy for the Rogue
 will use the same 0–100 scale.)
 
 | Skill | Today | v3-A |
