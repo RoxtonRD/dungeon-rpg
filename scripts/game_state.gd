@@ -31,11 +31,19 @@ const MARKET_POTIONS: Array = [
 	{"id": "elixir_revival", "min": 0, "max": 1},
 ]
 const SAVE_PATH: String = "user://save.json"
+## The previous good save, kept so an interrupted write never loses everything.
+const BACKUP_PATH: String = "user://save.bak.json"
+## Where a new save is written and checked before it replaces SAVE_PATH.
+## Never loaded: if it is still on disk, that write was interrupted.
+const TMP_PATH: String = "user://save.tmp.json"
+## A primary save that failed to parse is moved here (evidence, never loaded).
+const CORRUPT_PATH: String = "user://save.corrupt.json"
 ## v2: room-based dungeon (floors of rooms, player position, explored state).
 ## v3: customizable party (hero custom_name / skin_id / is_main).
-## Older saves are intentionally NOT migrated — the version check rejects them
-## and the menu falls back to a fresh game.
 const SAVE_VERSION: int = 3
+## Oldest save _migrate() can bring up to SAVE_VERSION. v1 and v2 are
+## intentionally never migrated; the menu falls back to a fresh game.
+const MIN_SUPPORTED_VERSION: int = 3
 
 var gold: int = 0
 ## Item ids (e.g. "potion_heal"). Duplicates allowed; resolved to ItemData on use.
@@ -122,15 +130,20 @@ func remove_item(item_id: String) -> bool:
 
 # ── Persistence ───────────────────────────────────────────────────────────────
 
+## True if Continue has something to load: the primary save or its backup.
+## A leftover tmp file does not count; it is an interrupted write.
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(BACKUP_PATH)
 
 
+## Removes the primary, backup and tmp files. The .corrupt file is kept.
 func delete_save() -> void:
-	if has_save():
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	for path in [SAVE_PATH, BACKUP_PATH, TMP_PATH]:
+		_remove_file(path)
 
 
+## Writes the save atomically: to TMP_PATH first, read back to confirm it is
+## valid, and only then rotated into place (see _rotate_tmp_into_place).
 func save_game() -> void:
 	var run_data = null
 	if current_run != null:
@@ -147,32 +160,131 @@ func save_game() -> void:
 		"market": market_stock.duplicate(true),
 		"potions": potion_stock.duplicate(true),
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(TMP_PATH, FileAccess.WRITE)
 	if file == null:
-		push_error("GameState.save_game: cannot open %s for writing" % SAVE_PATH)
+		push_error("GameState.save_game: cannot open %s for writing" % TMP_PATH)
 		return
 	file.store_string(JSON.stringify(payload, "\t"))
 	file.close()
+	if _read_save_dict(TMP_PATH).is_empty():
+		push_error("GameState.save_game: %s did not read back as valid JSON; old save kept" % TMP_PATH)
+		_remove_file(TMP_PATH)
+		return
+	_rotate_tmp_into_place()
 
 
-## Returns true on success. On version mismatch or corrupt data returns false
-## so the caller can start fresh.
+## Moves the checked TMP_PATH into SAVE_PATH, demoting the current save to
+## BACKUP_PATH. Godot's rename does not overwrite atomically on every platform
+## (on Windows it deletes the target, then moves), so no step here ever
+## renames onto an existing file. A crash between any two steps still leaves
+## a valid save that load_game() will find:
+##   1. drop the old backup     -> primary + tmp on disk
+##   2. primary -> backup       -> backup + tmp (the backup loads)
+##   3. tmp -> primary          -> primary + backup
+## A primary that no longer parses is moved to CORRUPT_PATH in step 2 instead,
+## so it never replaces a good backup.
+func _rotate_tmp_into_place() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		if _read_save_dict(SAVE_PATH).is_empty():
+			_move_file(SAVE_PATH, CORRUPT_PATH)
+		else:
+			_remove_file(BACKUP_PATH)
+			_move_file(SAVE_PATH, BACKUP_PATH)
+	if FileAccess.file_exists(SAVE_PATH):
+		push_error("GameState.save_game: could not move the old %s aside; new save left in %s" % [SAVE_PATH, TMP_PATH])
+		return
+	_move_file(TMP_PATH, SAVE_PATH)
+
+
+## Returns true on success. Tries SAVE_PATH, then BACKUP_PATH, and returns
+## false (so the caller can start fresh) if neither can be loaded. A save
+## written by a newer build is refused without touching any file, so an older
+## build can't clobber it.
 func load_game() -> bool:
-	if not has_save():
+	var data := _read_save_dict(SAVE_PATH)
+	if data.is_empty() and FileAccess.file_exists(SAVE_PATH):
+		push_warning("GameState.load_game: %s is corrupt; moved to %s" % [SAVE_PATH, CORRUPT_PATH])
+		_move_file(SAVE_PATH, CORRUPT_PATH)
+	if not data.is_empty() and not _is_supported_version(SAVE_PATH, data):
+		if _save_version(data) > SAVE_VERSION:
+			return false
+		data = {}
+	if data.is_empty():
+		data = _read_save_dict(BACKUP_PATH)
+		if data.is_empty() or not _is_supported_version(BACKUP_PATH, data):
+			return false
+		push_warning("GameState.load_game: primary save unusable; loaded the backup %s" % BACKUP_PATH)
+	data = _migrate(data)
+	if data.is_empty():
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	_apply_save_dict(data)
+	return true
+
+
+## Reads and parses one save file. Returns {} if it is missing, unreadable or
+## not a JSON object. Never changes anything on disk.
+static func _read_save_dict(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
-		return false
+		return {}
 	var text := file.get_as_text()
 	file.close()
-	var parsed = JSON.parse_string(text)
-	if not parsed is Dictionary:
-		push_warning("GameState.load_game: corrupt save — starting fresh")
+	var json := JSON.new()
+	if json.parse(text) != OK or not json.data is Dictionary:
+		return {}
+	return json.data
+
+
+static func _save_version(data: Dictionary) -> int:
+	return int(data.get("version", 0))
+
+
+## True if `data` can be migrated to SAVE_VERSION. Warns (naming `path`) if
+## not: too old (v1/v2 are never migrated) or newer than this build.
+static func _is_supported_version(path: String, data: Dictionary) -> bool:
+	var version := _save_version(data)
+	if version > SAVE_VERSION:
+		push_warning("GameState.load_game: %s is v%d, newer than this build (v%d); left untouched" % [path, version, SAVE_VERSION])
 		return false
-	var data: Dictionary = parsed
-	if int(data.get("version", 0)) != SAVE_VERSION:
-		push_warning("GameState.load_game: version mismatch — starting fresh")
+	if version < MIN_SUPPORTED_VERSION:
+		push_warning("GameState.load_game: %s is v%d, older than v%d; not migrated" % [path, version, MIN_SUPPORTED_VERSION])
 		return false
+	return true
+
+
+## Steps a supported save up to SAVE_VERSION, one version at a time. Returns
+## {} if a step is missing. Nothing to do yet: the save is still v3.
+static func _migrate(data: Dictionary) -> Dictionary:
+	var version := _save_version(data)
+	# When SAVE_VERSION becomes 4, add the first step here, then one `if` per
+	# later version, in order:
+	# if version == 3:
+	# 	data = _migrate_v3_to_v4(data)
+	# 	version = 4
+	if version != SAVE_VERSION:
+		push_error("GameState._migrate: no migration step from v%d to v%d" % [version, SAVE_VERSION])
+		return {}
+	data["version"] = version
+	return data
+
+
+## Renames `from` to `to`, replacing any existing `to`. Not atomic.
+static func _move_file(from: String, to: String) -> void:
+	_remove_file(to)
+	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(from), ProjectSettings.globalize_path(to))
+	if err != OK:
+		push_error("GameState: could not rename %s to %s (error %d)" % [from, to, err])
+
+
+static func _remove_file(path: String) -> void:
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+## Copies a parsed, migrated save dictionary into live state.
+func _apply_save_dict(data: Dictionary) -> void:
 	gold = int(data.get("gold", STARTING_GOLD))
 	dungeon_level = int(data.get("dungeon_level", 1))
 	turn_counter = int(data.get("turn_counter", 0))
@@ -205,7 +317,6 @@ func load_game() -> bool:
 	else:
 		# Save predates limited potion stock — roll a fresh shelf.
 		restock_potions()
-	return true
 
 
 ## TPK penalty: revive all heroes at 25 % HP, lose 20 % gold, clear the run.
