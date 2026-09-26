@@ -1,0 +1,403 @@
+{
+	"dungeon_level": 1,
+	"gold": 11,
+	"heroes": {
+		"heroes": [
+			{
+				"bonus_mp": 0,
+				"class_id": "alchemist",
+				"custom_name": "Alfa",
+				"equipment": {
+					"armor": "",
+					"trinket": "",
+					"weapon": ""
+				},
+				"hp": 43,
+				"is_main": true,
+				"level": 4,
+				"mp": 36,
+				"row": 1,
+				"skin_id": "common/1",
+				"sp_available": 1,
+				"sp_spent": {},
+				"statuses": [],
+				"xp": 0
+			},
+			{
+				"bonus_mp": 0,
+				"class_id": "warrior",
+				"custom_name": "Bravo",
+				"equipment": {
+					"armor": "",
+					"trinket": "",
+					"weapon": ""
+				},
+				"hp": 57,
+				"is_main": false,
+				"level": 4,
+				"mp": 11,
+				"row": 0,
+				"skin_id": "",
+				"sp_available": 1,
+				"sp_spent": {},
+				"statuses": [],
+				"xp": 0
+			},
+			{
+				"bonus_mp": 0,
+				"class_id": "cleric",
+				"custom_name": "Charlie",
+				"equipment": {
+					"armor": "",
+					"trinket": "",
+					"weapon": ""
+				},
+				"hp": 38,
+				"is_main": false,
+				"level": 4,
+				"mp": 34,
+				"row": 1,
+				"skin_id": "",
+				"sp_available": 1,
+				"sp_spent": {},
+				"statuses": [],
+				"xp": 0
+			},
+			{
+				"bonus_mp": 0,
+				"class_id": "mage",
+				"custom_name": "Delta",
+				"equipment": {
+					"armor": "",
+					"trinket": "",
+					"weapon": ""
+				},
+				"hp": 31,
+				"is_main": false,
+				"level": 4,
+				"mp": 43,
+				"row": 1,
+				"skin_id": "",
+				"sp_available": 1,
+				"sp_spent": {},
+				"statuses": [],
+				"xp": 0
+			}
+		]
+	},
+	"inventory": [
+		"potion_heal"
+	],
+	"market": [
+		{
+			"id": "sword_steel",
+			"qty": 1
+		},
+		{
+			"id": "amulet_ward",
+			"qty": 1
+		},
+		{
+			"id": "ring_focus",
+			"qty": 1
+		},
+		{
+			"id": "armor_chain",
+			"qty": 1
+		},
+		{
+			"id": "armor_plate",
+			"qty": 1
+		}
+	],
+	"owned_skins": [],
+	"potions": [
+		{
+			"id": "potion_heal",
+			"qty": 2
+		},
+		{
+			"id": "potion_mana",
+			"qty": 3
+		},
+		{
+			"id": "elixir_full",
+			"qty": 0
+		},
+		{
+			"id": "elixir_revival",
+			"qty": 1
+		}
+	],
+	"run": {
+		"boss": 0,
+		"current_floor": 2,
+		"floors": [
+			[
+				{
+					"cleared": false,
+					"conn": 14,
+					"explored": true,
+					"kind": 0,
+					"seen": true,
+					"x": 0,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 2,
+					"explored": false,
+					"kind": 0,
+					"seen": true,
+					"x": -1,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 5,
+					"explored": true,
+					"kind": 0,
+					"seen": true,
+					"x": 0,
+					"y": 1
+				},
+				{
+					"cleared": false,
+					"conn": 1,
+					"explored": true,
+					"kind": 5,
+					"seen": true,
+					"x": 0,
+					"y": 2
+				},
+				{
+					"cleared": true,
+					"conn": 10,
+					"explored": true,
+					"kind": 3,
+					"seen": true,
+					"x": 1,
+					"y": 0
+				},
+				{
+					"cleared": true,
+					"conn": 8,
+					"explored": true,
+					"kind": 2,
+					"seen": true,
+					"x": 2,
+					"y": 0
+				}
+			],
+			[
+				{
+					"cleared": false,
+					"conn": 7,
+					"explored": true,
+					"kind": 0,
+					"seen": true,
+					"x": 0,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 12,
+					"explored": true,
+					"kind": 0,
+					"seen": true,
+					"x": 0,
+					"y": -1
+				},
+				{
+					"cleared": false,
+					"conn": 8,
+					"explored": false,
+					"kind": 2,
+					"seen": true,
+					"x": 1,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 2,
+					"explored": true,
+					"kind": 5,
+					"seen": true,
+					"x": -1,
+					"y": -1
+				},
+				{
+					"cleared": false,
+					"conn": 5,
+					"explored": false,
+					"kind": 3,
+					"seen": true,
+					"x": 0,
+					"y": 1
+				},
+				{
+					"cleared": false,
+					"conn": 1,
+					"explored": false,
+					"kind": 0,
+					"seen": false,
+					"x": 0,
+					"y": 2
+				}
+			],
+			[
+				{
+					"cleared": false,
+					"conn": 14,
+					"explored": true,
+					"kind": 0,
+					"seen": true,
+					"x": 0,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 2,
+					"explored": false,
+					"kind": 1,
+					"seen": true,
+					"x": -1,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 11,
+					"explored": true,
+					"kind": 1,
+					"seen": true,
+					"x": 1,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 6,
+					"explored": false,
+					"kind": 5,
+					"seen": true,
+					"x": 1,
+					"y": -1
+				},
+				{
+					"cleared": false,
+					"conn": 9,
+					"explored": false,
+					"kind": 2,
+					"seen": true,
+					"x": 2,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 13,
+					"explored": false,
+					"kind": 1,
+					"seen": false,
+					"x": 2,
+					"y": -1
+				},
+				{
+					"cleared": false,
+					"conn": 4,
+					"explored": false,
+					"kind": 3,
+					"seen": false,
+					"x": 2,
+					"y": -2
+				},
+				{
+					"cleared": false,
+					"conn": 1,
+					"explored": false,
+					"kind": 2,
+					"seen": true,
+					"x": 0,
+					"y": 1
+				}
+			],
+			[
+				{
+					"cleared": false,
+					"conn": 12,
+					"explored": false,
+					"kind": 0,
+					"seen": false,
+					"x": 0,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 13,
+					"explored": false,
+					"kind": 1,
+					"seen": false,
+					"x": 0,
+					"y": 1
+				},
+				{
+					"cleared": false,
+					"conn": 3,
+					"explored": false,
+					"kind": 4,
+					"seen": false,
+					"x": -1,
+					"y": 0
+				},
+				{
+					"cleared": false,
+					"conn": 5,
+					"explored": false,
+					"kind": 1,
+					"seen": false,
+					"x": -1,
+					"y": -1
+				},
+				{
+					"cleared": false,
+					"conn": 2,
+					"explored": false,
+					"kind": 3,
+					"seen": false,
+					"x": -1,
+					"y": 1
+				},
+				{
+					"cleared": false,
+					"conn": 5,
+					"explored": false,
+					"kind": 1,
+					"seen": false,
+					"x": -1,
+					"y": -2
+				},
+				{
+					"cleared": false,
+					"conn": 1,
+					"explored": false,
+					"kind": 1,
+					"seen": false,
+					"x": 0,
+					"y": 2
+				},
+				{
+					"cleared": false,
+					"conn": 4,
+					"explored": false,
+					"kind": 6,
+					"seen": false,
+					"x": -1,
+					"y": -3
+				}
+			]
+		],
+		"level": 1,
+		"px": 1,
+		"py": 0
+	},
+	"turn_counter": 9,
+	"version": 3
+}
