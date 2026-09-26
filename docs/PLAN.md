@@ -16,9 +16,9 @@ if you come back after weeks away, this is the only thing you need to read.*
 - **Focus:** Phase 0 safety net, then the Warrior slice (D-013)
 - **Next up:**
   1. gameplay-engineer: save hardening, #28 (editor)
-  2. qa-balance: gdUnit4 tests + CI (worktree, parallel with #28)
-  3. gameplay-engineer: dev cheat panel (editor, after #28)
-  4. qa-balance: gdformat pass + format hook (after #28)
+  2. qa-balance: gdUnit4 tests + CI, #30 (worktree, parallel with #28)
+  3. qa-balance: gdformat pass + format hook, #31 (after #28 and #30)
+  4. gameplay-engineer: dev cheat panel, #32 (editor, after #28 and #31)
   5. advisor: brief the Warrior slice (step 1.2)
   6. release-engineer: target SDK 36 + a build on the phone, brief not
      written yet
