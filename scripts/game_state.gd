@@ -41,14 +41,6 @@ const MARKET_POTIONS: Array = [
 	{"id": "elixir_full", "min": 0, "max": 2},
 	{"id": "elixir_revival", "min": 0, "max": 1},
 ]
-const SAVE_PATH: String = "user://save.json"
-## The previous good save, kept so an interrupted write never loses everything.
-const BACKUP_PATH: String = "user://save.bak.json"
-## Where a new save is written and checked before it replaces SAVE_PATH.
-## Never loaded: if it is still on disk, that write was interrupted.
-const TMP_PATH: String = "user://save.tmp.json"
-## A primary save that failed to parse is moved here (evidence, never loaded).
-const CORRUPT_PATH: String = "user://save.corrupt.json"
 ## v2: room-based dungeon (floors of rooms, player position, explored state).
 ## v3: customizable party (hero custom_name / skin_id / is_main).
 const SAVE_VERSION: int = 3
@@ -81,6 +73,26 @@ var nav_return_scene: String = "res://scripts/city/city_hub.tscn"
 ## walks into. Status durations are measured in these turns, so buffs decay while
 ## exploring as well as while fighting.
 var turn_counter: int = 0
+## Folder that holds the save files. Tests point it at a throwaway folder so
+## they never touch the real save; the game never changes it.
+var save_dir: String = "user://"
+## The primary save: the one Continue loads.
+var save_path: String:
+	get:
+		return save_dir.path_join("save.json")
+## The previous good save, kept so an interrupted write never loses everything.
+var backup_path: String:
+	get:
+		return save_dir.path_join("save.bak.json")
+## Where a new save is written and checked before it replaces save_path.
+## Never loaded: if it is still on disk, that write was interrupted.
+var tmp_path: String:
+	get:
+		return save_dir.path_join("save.tmp.json")
+## A primary save that failed to parse is moved here (evidence, never loaded).
+var corrupt_path: String:
+	get:
+		return save_dir.path_join("save.corrupt.json")
 
 
 ## Resets gold and inventory for a new game. Party.start_new_game() handles heroes.
@@ -150,16 +162,16 @@ func remove_item(item_id: String) -> bool:
 ## True if Continue has something to load: the primary save or its backup.
 ## A leftover tmp file does not count; it is an interrupted write.
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH) or FileAccess.file_exists(BACKUP_PATH)
+	return FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path)
 
 
 ## Removes the primary, backup and tmp files. The .corrupt file is kept.
 func delete_save() -> void:
-	for path in [SAVE_PATH, BACKUP_PATH, TMP_PATH]:
+	for path in [save_path, backup_path, tmp_path]:
 		_remove_file(path)
 
 
-## Writes the save atomically: to TMP_PATH first, read back to confirm it is
+## Writes the save atomically: to tmp_path first, read back to confirm it is
 ## valid, and only then rotated into place (see _rotate_tmp_into_place).
 func save_game() -> void:
 	var run_data = null
@@ -177,68 +189,68 @@ func save_game() -> void:
 		"market": market_stock.duplicate(true),
 		"potions": potion_stock.duplicate(true),
 	}
-	var file := FileAccess.open(TMP_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(tmp_path, FileAccess.WRITE)
 	if file == null:
-		push_error("GameState.save_game: cannot open %s for writing" % TMP_PATH)
+		push_error("GameState.save_game: cannot open %s for writing" % tmp_path)
 		return
 	file.store_string(JSON.stringify(payload, "\t"))
 	file.close()
-	if _read_save_dict(TMP_PATH).is_empty():
+	if _read_save_dict(tmp_path).is_empty():
 		push_error(
-			"GameState.save_game: %s did not read back as valid JSON; old save kept" % TMP_PATH
+			"GameState.save_game: %s did not read back as valid JSON; old save kept" % tmp_path
 		)
-		_remove_file(TMP_PATH)
+		_remove_file(tmp_path)
 		return
 	_rotate_tmp_into_place()
 
 
-## Moves the checked TMP_PATH into SAVE_PATH, demoting the current save to
-## BACKUP_PATH. Godot's rename does not overwrite atomically on every platform
+## Moves the checked tmp_path into save_path, demoting the current save to
+## backup_path. Godot's rename does not overwrite atomically on every platform
 ## (on Windows it deletes the target, then moves), so no step here ever
 ## renames onto an existing file. A crash between any two steps still leaves
 ## a valid save that load_game() will find:
 ##   1. drop the old backup     -> primary + tmp on disk
 ##   2. primary -> backup       -> backup + tmp (the backup loads)
 ##   3. tmp -> primary          -> primary + backup
-## A primary that no longer parses is moved to CORRUPT_PATH in step 2 instead,
+## A primary that no longer parses is moved to corrupt_path in step 2 instead,
 ## so it never replaces a good backup.
 func _rotate_tmp_into_place() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		if _read_save_dict(SAVE_PATH).is_empty():
-			_move_file(SAVE_PATH, CORRUPT_PATH)
+	if FileAccess.file_exists(save_path):
+		if _read_save_dict(save_path).is_empty():
+			_move_file(save_path, corrupt_path)
 		else:
-			_remove_file(BACKUP_PATH)
-			_move_file(SAVE_PATH, BACKUP_PATH)
-	if FileAccess.file_exists(SAVE_PATH):
+			_remove_file(backup_path)
+			_move_file(save_path, backup_path)
+	if FileAccess.file_exists(save_path):
 		push_error(
 			(
 				"GameState.save_game: could not move the old %s aside; new save left in %s"
-				% [SAVE_PATH, TMP_PATH]
+				% [save_path, tmp_path]
 			)
 		)
 		return
-	_move_file(TMP_PATH, SAVE_PATH)
+	_move_file(tmp_path, save_path)
 
 
-## Returns true on success. Tries SAVE_PATH, then BACKUP_PATH, and returns
+## Returns true on success. Tries save_path, then backup_path, and returns
 ## false (so the caller can start fresh) if neither can be loaded. A save
 ## written by a newer build is refused without touching any file, so an older
 ## build can't clobber it.
 func load_game() -> bool:
-	var data := _read_save_dict(SAVE_PATH)
-	if data.is_empty() and FileAccess.file_exists(SAVE_PATH):
-		push_warning("GameState.load_game: %s is corrupt; moved to %s" % [SAVE_PATH, CORRUPT_PATH])
-		_move_file(SAVE_PATH, CORRUPT_PATH)
-	if not data.is_empty() and not _is_supported_version(SAVE_PATH, data):
+	var data := _read_save_dict(save_path)
+	if data.is_empty() and FileAccess.file_exists(save_path):
+		push_warning("GameState.load_game: %s is corrupt; moved to %s" % [save_path, corrupt_path])
+		_move_file(save_path, corrupt_path)
+	if not data.is_empty() and not _is_supported_version(save_path, data):
 		if _save_version(data) > SAVE_VERSION:
 			return false
 		data = {}
 	if data.is_empty():
-		data = _read_save_dict(BACKUP_PATH)
-		if data.is_empty() or not _is_supported_version(BACKUP_PATH, data):
+		data = _read_save_dict(backup_path)
+		if data.is_empty() or not _is_supported_version(backup_path, data):
 			return false
 		push_warning(
-			"GameState.load_game: primary save unusable; loaded the backup %s" % BACKUP_PATH
+			"GameState.load_game: primary save unusable; loaded the backup %s" % backup_path
 		)
 	data = _migrate(data)
 	if data.is_empty():
