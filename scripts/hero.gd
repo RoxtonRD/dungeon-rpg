@@ -55,7 +55,7 @@ static func create(from_class: ClassData) -> Hero:
 	h.xp = 0
 	# Level-1 heroes start with 1 SP (prototype: Party.makeChar).
 	h.sp_available = 1
-	h.row = int(from_class.role)   # default: warriors/rogues front, mages/clerics back
+	h.row = int(from_class.role)  # default: warriors/rogues front, mages/clerics back
 	h.hp = h.max_hp()
 	h.mp = h.max_mp()
 	return h
@@ -76,7 +76,12 @@ func max_hp() -> int:
 
 
 func max_mp() -> int:
-	return class_data.base_mp + class_data.mp_per_level * (level - 1) + _equipment_mod("mod_mp") + bonus_mp
+	return (
+		class_data.base_mp
+		+ class_data.mp_per_level * (level - 1)
+		+ _equipment_mod("mod_mp")
+		+ bonus_mp
+	)
 
 
 func atk() -> int:
@@ -115,6 +120,7 @@ func effective_skin() -> String:
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────
+
 
 ## Plain-Dictionary snapshot of this hero. Equipment is stored by item id;
 ## class_data by class id. Both are restored by path convention in from_dict.
@@ -165,7 +171,7 @@ static func from_dict(data: Dictionary) -> Hero:
 	h.mp = int(data.get("mp", 0))
 	h.row = int(data.get("row", int(h.class_data.role)))
 	h.statuses.clear()
-	for sd in data.get("statuses", []):   # absent in pre-persistence saves
+	for sd in data.get("statuses", []):  # absent in pre-persistence saves
 		h.statuses.append(CombatStatus.from_dict(sd))
 	var equip_in: Dictionary = data.get("equipment", {})
 	for slot in ["weapon", "armor", "trinket"]:

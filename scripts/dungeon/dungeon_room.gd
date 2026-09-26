@@ -46,7 +46,17 @@ func connects_to(other_pos: Vector2i) -> bool:
 func has_content() -> bool:
 	if cleared:
 		return false
-	return kind in [RoomType.COMBAT, RoomType.TREASURE, RoomType.EVENT, RoomType.REST, RoomType.BOSS, RoomType.SHRINE]
+	return (
+		kind
+		in [
+			RoomType.COMBAT,
+			RoomType.TREASURE,
+			RoomType.EVENT,
+			RoomType.REST,
+			RoomType.BOSS,
+			RoomType.SHRINE
+		]
+	)
 
 
 ## Display label (pt-BR) for the room type. Cleared content rooms read as
@@ -55,18 +65,27 @@ func type_name() -> String:
 	if cleared and kind != RoomType.STAIRS and kind != RoomType.BOSS:
 		return tr("ROOM_EMPTY")
 	match kind:
-		RoomType.EMPTY: return tr("ROOM_EMPTY")
-		RoomType.COMBAT: return tr("ROOM_COMBAT")
-		RoomType.TREASURE: return tr("ROOM_TREASURE")
-		RoomType.EVENT: return tr("ROOM_EVENT")
-		RoomType.REST: return tr("ROOM_REST")
-		RoomType.STAIRS: return tr("ROOM_STAIRS")
-		RoomType.BOSS: return tr("ROOM_BOSS")
-		RoomType.SHRINE: return tr("ROOM_SHRINE")
+		RoomType.EMPTY:
+			return tr("ROOM_EMPTY")
+		RoomType.COMBAT:
+			return tr("ROOM_COMBAT")
+		RoomType.TREASURE:
+			return tr("ROOM_TREASURE")
+		RoomType.EVENT:
+			return tr("ROOM_EVENT")
+		RoomType.REST:
+			return tr("ROOM_REST")
+		RoomType.STAIRS:
+			return tr("ROOM_STAIRS")
+		RoomType.BOSS:
+			return tr("ROOM_BOSS")
+		RoomType.SHRINE:
+			return tr("ROOM_SHRINE")
 	return "?"
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────
+
 
 func to_dict() -> Dictionary:
 	return {

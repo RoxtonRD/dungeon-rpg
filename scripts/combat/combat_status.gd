@@ -42,8 +42,13 @@ static func build_for_skill(skill: SkillData) -> Array[CombatStatus]:
 		bar.source_name = skill.display_name
 		bar.duration = skill.mod_duration
 		out.append(bar)
-	var has_mods := skill.mod_atk != 0 or skill.mod_def != 0 \
-		or skill.mod_mag != 0 or skill.mod_spd != 0 or skill.taunt
+	var has_mods := (
+		skill.mod_atk != 0
+		or skill.mod_def != 0
+		or skill.mod_mag != 0
+		or skill.mod_spd != 0
+		or skill.taunt
+	)
 	if has_mods or not skill.barrier:
 		var st := CombatStatus.new()
 		st.kind = Kind.BUFF
@@ -68,13 +73,19 @@ static func build_for_skill(skill: SkillData) -> Array[CombatStatus]:
 # ── Persistence ───────────────────────────────────────────────────────────────
 # Party statuses outlive a fight (they live on the Hero), so they are saved.
 
+
 func to_dict() -> Dictionary:
 	return {
 		"kind": int(kind),
 		"source": source_name,
-		"atk": mod_atk, "def": mod_def, "mag": mod_mag, "spd": mod_spd,
-		"dot": dot_damage, "hot": heal_per_turn,
-		"dur": duration, "taunt": taunt,
+		"atk": mod_atk,
+		"def": mod_def,
+		"mag": mod_mag,
+		"spd": mod_spd,
+		"dot": dot_damage,
+		"hot": heal_per_turn,
+		"dur": duration,
+		"taunt": taunt,
 	}
 
 

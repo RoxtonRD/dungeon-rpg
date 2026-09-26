@@ -13,7 +13,9 @@ extends RefCounted
 const FONT_DIR := "res://assets/fonts/"
 ## Probed in order; the first that exists wins. `main` is the documented name.
 const CANDIDATES: Array[String] = [
-	"main.ttf", "main.otf", "main.woff2",
+	"main.ttf",
+	"main.otf",
+	"main.woff2",
 ]
 
 

@@ -59,6 +59,7 @@ func _start_new_game() -> void:
 
 # ── Reset confirmation modal ──────────────────────────────────────────────────
 
+
 func _show_reset_confirm() -> void:
 	# Compose the prompt here (not in _ready) so it always reflects the current
 	# locale, even if the language changed since the scene loaded.

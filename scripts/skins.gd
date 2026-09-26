@@ -14,7 +14,7 @@ const COMMON_DIR := "res://assets/heroes/common/"
 ## Highest common skin number probed for. Common skins are drop-in like class ones.
 const MAX_COMMON := 12
 
-var _by_id: Dictionary = {}          # full id -> SkinData
+var _by_id: Dictionary = {}  # full id -> SkinData
 var _common_ids: Array[String] = []  # catalog ids beginning with "common/"
 
 

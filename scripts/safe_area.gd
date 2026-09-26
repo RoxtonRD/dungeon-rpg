@@ -31,8 +31,7 @@ func apply(content: Control, base: int = BASE_MARGIN) -> void:
 	# Some Android devices only report the safe area after the first frame;
 	# re-apply once on the next frame to catch that case.
 	if content.is_inside_tree():
-		content.get_tree().process_frame.connect(
-			_apply_one.bind(content, base), CONNECT_ONE_SHOT)
+		content.get_tree().process_frame.connect(_apply_one.bind(content, base), CONNECT_ONE_SHOT)
 
 
 func _apply_one(content: Control, base: int) -> void:

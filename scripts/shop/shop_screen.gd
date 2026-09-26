@@ -12,7 +12,7 @@ const CITY_SCENE := "res://scripts/city/city_hub.tscn"
 @onready var item_list_vbox: VBoxContainer = %ItemListVBox
 @onready var close_button: Button = %CloseButton
 
-var _mode: String = "buy"   # "buy" | "sell"
+var _mode: String = "buy"  # "buy" | "sell"
 
 
 func _ready() -> void:
@@ -44,6 +44,7 @@ func _refresh() -> void:
 
 
 # ── Buy tab ───────────────────────────────────────────────────────────────────
+
 
 func _rebuild_buy_list() -> void:
 	_clear_list()
@@ -129,6 +130,7 @@ func _on_buy(item_id: String, price: int, stock: Array, stock_index: int) -> voi
 
 # ── Sell tab ──────────────────────────────────────────────────────────────────
 
+
 func _rebuild_sell_list() -> void:
 	_clear_list()
 	if GameState.inventory.is_empty():
@@ -185,6 +187,7 @@ func _on_sell(inv_idx: int) -> void:
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 func _clear_list() -> void:
 	for child in item_list_vbox.get_children():

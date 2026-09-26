@@ -7,8 +7,8 @@ extends Resource
 
 ## How the skin becomes usable.
 enum Unlock {
-	FREE,   ## available from the start
-	GOLD,   ## bought on the Characters screen for `price`
+	FREE,  ## available from the start
+	GOLD,  ## bought on the Characters screen for `price`
 	LEVEL,  ## granted when any hero reaches `level_req`
 	EVENT,  ## granted by an in-game event (rare room/boss) via GameState.unlock_skin
 }
