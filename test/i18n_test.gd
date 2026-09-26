@@ -79,10 +79,14 @@ func _rows() -> Array[Dictionary]:
 	if file == null:
 		return rows
 	file.get_csv_line()  # header
-	var line := 1
+	var next_line := 2
 	while not file.eof_reached():
+		var line := next_line
 		var cells := file.get_csv_line()
-		line += 1
+		# A quoted cell can span several lines of the file.
+		next_line += 1
+		for cell in cells:
+			next_line += cell.count("\n")
 		if cells.size() == 1 and cells[0].strip_edges().is_empty():
 			continue
 		rows.append({ "line": line, "cells": cells })
