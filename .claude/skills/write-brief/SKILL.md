@@ -47,7 +47,10 @@ Use the sections in `.github/ISSUE_TEMPLATE/brief.md`:
 - **Start prompt**: always begins with "Read `.claude/agents/<role>.md`.
   That is your role…". Say **worktree or not**: editor drivers work in
   `C:\Dev\dungeon-rpg` without a worktree; everyone else uses a worktree.
-  (There is no agent picker in Claude Desktop.)
+  (There is no agent picker in Claude Desktop.) The prompt also gets the
+  latest code: editor drivers `git switch main && git pull`, worktree
+  sessions `git fetch origin` and branch from `origin/main`. Roxton
+  never has to run git before starting a worker.
 
 ## Publishing
 
