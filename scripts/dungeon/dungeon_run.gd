@@ -49,7 +49,7 @@ const LOOP_CHANCE := 0.35
 const SHRINE_CHANCE := 0.12
 
 ## Content weights per floor: COMBAT, TREASURE, EVENT, REST, EMPTY.
-## Deeper floors lean harder into combat and events (design-doc-v2).
+## Deeper floors lean harder into combat and events (docs/design-doc-v2.md).
 const KIND_WEIGHTS := [
 	[0.35, 0.20, 0.15, 0.10, 0.20],
 	[0.40, 0.18, 0.17, 0.10, 0.15],

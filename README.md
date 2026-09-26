@@ -2,7 +2,7 @@
 
 > A turn-based dungeon crawler RPG for Android, built solo in Godot 4.
 
-[![Godot](https://img.shields.io/badge/Godot-4.6-478CBF?logo=godotengine&logoColor=white)](https://godotengine.org/)
+[![Godot](https://img.shields.io/badge/Godot-4.7-478CBF?logo=godotengine&logoColor=white)](https://godotengine.org/)
 [![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)](#)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 

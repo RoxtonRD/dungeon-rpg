@@ -4,16 +4,25 @@ Project context for Claude Code. Read this before any task.
 
 ## What this is
 
-A turn-based tactical dungeon-crawler RPG for Android, inspired by
-Monster's Den. Built in Godot 4.6 with GDScript. Portrait orientation.
+A turn-based tactical party dungeon crawler for Android, inspired by
+Monster's Den. Built in Godot 4.7 with GDScript. Portrait orientation.
 Fully localized: Brazilian Portuguese (pt-BR, source language) and
 English, selectable in-game.
 
-This is **version 2 (Fases 1 e 2)**: a room-based dungeon replaced the
-v1 node-map, and the city hub is the home base between dungeons. The
-goal remains a functional, fun game with the minimum number of systems.
-See `design-doc-v2.md` for the current spec (`design-doc-v1.md`
-documents the v1 base that everything else reuses).
+**Goal:** ship 1.0 on Google Play: a short, tactical dungeon crawl the
+player *wants* to replay.
+
+## Read first
+
+1. [`docs/PLAN.md`](docs/PLAN.md): current phase, the **Now** block, what
+   is in and out of scope, and the agent team rules.
+2. [`docs/DECISIONS.md`](docs/DECISIONS.md): settled decisions and why.
+   Don't re-argue them without new information, and add an entry when a
+   new decision is made.
+3. [`docs/design-doc-v2.md`](docs/design-doc-v2.md): how the existing
+   systems work (dungeon, city, classes, statuses, loot).
+
+`docs/archive/` holds old plans. They are history, **not instructions**.
 
 ## Core loop
 
@@ -22,83 +31,73 @@ prepare (market/gear) -> deeper dungeon
 
 Any system that does not directly serve this loop is out of scope.
 
+## What exists (the v2 build)
+
+- 6 classes (Guerreiro, Clérigo, Ladino, Mago, Conjurador, Alquimista),
+  4 skills each, 3 upgrade tiers; XP/levels to 10, 1 SP per level.
+- Character creation builds a party of 4 (max 2 of any class), with names
+  and skins. **Skins are frozen** (D-001).
+- Turn-based combat: front/back rows, 2x2 formation, consumables in
+  combat, status effects on a global turn counter that persists outside
+  combat.
+- Room-based dungeon: 4 floors, fog of war, stairs, boss on floor 4; room
+  types combat / treasure / event / rest / empty / stairs / boss / shrine.
+- City hub: Market (fixed potions + limited random stock, restocks when a
+  run ends), Characters, Formation, Enter Dungeon.
+- Item rarity tiers with depth-scaled drops (`scripts/util/loot.gd`).
+- Versioned JSON save; TPK rule (revive at 25% HP, lose 20% gold).
+- Settings (language, combat speed) and credits screens.
+- Dev tool: `scripts/dev/balance_sim.gd`, a headless combat simulator.
+
 ## Stack & conventions
 
-- Engine: Godot 4.6, GDScript only. No C#, no external build steps.
-- Platform: Android, portrait orientation.
-- Game data is **data-driven**: defined as Godot Resources (`.tres`),
-  never hardcoded. Resource types: `ClassData`, `SkillData`,
-  `EnemyData`, `ItemData`.
+- Engine: Godot 4.7, GDScript only. No C#, no external build steps.
+- Platform: Android (target API 36), portrait orientation.
+- Game data is **data-driven**: Godot Resources (`.tres`), never
+  hardcoded. Resource types: `ClassData`, `SkillData`, `EnemyData`,
+  `ItemData`.
 - UI: one Godot scene per screen, using `Control` nodes and signals.
-- Save: file-based (JSON via `FileAccess` or `ConfigFile`), with a
-  versioned save format to allow future migrations.
+- Save: JSON via `FileAccess`, versioned. Until the save freeze line
+  (D-004) the format may change freely; after it, every change needs a
+  migration step and a fixture test.
 - **i18n**: all user-facing text lives as keys in `i18n/translations.csv`
   (columns `keys,pt_BR,en`); resolve with `tr()` (or
   `TranslationServer.translate()` in static contexts). `.tres`
-  `display_name`/`description` fields hold keys, not literal text — never
+  `display_name`/`description` fields hold keys, not literal text. Never
   hardcode a Portuguese string in a scene, script or resource.
 - Device settings (locale, combat speed) live in `user://settings.cfg`
-  via the `Settings` autoload — separate from game saves.
+  via the `Settings` autoload, separate from game saves.
+
+## Art
+
+- **No generated art** (D-002). Icons come from
+  [game-icons.net](https://game-icons.net) (CC BY 3.0, credit on the
+  credits screen). Where art is missing, use flat colour or a `ColorRect`.
+- Never invent art assets and never block on missing art.
 
 ## Working style
 
-- Work in **small, verifiable slices**. One screen or one system at a
-  time. After each slice, stop so the result can be tested in the Godot
-  editor before continuing.
-- Use **explicit placeholders for art**: `ColorRect` or generic icons
-  wherever a hand-drawn portrait (character / item / enemy) will go.
-  Never block on missing art and never invent art assets.
+- Work in **small, verifiable slices** that fit one sitting. After each
+  slice, stop so the result can be tested in the Godot editor.
 - Prefer clear, readable GDScript over clever code. This is a learning
   project as much as a shipping one.
 - After completing a slice, suggest a concise commit message.
+- At the end of a session, update the **Now** block in `docs/PLAN.md`.
 
-## v2 scope — IN (Fases 1 e 2)
+## Multi-agent rules
 
-6 classes (Guerreiro, Clerigo, Ladino, Mago, **Conjurador** — dano
-fisico que escala com Magia via `SkillData.damage_stat` — e **Alquimista**
-— suporte com buffs e cura ao longo do tempo via `CombatStatus.REGEN`);
-**customizable party:
-character creation on New Adventure builds all four heroes, each with a
-typed name, chosen class and chosen skin, with at most 2 heroes of any
-one class; heroes can be renamed and reskinned (cosmetic only, class
-fixed) from the city Characters screen; hero skins are drop-in via
-`HeroArt` and `assets/heroes/README.md`, including class-neutral common
-skins and skins unlockable by gold/level/event through a skin catalog
-(`resources/skins/catalog.tres`) with per-save ownership
-(`GameState.owned_skins`)**; turn-based combat
-with front/back rows (skills + **usable consumables mid-combat**);
-**status effects persist outside combat on a global turn counter that
-advances per combat round and per room walked — heals and buffs are
-castable from the Characters screen, so pre-buffing a fight is a real
-tactic**; 2x2
-formation grid; **room-based dungeon: 4 floors
-of orthogonally connected grid rooms, fog of war (seen rooms persist),
-stairs room per floor, boss room on floor 4**; room types (combat,
-treasure, event, rest, empty, stairs, boss, rare shrine that grants an
-event-exclusive skin); **city hub between dungeons
-(Mercado, Personagens, Formação, Entrar na Masmorra); Mercado with fixed
-potions + limited-stock random equipment, restocking when a run ends
-(complete/abandon/TPK); leaving a dungeon abandons the run**; 4 skills
-per class; XP/levels with 1 Skill Point per level (surplus converts to
-+2 max MP); equipment slots with stat modifiers; **item rarity tiers
-(Common/Uncommon/Rare/Epic) with depth-scaled combat drops (a chance on
-common fights, guaranteed from bosses) via `scripts/util/loot.gd`**;
-versioned file-based
-save (run layouts, explored rooms, player position, market stock) with
-a TPK rule (revive at 25% HP, lose 20% gold); **pt-BR/English
-localization; settings screen (language + combat speed) and credits
-screen from the main menu**.
+Full rules are in `docs/PLAN.md` § Team. The short version:
 
-## Scope — OUT (do not build unless asked)
-
-Tile art for rooms and city art (themed chips / placeholder backgrounds
-for now); 4x3 tactical grid with distance-based accuracy; Hardcore mode;
-tier-gated Market stock and per-enemy drop tables (drops use one
-depth-scaled shared pool for now); sound; animations beyond combat
-particles; procedural loot affixes; save migration from v1.
+- **One editor, one driver.** Only one session uses the Godot MCP at a
+  time. Editor drivers work in the main checkout on a feature branch;
+  everyone else uses a worktree and runs Godot headless.
+- Briefs are GitHub issues. One branch and one PR per task; agents never
+  merge. Stay inside the files your role owns.
+- If a brief is wrong or incomplete, stop and report. Don't improvise
+  scope.
 
 ## Out of bounds
 
-Do not add systems, screens, or mechanics not listed in the current
-scope without asking first. If something seems missing, ask before
-building it.
+Do not add systems, screens, or mechanics that are not in the current
+phase of `docs/PLAN.md` without asking first. If something seems missing,
+ask before building it.
