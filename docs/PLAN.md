@@ -15,16 +15,18 @@ back after weeks away, this is the only thing you need to read.*
 
 - **Phase:** 1 — Find the fun (Phase 0 runs alongside, delegated)
 - **Focus:** finish the Phase 0 safety net, then the Warrior slice (D-013)
-- **Done:** save hardening (#28 → PR #33), tests + CI (#30 → PR #34)
+- **Done:** save hardening (#28 → PR #33), tests + CI (#30 → PR #34),
+  format hook (#31 → PR #37)
+- **In progress:** dev cheat panel #32 (editor), save tests #35 (worktree)
 - **Next up:**
-  1. qa-balance: gdformat pass + format hook, #31 (worktree), **now**
-  2. After #31, in parallel:
-     - gameplay-engineer: dev cheat panel, #32 (editor)
-     - qa-balance: save tests, #35 (worktree)
-  3. advisor: brief the Warrior slice (step 1.2)
+  1. gameplay-engineer: Warrior slice 1/3, Rage + cooldowns, #38
+     (editor, after #32)
+  2. Roxton: play the Warrior (3 fights via the dev panel), which is the
+     **feel gate** for combat v3
+  3. advisor: brief Warrior slice 2/3 (skill forks) from that feedback
   4. release-engineer: target SDK 36 + a build on the phone, brief not
      written yet
-  5. Roxton: branch protection on `main` (require PR + the gdUnit4 check)
+  5. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
@@ -66,7 +68,7 @@ the fun work.
 | ✅ Dev tooling: shared `.claude/settings.json` (permissions, deny `gh pr merge` and pushes to `main`), session-start hook, issue and PR templates, skills (`write-brief`, `review-pr`, `add-content`, `smoke-test`), `tools/godot.sh` (D-014) | advisor |
 | ✅ **Tests + CI** (#30 → PR #34): gdUnit4 6.2.1 in `test/`; every `.gd`/`.tres` loads, i18n complete; `tools/test.sh`; GitHub Action on every PR | qa-balance |
 | **Save tests** (#35): round-trip, crash-safety, v3 fixture, isolated `user://` | qa-balance |
-| **Format + syntax hook:** one-time `gdformat` pass over the codebase (after #28 merges), then a hook that formats and syntax-checks every `.gd` an agent edits. Lint optional, non-blocking | qa-balance |
+| ✅ **Format + syntax hook** (#31 → PR #37): gdformat pass, PostToolUse hook, CI format check; gdlint non-blocking (52 style warnings) | qa-balance |
 | Branch protection on `main`: require a PR and the CI check | Roxton |
 | Target SDK 34 → 36; confirm the Godot 4.7 export template; install a build on the phone | release-engineer |
 | Log in to Play Console: check the account is active, identity verification is done, and note the account creation date | Roxton |
@@ -96,7 +98,7 @@ unknown.
 | Step | What | Owner |
 |---|---|---|
 | 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
-| 1.2 | **Vertical slice**: one class (Warrior) fully rebuilt under v3, end to end. You play it. **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
+| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in three parts, each ending with Roxton playing it: **1/3** Rage + cooldowns (#38); **2/3** skill forks; **3/3** the Backstab synergy. **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot**: extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
