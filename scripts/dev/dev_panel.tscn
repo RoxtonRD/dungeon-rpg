@@ -1,0 +1,256 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/dev/dev_panel.gd" id="1_devpanel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.09, 0.08, 0.11, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.4, 0.6)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="DevPanel" type="CanvasLayer"]
+layer = 99
+script = ExtResource("1_devpanel")
+
+[node name="ToggleButton" type="Button" parent="."]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.6)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -64.0
+offset_right = 84.0
+offset_bottom = -8.0
+grow_vertical = 0
+focus_mode = 0
+text = "DEV"
+
+[node name="Panel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 24.0
+offset_right = -16.0
+offset_bottom = -72.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Margin/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+text = "Dev panel (debug builds only)"
+
+[node name="Output" type="Label" parent="Panel/Margin/Scroll/Rows"]
+unique_name_in_owner = true
+modulate = Color(1, 0.85, 0.4, 1)
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "Pick an action."
+autowrap_mode = 3
+
+[node name="PartySep" type="HSeparator" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="ClassesLabel" type="Label" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+text = "Party: 4 class ids, comma-separated"
+
+[node name="ClassesEdit" type="LineEdit" parent="Panel/Margin/Scroll/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "warrior,cleric,rogue,mage"
+
+[node name="LevelRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="Panel/Margin/Scroll/Rows/LevelRow"]
+layout_mode = 2
+text = "Level"
+
+[node name="LevelOption" type="OptionButton" parent="Panel/Margin/Scroll/Rows/LevelRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+
+[node name="SetLevelButton" type="Button" parent="Panel/Margin/Scroll/Rows/LevelRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Set level"
+
+[node name="PartyRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="QuickPartyButton" type="Button" parent="Panel/Margin/Scroll/Rows/PartyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Quick party"
+
+[node name="HealButton" type="Button" parent="Panel/Margin/Scroll/Rows/PartyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Heal party"
+
+[node name="GoldRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="Gold100Button" type="Button" parent="Panel/Margin/Scroll/Rows/GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+100 gold"
+
+[node name="Gold1000Button" type="Button" parent="Panel/Margin/Scroll/Rows/GoldRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+1000 gold"
+
+[node name="ItemRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="ItemOption" type="OptionButton" parent="Panel/Margin/Scroll/Rows/ItemRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="AddItem1Button" type="Button" parent="Panel/Margin/Scroll/Rows/ItemRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+text = "+1"
+
+[node name="AddItem5Button" type="Button" parent="Panel/Margin/Scroll/Rows/ItemRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+text = "+5"
+
+[node name="RunSep" type="HSeparator" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="RunRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="DungeonLabel" type="Label" parent="Panel/Margin/Scroll/Rows/RunRow"]
+layout_mode = 2
+text = "Dungeon"
+
+[node name="DungeonOption" type="OptionButton" parent="Panel/Margin/Scroll/Rows/RunRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+
+[node name="StartRunButton" type="Button" parent="Panel/Margin/Scroll/Rows/RunRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start run"
+
+[node name="FloorRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="FloorButtons" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows/FloorRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Floor1" type="Button" parent="Panel/Margin/Scroll/Rows/FloorRow/FloorButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "F1"
+
+[node name="Floor2" type="Button" parent="Panel/Margin/Scroll/Rows/FloorRow/FloorButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "F2"
+
+[node name="Floor3" type="Button" parent="Panel/Margin/Scroll/Rows/FloorRow/FloorButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "F3"
+
+[node name="Floor4" type="Button" parent="Panel/Margin/Scroll/Rows/FloorRow/FloorButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "F4"
+
+[node name="RevealButton" type="Button" parent="Panel/Margin/Scroll/Rows/FloorRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reveal"
+
+[node name="FightSep" type="HSeparator" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="EnemyRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="EnemyOption" type="OptionButton" parent="Panel/Margin/Scroll/Rows/EnemyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+clip_text = true
+
+[node name="AddEnemyButton" type="Button" parent="Panel/Margin/Scroll/Rows/EnemyRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Add"
+
+[node name="QueueLabel" type="Label" parent="Panel/Margin/Scroll/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="FightRow" type="HBoxContainer" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="ClearQueueButton" type="Button" parent="Panel/Margin/Scroll/Rows/FightRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Clear"
+
+[node name="FightButton" type="Button" parent="Panel/Margin/Scroll/Rows/FightRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Fight!"
+
+[node name="CloseSep" type="HSeparator" parent="Panel/Margin/Scroll/Rows"]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="Panel/Margin/Scroll/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Close"
