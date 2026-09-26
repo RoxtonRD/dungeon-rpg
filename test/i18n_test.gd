@@ -2,7 +2,7 @@
 ## defined twice, and every text key a .tres refers to exists.
 extends GdUnitTestSuite
 
-const TestFiles := preload("res://test/support/test_files.gd")
+const TestUtil := preload("res://test/support/test_util.gd")
 const CSV_PATH := "res://i18n/translations.csv"
 const HEADER := ["keys", "pt_BR", "en"]
 ## .tres fields that hold a translation key rather than literal text.
@@ -27,7 +27,7 @@ func test_every_row_has_pt_br_and_en() -> void:
 			incomplete.append("line %d %s: empty pt_BR" % [row.line, key])
 		if row.cells[2].strip_edges().is_empty():
 			incomplete.append("line %d %s: empty en" % [row.line, key])
-	assert_array(incomplete).is_empty()
+	assert_array(incomplete) 			.override_failure_message(TestUtil.problem_list("Incomplete CSV rows", incomplete)) 			.is_empty()
 
 
 func test_no_duplicate_keys() -> void:
@@ -42,7 +42,7 @@ func test_no_duplicate_keys() -> void:
 					% [row.line, key, first_line[key]])
 		else:
 			first_line[key] = row.line
-	assert_array(duplicates).is_empty()
+	assert_array(duplicates) 			.override_failure_message(TestUtil.problem_list("Duplicate or empty keys", duplicates)) 			.is_empty()
 
 
 func test_tres_text_keys_exist() -> void:
@@ -57,7 +57,7 @@ func test_tres_text_keys_exist() -> void:
 			'^(%s) = "(.*)"$' % "|".join(TEXT_KEY_FIELDS))
 	var missing: PackedStringArray = []
 	var checked := 0
-	for path in TestFiles.find("res://resources", ".tres"):
+	for path in TestUtil.find_files("res://resources", ".tres"):
 		var lines := FileAccess.get_file_as_string(path).split("\n")
 		for i in lines.size():
 			var m := field.search(lines[i].strip_edges())
@@ -68,7 +68,7 @@ func test_tres_text_keys_exist() -> void:
 				missing.append("%s:%d %s = %s"
 						% [path, i + 1, m.get_string(1), m.get_string(2)])
 	assert_int(checked).is_greater(0)
-	assert_array(missing).is_empty()
+	assert_array(missing) 			.override_failure_message(TestUtil.problem_list("Text keys missing from the CSV", missing)) 			.is_empty()
 
 
 ## Data rows of the CSV (header skipped, blank lines skipped), each as

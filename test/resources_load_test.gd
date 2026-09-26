@@ -3,7 +3,7 @@
 ## parse errors before they reach the game.
 extends GdUnitTestSuite
 
-const TestFiles := preload("res://test/support/test_files.gd")
+const TestUtil := preload("res://test/support/test_util.gd")
 
 
 ## Collects every engine error (and script error) logged while it is attached.
@@ -35,19 +35,21 @@ func after_test() -> void:
 
 
 func test_all_resources_load() -> void:
-	var paths := TestFiles.find("res://resources", ".tres")
+	var paths := TestUtil.find_files("res://resources", ".tres")
 	assert_array(paths).is_not_empty()
-	assert_array(_load_failures(paths)).is_empty()
+	var failures := _load_failures(paths)
+	assert_array(failures) 			.override_failure_message(TestUtil.problem_list("Resources that fail to load", failures)) 			.is_empty()
 
 
 func test_all_scripts_load() -> void:
-	var paths := TestFiles.find("res://scripts", ".gd")
+	var paths := TestUtil.find_files("res://scripts", ".gd")
 	assert_array(paths).is_not_empty()
-	assert_array(_load_failures(paths)).is_empty()
+	var failures := _load_failures(paths)
+	assert_array(failures) 			.override_failure_message(TestUtil.problem_list("Scripts that fail to load", failures)) 			.is_empty()
 
 
 ## Loads each path fresh (bypassing the cache, so files the autoloads already
-## loaded are parsed again) and returns one line per file that failed.
+## loaded are parsed again) and returns one line per distinct error.
 func _load_failures(paths: PackedStringArray) -> PackedStringArray:
 	var failures: PackedStringArray = []
 	for path in paths:
@@ -58,5 +60,7 @@ func _load_failures(paths: PackedStringArray) -> PackedStringArray:
 		elif res is Script and not (res as Script).can_instantiate():
 			failures.append("%s: script does not compile" % path)
 		for error in _catcher.errors:
-			failures.append("%s: %s" % [path, error])
+			var line := "%s: %s" % [path, error]
+			if not failures.has(line):
+				failures.append(line)
 	return failures
