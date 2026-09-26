@@ -1,0 +1,36 @@
+# Runs the gdUnit4 suite in test/ on every PR and on pushes to main.
+# Same suite as `tools/test.sh` locally; see .claude/skills/run-tests/.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write          # publish the JUnit report as a check run
+  pull-requests: write
+
+jobs:
+  gdunit4:
+    name: gdUnit4 (Godot 4.7.2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: godot-gdunit-labs/gdUnit4-action@v1.3.2
+        with:
+          godot-version: '4.7.2'
+          # Use the gdUnit4 vendored in addons/gdUnit4 (v6.2.1), not "latest".
+          version: installed
+          paths: res://test
+          timeout: 10
+          # Orphan-node warnings (exit 101) fail the run, as in tools/test.sh.
+          warnings-as-errors: true
+          report-name: gdunit4-report
