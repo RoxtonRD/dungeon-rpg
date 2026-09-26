@@ -1,5 +1,6 @@
-# Runs the gdUnit4 suite in test/ on every PR and on pushes to main.
-# Same suite as `tools/test.sh` locally; see .claude/skills/run-tests/.
+# Runs the gdUnit4 suite in test/ on every PR and on pushes to main, plus a
+# gdformat check (blocking) and gdlint (non-blocking). Same suite as
+# `tools/test.sh` locally; see .claude/skills/run-tests/.
 name: Tests
 
 on:
@@ -34,3 +35,30 @@ jobs:
           # Orphan-node warnings (exit 101) fail the run, as in tools/test.sh.
           warnings-as-errors: true
           report-name: gdunit4-report
+
+  format:
+    name: GDScript format + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: tools/requirements-dev.txt
+
+      - name: Install gdtoolkit
+        run: python -m pip install -r tools/requirements-dev.txt
+
+      # Blocking: every script must already be gdformat-clean. The
+      # .claude/hooks/gd_format.py hook does this on every agent edit; run
+      # `gdformat scripts test` locally to fix a failure (never addons/).
+      - name: gdformat --check
+        run: gdformat --check scripts test
+
+      # Non-blocking for now: existing warnings are reported, not fixed (#31).
+      - name: gdlint (non-blocking)
+        continue-on-error: true
+        run: gdlint scripts

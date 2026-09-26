@@ -1,0 +1,6 @@
+# Commits that only reformat code. `git blame` skips them once you run
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# (GitHub's blame view reads this file automatically.)
+
+# style: gdformat pass (#31)
+dda8fd88c69ed4bd2fb7862f99b84984c179691a

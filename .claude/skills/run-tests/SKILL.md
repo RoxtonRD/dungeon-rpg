@@ -1,6 +1,6 @@
 ---
 name: run-tests
-description: Run the Dungeons of Praesidium gdUnit4 test suite headless (all of it, one suite, or one test) with tools/test.sh, and read the failures. Use before opening any PR, after touching .tres/.gd/translations, or when CI's "Tests" check is red. Safe to run alongside the editor session.
+description: Run the Dungeons of Praesidium gdUnit4 test suite headless (all of it, one suite, or one test) with tools/test.sh, and read the failures. Use before opening any PR, after touching .tres/.gd/translations, or when CI's "Tests" or format check is red. Also covers gdformat/gdlint and the format hook. Safe to run alongside the editor session.
 ---
 
 # Run tests
@@ -68,9 +68,33 @@ res://test/i18n_test.gd > test_every_row_has_pt_br_and_en FAILED
 
 `.github/workflows/tests.yml` runs the same `test/` folder on every PR and
 on pushes to `main` with Godot 4.7.2, via `gdUnit4-action` using the
-vendored gdUnit4. The JUnit report appears as the `gdunit4-report` check
+vendored gdUnit4 (plus the format check, below). The JUnit report appears as the `gdunit4-report` check
 on the PR, and the full report is uploaded as a workflow artifact. If CI
 is red, run `tools/test.sh` locally first: it should fail the same way.
+
+## Formatting and lint (gdtoolkit)
+
+One-time install (Python 3, pinned version):
+
+```
+python -m pip install -r tools/requirements-dev.txt
+```
+
+- **Hook:** `.claude/hooks/gd_format.py` runs after every `Write`/`Edit`
+  of a `.gd` file outside `addons/`: `gdformat` fixes the layout, then
+  `gdparse` checks the syntax. A parse error comes back to the agent
+  straight away (hook exit 2). Without gdtoolkit it only prints the
+  install hint above.
+- **By hand:** `gdformat scripts test` formats everything;
+  `gdformat --check scripts test` only reports. Never run it on `addons/`
+  (vendored code). If `gdformat` isn't on PATH, use
+  `python -m gdtoolkit.formatter` (likewise `.linter`, `.parser`).
+- **CI:** the `GDScript format + lint` job fails the PR if
+  `gdformat --check scripts test` would change anything. `gdlint scripts`
+  runs too but is non-blocking; its existing warnings are known.
+- The one-time format commit is listed in `.git-blame-ignore-revs`. Run
+  `git config blame.ignoreRevsFile .git-blame-ignore-revs` once so
+  `git blame` skips it.
 
 ## Adding a test
 

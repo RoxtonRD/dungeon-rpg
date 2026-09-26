@@ -1,0 +1,4 @@
+# Dev-only Python tools. Install with:
+#   python -m pip install -r tools/requirements-dev.txt
+# gdtoolkit provides gdformat, gdlint and gdparse (Godot 4 syntax).
+gdtoolkit==4.5.0
