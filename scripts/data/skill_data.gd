@@ -24,7 +24,12 @@ enum DamageStat { AUTO, ATK, MAG }
 @export_multiline var description: String = ""
 
 @export_group("Cost & Unlock")
+## Cost in the caster's class resource (MP for mana classes, Rage for rage
+## classes; see ClassData.resource_type). Named mp_cost for history.
 @export var mp_cost: int = 0
+## Caster turns before the skill can be used again (0 = no cooldown).
+## Combat-only; enemy skills ignore it.
+@export var cooldown: int = 0
 ## Hero level at which the skill unlocks. Unused by enemy skills.
 @export var unlock_level: int = 1
 ## Highest tier reachable by spending Skill Points (base tier = 1).

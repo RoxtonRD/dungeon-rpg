@@ -180,4 +180,7 @@ static func from_dict(data: Dictionary) -> Hero:
 			h.equipment[slot] = load("res://resources/items/%s.tres" % item_id) as ItemData
 		else:
 			h.equipment[slot] = null
+	# A save from before a class lost its MP (the Warrior now spends Rage) can
+	# hold more MP than the hero's max; never show "8/0".
+	h.mp = mini(h.mp, h.max_mp())
 	return h

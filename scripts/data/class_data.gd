@@ -6,12 +6,17 @@ extends Resource
 
 ## Which combat row the class occupies by default.
 enum Role { FRONT, BACK }
+## What the class spends on skills. MANA is the persistent MP pool; RAGE is
+## built in combat and resets every fight (see Battler.rage).
+enum ResourceType { MANA, RAGE }
 
 ## Stable internal key, e.g. "warrior". Used in save files — never translate.
 @export var id: String = ""
 ## Name shown in the UI (pt-BR).
 @export var display_name: String = ""
 @export var role: Role = Role.FRONT
+## What SkillData.mp_cost is paid from for this class's skills.
+@export var resource_type: ResourceType = ResourceType.MANA
 
 @export_group("Base Stats (level 1)")
 @export var base_hp: int = 1

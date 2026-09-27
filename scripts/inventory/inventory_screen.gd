@@ -196,20 +196,17 @@ func _update_hero_info(hero: Hero) -> void:
 	var title := hero.display_name()
 	if title != class_name_str:
 		title = "%s — %s" % [title, class_name_str]
+	# A hero with no MP (the Warrior spends Rage) shows no MP at all.
+	var has_mp := hero.max_mp() > 0
+	var mp_part := ""
+	if has_mp:
+		mp_part = "  %s: %d/%d" % [tr("RES_MP"), hero.mp, hero.max_mp()]
 	hero_info_label.text = (
-		tr("UI_HERO_INFO")
-		% [
-			title,
-			hero.level,
-			hero.hp,
-			hero.max_hp(),
-			hero.mp,
-			hero.max_mp(),
-			hero.sp_available,
-		]
+		tr("UI_HERO_INFO") % [title, hero.level, hero.hp, hero.max_hp(), mp_part, hero.sp_available]
 	)
 	hp_bar.max_value = maxi(1, hero.max_hp())
 	hp_bar.value = hero.hp
+	mp_bar.visible = has_mp
 	mp_bar.max_value = maxi(1, hero.max_mp())
 	mp_bar.value = hero.mp
 	stats_label.text = (
@@ -316,7 +313,11 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		# Skill name + tier
 		var tier := Party.get_skill_tier(hero, skill)
 		var name_lbl := Label.new()
-		name_lbl.text = "%s  T%d  ·  %d MP" % [tr(skill.display_name), tier, skill.mp_cost]
+		var uses_rage := hero.class_data.resource_type == ClassData.ResourceType.RAGE
+		var resource_name := tr("RES_RAGE") if uses_rage else tr("RES_MP")
+		name_lbl.text = (
+			"%s  T%d  ·  %d %s" % [tr(skill.display_name), tier, skill.mp_cost, resource_name]
+		)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 15)
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -325,7 +326,8 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 
 		# Cast button — heals and buffs are usable outside combat, spending MP.
 		# Healers become the sustain engine; buffs enable pre-buffing a fight.
-		if _castable_out_of_combat(skill):
+		# Rage only exists in combat, so a rage class never casts out here.
+		if not uses_rage and _castable_out_of_combat(skill):
 			var cast_btn := Button.new()
 			cast_btn.text = tr("UI_USE")
 			cast_btn.custom_minimum_size = Vector2(80, 0)

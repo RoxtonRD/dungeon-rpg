@@ -91,16 +91,31 @@ func skill_is_auto_targeted(skill: SkillData) -> bool:
 	)
 
 
+## The single gate for a hero using a skill: unlocked at the hero's level,
+## enough of the class resource (MP or Rage) and not on cooldown. The combat
+## buttons, player_action and the balance sim all ask this.
+func can_use(actor: Battler, skill: SkillData) -> bool:
+	if actor.side != Battler.Side.PARTY:
+		return true  # enemies don't pay costs or track cooldowns
+	if actor.hero.level < skill.unlock_level:
+		return false
+	if actor.resource_amount() < skill.mp_cost:
+		return false
+	return actor.cooldown_left(skill) == 0
+
+
 ## Resolves the player's chosen action. `target` may be null when the skill
 ## auto-targets (SELF / ALL / ALLIES / RANDOM).
 func player_action(skill: SkillData, target: Battler) -> void:
 	if ended or current_actor == null or current_actor.side != Battler.Side.PARTY:
 		return
 	var actor := current_actor
-	if actor.hero.mp < skill.mp_cost:
-		_log(tr("LOG_NO_MP"))
+	if not can_use(actor, skill):
+		if not actor.uses_rage() and actor.hero.mp < skill.mp_cost:
+			_log(tr("LOG_NO_MP"))
 		return
-	actor.hero.mp -= skill.mp_cost
+	actor.spend_resource(skill.mp_cost)
+	actor.start_cooldown(skill)
 	var scaled := Party.get_upgraded_skill(actor.hero, skill)
 	_apply_skill(actor, scaled, target)
 	_after_action()
@@ -191,6 +206,7 @@ func _advance_to_next_actor() -> void:
 			# Every remaining entry was dead — reroll the round.
 			continue
 		current_actor = next
+		next.tick_cooldowns()
 		turn_started.emit(next)
 		# Stop here. The caller drives the turn:
 		#   - player_action / player_flee for party turns
@@ -285,6 +301,8 @@ func _tick_statuses() -> void:
 
 func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 	var caster_stats := caster.effective_stats()
+	# Total damage this action dealt, for the caster's Rage.
+	var dealt := 0
 	var targets: Array[Battler] = _gather_targets(caster, skill, picked)
 	match skill.skill_type:
 		SkillData.SkillType.BUFF:
@@ -319,10 +337,13 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 					ht = picked
 				if ht == null:
 					break
-				_apply_damage_hit(caster, caster_stats, skill, ht, hit_kind)
+				dealt += _apply_damage_hit(caster, caster_stats, skill, ht, hit_kind)
 		SkillData.SkillType.PHYS, SkillData.SkillType.MAG:
 			for t in targets:
-				_apply_damage_hit(caster, caster_stats, skill, t, skill.skill_type)
+				dealt += _apply_damage_hit(caster, caster_stats, skill, t, skill.skill_type)
+	# Once per damaging action, however many targets or hits it had.
+	if dealt > 0:
+		caster.gain_rage(Battler.RAGE_PER_DAMAGING_ACTION)
 
 
 func _gather_targets(caster: Battler, skill: SkillData, picked: Battler) -> Array[Battler]:
@@ -416,11 +437,11 @@ func _apply_damage_hit(
 	skill: SkillData,
 	target: Battler,
 	dmg_kind: SkillData.SkillType
-) -> void:
-	# Barrier eats the hit before damage is rolled.
+) -> int:
+	# Barrier eats the hit before damage is rolled (and gives no Rage).
 	if target.consume_barrier():
 		_log(tr("LOG_BARRIER") % target.display_name(), LogKind.BARRIER)
-		return
+		return 0
 	# is_mag decides how the hit resolves against DEF; damage_stat decides which
 	# caster stat scales it. They're independent so a physically-resolved skill
 	# can scale off MAG (Conjurer's "physical spells").
@@ -445,6 +466,7 @@ func _apply_damage_hit(
 	var t_def := int(floor(float(t_stats["def"]) * 0.4)) if is_mag else int(t_stats["def"])
 	var dmg := maxi(1, int(floor(raw - t_def)))
 	target.set_hp(target.get_hp() - dmg)
+	target.gain_rage(Battler.RAGE_PER_HIT_TAKEN)
 	hp_changed.emit(target)
 	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS)
 	var crit_label := tr("LOG_CRIT_SUFFIX") if crit else ""
@@ -489,6 +511,7 @@ func _apply_damage_hit(
 		caster.set_hp(caster.get_hp() + healed)
 		hp_changed.emit(caster)
 		damage_popup.emit(caster, healed, PopupKind.HEAL)
+	return dmg
 
 
 # ── Enemy AI ──────────────────────────────────────────────────────────────────

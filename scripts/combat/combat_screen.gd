@@ -257,7 +257,8 @@ func _show_player_turn_ui() -> void:
 
 func _populate_skill_buttons() -> void:
 	_clear_skill_buttons()
-	var hero: Hero = state.current_actor.hero
+	var actor: Battler = state.current_actor
+	var hero: Hero = actor.hero
 	for skill in hero.class_data.skills:
 		# Hide skills the hero hasn't unlocked yet (consistent with Personagens).
 		if hero.level < skill.unlock_level:
@@ -265,7 +266,8 @@ func _populate_skill_buttons() -> void:
 		var btn := Button.new()
 		btn.custom_minimum_size = Vector2(0, 96)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.disabled = hero.mp < skill.mp_cost
+		var usable := state.can_use(actor, skill)
+		btn.disabled = not usable
 		btn.pressed.connect(_on_skill_pressed.bind(skill))
 
 		# Icon + label overlay. Children ignore the mouse so the button stays
@@ -278,13 +280,13 @@ func _populate_skill_buttons() -> void:
 		hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(hbox)
 
-		if hero.mp < skill.mp_cost:
-			hbox.add_child(_make_icon(skill.icon_or_null(), 96, 0.25))
-		else:
+		if usable:
 			hbox.add_child(_make_icon(skill.icon_or_null(), 96, 1.0))
+		else:
+			hbox.add_child(_make_icon(skill.icon_or_null(), 96, 0.25))
 
 		var label := Label.new()
-		label.text = _label_for_skill(hero, skill)
+		label.text = _label_for_skill(actor, skill)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -295,12 +297,18 @@ func _populate_skill_buttons() -> void:
 		skill_grid.add_child(btn)
 
 
-func _label_for_skill(hero: Hero, skill: SkillData) -> String:
+## "Name · 30 Rage" (or MP), plus the turns left when the skill is on cooldown.
+func _label_for_skill(actor: Battler, skill: SkillData) -> String:
+	var hero := actor.hero
 	var name_part := tr(skill.display_name)
 	var tier := Party.get_skill_tier(hero, skill)
 	if tier > 1:
 		name_part += " (T%d)" % tier
-	var label := "%s · %d MP" % [name_part, skill.mp_cost]
+	var resource_name := tr("RES_RAGE") if actor.uses_rage() else tr("RES_MP")
+	var label := "%s · %d %s" % [name_part, skill.mp_cost, resource_name]
+	var turns_left := actor.cooldown_left(skill)
+	if turns_left > 0:
+		label += "\n" + tr("UI_SKILL_COOLDOWN") % turns_left
 	if hero.level < skill.unlock_level:
 		label += tr("UI_SKILL_LOCKED") % skill.unlock_level
 	return label

@@ -112,7 +112,7 @@ static func _player_turn(st: CombatState, actor: Battler, dmg_by_class: Dictiona
 	var hero: Hero = actor.hero
 	var usable: Array[SkillData] = []
 	for s in hero.class_data.skills:
-		if hero.level >= s.unlock_level and hero.mp >= s.mp_cost:
+		if st.can_use(actor, s):
 			usable.append(s)
 	if usable.is_empty():
 		st.player_flee()
