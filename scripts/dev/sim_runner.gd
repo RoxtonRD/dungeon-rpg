@@ -1,18 +1,27 @@
 ## Headless runner for the balance sim (dev tool — not used by the game).
 ##
 ## Runs as a scene so the autoloads (Party, GameState) exist, which the sim
-## needs. Reads the user args, runs the Warrior talent-build report, prints it
-## as Markdown and quits. Usage (see tools/sim.sh):
+## needs. Reads the user args, runs a report, prints it as Markdown and quits.
+## Usage (see tools/sim.sh):
 ##     tools/sim.sh all --fights 200
 ##     tools/sim.sh tank executioner --seed 7 --level 10 --out docs/reports/x.md
+##     tools/sim.sh campaign --runs 100 --seed 1 --out docs/reports/sim-campaign.md
 ##
-## Arguments: build names (or "all"), then any of
+## Talent-build report arguments: build names (or "all"), then any of
 ##   --fights N   fights per cell (default 100)
 ##   --seed N     RNG seed, printed in the report (default 1)
 ##   --level N    every hero at level N instead of LEVEL_BY_DUNGEON
 ##   --out PATH   also write the report to PATH (relative to the project)
 ##
-## SAFETY: this never calls GameState.save_game(). See balance_sim.gd.
+## Campaign report (campaign_bot.gd): "campaign", then any of
+##   --runs N     campaigns to play (default 100)
+##   --seed N     RNG seed (default 1)
+##   --out PATH   as above
+##
+## SAFETY: the talent-build report never calls GameState.save_game(). The
+## campaign bot awards real XP, which can save the game, so it runs isolated
+## and checks the real save files: see campaign_bot.gd. A changed real save
+## exits with code 3.
 extends Node
 
 const PARTY: Array[String] = ["warrior", "cleric", "rogue", "mage"]
@@ -20,6 +29,9 @@ const PARTY: Array[String] = ["warrior", "cleric", "rogue", "mage"]
 const GEAR_OFFSET := -1
 ## The Warrior's base skills, in class order: the usage table's columns.
 const WARRIOR_SKILLS: Array[String] = ["slash", "cleave", "provoke", "execute"]
+
+## The Warrior's build order in the campaign report (brief #61).
+const CAMPAIGN_BUILD := "executioner"
 
 ## Talent builds: {skill basename: {"fork": "a"|"b", "boost": bool}}, spent in
 ## this order (see BalanceSim.apply_build). Each uses exactly the 5 SP of
@@ -46,12 +58,26 @@ const BUILDS := {
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
-	var opts := parse_args(args)
+	var campaign := not args.is_empty() and args[0] == "campaign"
+	var opts := parse_campaign_args(args) if campaign else parse_args(args)
 	if opts.has("error"):
 		printerr("sim_runner: %s" % opts["error"])
 		get_tree().quit(2)
 		return
-	var md := report(opts)
+	var md := ""
+	if campaign:
+		var res := campaign_report(opts)
+		md = res["md"]
+		var guard: Dictionary = res["guard"]
+		if not (guard["changed"] as Array).is_empty():
+			print(md)
+			printerr("sim_runner: REAL SAVE CHANGED during the bot run: %s" % guard["changed"])
+			get_tree().quit(3)
+			return
+		# Outside the report, so the report stays identical from run to run.
+		print("save guard: real save files unchanged: %s" % guard["md5"])
+	else:
+		md = report(opts)
 	print(md)
 	if str(opts["out"]) != "":
 		var f := FileAccess.open(str(opts["out"]), FileAccess.WRITE)
@@ -97,6 +123,40 @@ static func parse_args(args: PackedStringArray) -> Dictionary:
 	if int(opts["level"]) < 0 or int(opts["level"]) > Party.LEVEL_CAP:
 		return {"error": "--level must be 1..%d" % Party.LEVEL_CAP}
 	return opts
+
+
+## Turns "campaign" user args into {runs, seed, out, args}, or {error: message}.
+static func parse_campaign_args(args: PackedStringArray) -> Dictionary:
+	var opts := {"runs": 100, "seed": 1, "out": "", "args": args}
+	var i := 1  # args[0] is "campaign"
+	while i < args.size():
+		var a := args[i]
+		if not a in ["--runs", "--seed", "--out"]:
+			return {"error": "unknown campaign option: %s (--runs, --seed, --out)" % a}
+		if i + 1 >= args.size():
+			return {"error": "%s needs a value" % a}
+		var v := args[i + 1]
+		if a == "--out":
+			opts["out"] = v if v.contains("://") else "res://" + v
+		elif not v.is_valid_int():
+			return {"error": "%s needs a number, got %s" % [a, v]}
+		else:
+			opts[a.trim_prefix("--")] = int(v)
+		i += 2
+	if int(opts["runs"]) < 1:
+		return {"error": "--runs must be at least 1"}
+	return opts
+
+
+## Plays the campaigns (isolated from the real save) and returns
+## {md: the Markdown report, guard: the real-save check, see CampaignBot}.
+static func campaign_report(opts: Dictionary) -> Dictionary:
+	var res := CampaignBot.run_isolated(
+		int(opts["runs"]), int(opts["seed"]), BUILDS[CAMPAIGN_BUILD]
+	)
+	var command := "tools/sim.sh %s" % " ".join(opts["args"])
+	var md := CampaignBot.report(res["campaigns"], int(opts["seed"]), CAMPAIGN_BUILD, command)
+	return {"md": md, "guard": res["guard"]}
 
 
 ## Runs every requested build and returns the Markdown report. Each build is
