@@ -21,15 +21,14 @@ back after weeks away, this is the only thing you need to read.*
 - **Feel gate 1 passed** (2026-09-27): Rage beats mana (D-021).
 - **Next up:**
   1. ui-assets: combat readability, #45 (editor), **now**
-  2. Roxton + advisor: pick the Warrior's skill forks and the SP rule
-     (combat-v3.md §4), then the advisor briefs Warrior 2/3. Carry
-     forward: Slash's "costs no MP" text; `save_test` should use a mana
-     hero; `sp_spent` floats on load.
-  3. Roxton: list the other combat ideas, and the advisor triages them
-     (now / after the slice / parking lot)
-  4. release-engineer: target SDK 36 + a build on the phone, brief not
+  2. gameplay-engineer: Warrior 2a/3, talents logic + data, #47 (editor,
+     after #45). Forks and scarce SP decided (D-022).
+  3. advisor: brief 2b (talent screen, ui-assets) and 3/3 (synergy +
+     one passive + one reaction, D-023)
+  4. Roxton: after #47, play the forks via DevTools (`set_talent`)
+  5. release-engineer: target SDK 36 + a build on the phone, brief not
      written yet
-  5. Roxton: branch protection on `main` (require PR + both CI checks)
+  6. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
@@ -102,7 +101,7 @@ unknown.
 | Step | What | Owner |
 |---|---|---|
 | 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
-| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in three parts, each ending with Roxton playing it: **1/3** Rage + cooldowns (#38); **2/3** skill forks; **3/3** the Backstab synergy. **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
+| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); **2a** talents logic + data (#47); **2b** talent screen; **3/3** the Backstab synergy + one passive + one reaction (D-023). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
@@ -152,8 +151,9 @@ Can start once Phase 2 is underway.
 ## Phase 4 — After 1.0 (not planned in detail)
 
 - **1.1 — Abyssal Fissure:** endless dungeon after the campaign; collection
-  rewards (outfits) and hero retirement as the long progression
-  (archived roadmap, Move 3).
+  rewards (outfits) and a long progression: **ascension** (a raised
+  level cap, then Master / Grand Master / subclass, Kru-style, D-024)
+  and/or hero retirement (archived roadmap, Move 3).
 - Desktop / Steam: decide after launch; a portrait game plays awkwardly on
   PC.
 - iOS: needs a Mac and a paid developer account; only if Android goes well.
@@ -166,6 +166,8 @@ Captured so they stop taking up headspace. Not scheduled, not promised.
 - Hardcore mode
 - Tile art for rooms, city art
 - Sound and music
+- An online / MMO version with Kru Dark Ages' feel: a separate dream,
+  after this game ships (D-024)
 
 ---
 

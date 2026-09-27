@@ -182,3 +182,30 @@ sometimes real", which is what forks and synergy target. His strongest
 finding was that combat is hard to read (who hit whom, what effect
 landed), so readability (#45) goes before 2/3.
 
+**D-022 · Warrior talents: forks + boosts, 5 SP for 8 nodes.**
+Roxton accepted the proposed forks (Slash Rending/Momentum, Cleave Wide
+Arc/Heavy Arc, Provoke Iron Wall/Vengeance, Execute Reaper/Sunder) and
+**Option 2, scarce SP**: talent classes get +1 SP at levels
+2/4/6/8/10. This answers his original complaint that everything ends
+maxed. Non-talent classes keep tiers until the rollout (step 1.3).
+Details: `combat-v3.md` §4b; build: #47.
+
+**D-023 · Depth through passives and reactions, not more active skills;
+reactions are automatic.**
+Roxton proposed more utility, passive and defensive abilities, including
+auto-triggering defenses with a trade-off. Adopted with one change:
+reactions trigger by chance, cost the class's own resource, and the player
+controls them with a per-hero on/off toggle on the talent screen, not with
+mid-turn prompts (mobile flow). All of them share the talent screen and SP
+pool. One passive and one reaction (Warrior *Parry*) are prototyped in
+3/3 before any rollout.
+
+**D-024 · Ascension (a raised level cap, then Master / Grand Master /
+subclass) is post-1.0.**
+Roxton's Kru Dark Ages idea (level 99 → Master or Grand Master, or a
+subclass restarting at level 1) is a strong candidate for the endless
+mode's growth axis (Phase 4), alongside or instead of retirement. The
+guard for now is to keep `LEVEL_CAP` and the SP schedule data-driven, so
+raising them later is cheap. An online/MMO version is explicitly a
+separate, after-release dream, not part of this project's scope.
+
