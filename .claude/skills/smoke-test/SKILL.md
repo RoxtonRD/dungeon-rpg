@@ -10,6 +10,10 @@ driver).
 
 ## Steps
 
+0. **Protect Roxton's save (D-018).** Copy every `save*.json` in
+   `%APPDATA%/Godot/app_userdata/Dungeons of Praesidium/` to a backup
+   folder and note their MD5s. Step 4 starts a new game, which overwrites
+   them. After step 8, restore them and confirm the MD5s match.
 1. **Start clean.** `editor_manage` `logs_clear`, then `project_run` on
    the main scene. Poll `editor_state` until `game_capture_ready` is true.
 2. **Boot check.** `logs_read` with `source: "all"`. Any error means stop
