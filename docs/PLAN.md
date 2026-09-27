@@ -20,9 +20,10 @@ back after weeks away, this is the only thing you need to read.*
   cooldowns (#43)**
 - **Feel gate 1 passed** (2026-09-27): Rage beats mana (D-021).
 - **Next up:**
-  1. ui-assets: combat readability, #45 (editor), **now**
+  1. Roxton: merge PR #49 (combat readability), then play one fight:
+     can you tell who did what to whom without reading the log?
   2. gameplay-engineer: Warrior 2a/3, talents logic + data, #47 (editor,
-     after #45). Forks and scarce SP decided (D-022).
+     after #49), with hand-offs from the #49 review in the issue comments
   3. advisor: brief 2b (talent screen, ui-assets) and 3/3 (synergy +
      one passive + one reaction, D-023)
   4. Roxton: after #47, play the forks via DevTools (`set_talent`)
@@ -106,7 +107,7 @@ unknown.
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
 | 1.5 | **Dungeon pressure**: combat quota per floor, rests restore partially, the Fountain stops being a free full heal, close the walk-back regen loop (P1–P4 in `archive/roadmap-v3.md`). Per-floor enemy pools (`cultist` and `ogre` exist but never spawn) | gameplay-engineer + content-data |
-| 1.6 | **Combat readability**: (a) who did what to whom: action banner, target marking, stronger hits, status popups (#45); (b) later: turn-order strip, round counter | ui-assets |
+| 1.6 | **Combat readability**: ✅ (a) who did what to whom: action banner, target marking, stronger hits, status popups (#45 → PR #49); (b) later: turn-order strip, round counter | ui-assets |
 
 **Exit:** you play three runs in a row because you want to, and the bot
 report shows every floor has fights and the run length is inside the

@@ -46,7 +46,9 @@ Read `CLAUDE.md`, the **Now** block of `docs/PLAN.md`, and your task brief.
 
 ## Done means
 
-- Before/after screenshots in the PR at a phone resolution, in both
-  languages when text changed.
+- Before/after screenshots at a phone resolution (both languages when text
+  changed), **sent to Roxton with `SendUserFile`** in your final report,
+  since `gh` can't attach images to a PR. List what each one shows in the
+  PR text.
 - No errors in the Godot log, and the `smoke-test` skill passes.
 - CI is green.
