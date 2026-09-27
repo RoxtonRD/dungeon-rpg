@@ -19,17 +19,20 @@ back after weeks away, this is the only thing you need to read.*
   save tests (#40), dev cheat panel (#41), **Warrior 1/3: Rage +
   cooldowns (#43)**
 - **Feel gate 1 passed** (2026-09-27): Rage beats mana (D-021).
+- **Readability confirmed** by Roxton: "who did what to whom" is readable
+  without the log (#49).
 - **Next up:**
-  1. Roxton: merge PR #49 (combat readability), then play one fight:
-     can you tell who did what to whom without reading the log?
-  2. gameplay-engineer: Warrior 2a/3, talents logic + data, #47 (editor,
-     after #49), with hand-offs from the #49 review in the issue comments
-  3. advisor: brief 2b (talent screen, ui-assets) and 3/3 (synergy +
-     one passive + one reaction, D-023)
-  4. Roxton: after #47, play the forks via DevTools (`set_talent`)
-  5. release-engineer: target SDK 36 + a build on the phone, brief not
+  1. Roxton: merge PR #51 (Warrior talents logic, approved)
+  2. ui-assets: Warrior 2b/3, talent screen, #52 (editor, after #51)
+  3. Roxton: **feel gate 2**: two different Warrior builds, two fights
+     each, via the talent screen
+  4. advisor: brief 3/3 (Backstab synergy + one passive + the Parry
+     reaction, D-023)
+  5. qa-balance (later): the sim picks talent builds; it currently measures
+     a talent-less Warrior (D3 floor 4: 56% wins)
+  6. release-engineer: target SDK 36 + a build on the phone, brief not
      written yet
-  6. Roxton: branch protection on `main` (require PR + both CI checks)
+  7. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
@@ -102,7 +105,7 @@ unknown.
 | Step | What | Owner |
 |---|---|---|
 | 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
-| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); **2a** talents logic + data (#47); **2b** talent screen; **3/3** the Backstab synergy + one passive + one reaction (D-023). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
+| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); ✅ **2a** talents logic + data (#47 → PR #51); **2b** talent screen (#52); **3/3** the Backstab synergy + one passive + one reaction (D-023). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |

@@ -209,3 +209,20 @@ guard for now is to keep `LEVEL_CAP` and the SP schedule data-driven, so
 raising them later is cheap. An online/MMO version is explicitly a
 separate, after-release dream, not part of this project's scope.
 
+---
+
+## 2026-09-27 — Warrior 2a review (PR #51)
+
+**D-025 · Talent rules settled during implementation (the #47 engineer's
+calls, accepted).**
+- The *effective* skill cost applies only to talent classes. Mana classes
+  keep paying base costs in combat, exactly as before (the tier discount
+  stays outside-combat only).
+- An old save converts only when it has **no `talents` key**, so SP from
+  a Tome of Mastery is never wiped on later loads.
+- Talents are keyed by the skill's `.tres` basename (e.g.
+  `warrior_execute`), like `sp_spent`. `DevTools.set_talent` accepts
+  either the id or the basename.
+- Reaper's refund has no log line yet; the Rage bar shows it. A popup can
+  come with 3/3 if the playtest asks for it.
+
