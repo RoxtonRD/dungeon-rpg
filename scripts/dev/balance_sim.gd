@@ -26,12 +26,19 @@ const LEVEL_BY_DUNGEON := [2, 3, 4, 5]
 ## Builds a party at `level`, geared to `gear_tier` (ItemData.Tier, -1 = naked).
 ## Gearing matters: a real party at dungeon 4 is carrying rare/epic loot, so
 ## simulating naked heroes badly understates party power at depth.
-static func make_party(class_ids: Array, level: int, gear_tier: int = -1) -> Array[Hero]:
+## Talent-class heroes get the SP their level earns, then spend it on `build`
+## (see apply_build). Nothing here awards XP, so nothing here can save.
+static func make_party(
+	class_ids: Array, level: int, gear_tier: int = -1, build: Dictionary = {}
+) -> Array[Hero]:
 	var out: Array[Hero] = []
 	for cid in class_ids:
 		var cd := load("res://resources/classes/%s.tres" % cid) as ClassData
 		var h := Hero.create(cd)
 		h.level = level
+		if cd.uses_talents:
+			h.sp_available = Party.talent_sp_for_level(level)
+			apply_build(h, build)
 		if gear_tier >= 0:
 			_equip_best(h, gear_tier)
 		h.hp = h.max_hp()  # after level+gear, so maxima are correct
@@ -77,6 +84,20 @@ static func _equip_best(h: Hero, max_tier: int) -> void:
 		h.equipment[slot_name] = _gear_cache[key][slot_name]
 
 
+## Spends a talent hero's SP on `build`, a dictionary
+## {skill basename: {"fork": "a"|"b", "boost": bool}}, in its listed order,
+## through the real Party API. A pick the hero can't take yet (skill still
+## level-locked, or no SP left) is skipped; later picks are still tried.
+static func apply_build(h: Hero, build: Dictionary) -> void:
+	for key in build:
+		var pick: Dictionary = build[key]
+		for s in h.class_data.skills:
+			if s.resource_path.get_file().get_basename() != key:
+				continue
+			if Party.pick_fork(h, s, str(pick.get("fork", ""))) and pick.get("boost", false):
+				Party.boost_skill(h, s)
+
+
 static func heal_party(heroes: Array[Hero]) -> void:
 	for h in heroes:
 		h.hp = h.max_hp()
@@ -87,12 +108,17 @@ static func heal_party(heroes: Array[Hero]) -> void:
 
 
 ## Fights `enemy_list` with `heroes` (HP/MP carry in and out). Accumulates
-## damage dealt per class id into `dmg_by_class`. Returns {result, rounds}.
+## damage dealt per class id into `dmg_by_class`, and skill usage per class id
+## into `usage` (see _add_usage). Returns {result, rounds}.
 static func fight(
-	heroes: Array[Hero], enemy_list: Array[EnemyData], dmg_by_class: Dictionary
+	heroes: Array[Hero],
+	enemy_list: Array[EnemyData],
+	dmg_by_class: Dictionary,
+	usage: Dictionary = {}
 ) -> Dictionary:
 	var st := CombatState.build(heroes, enemy_list)
 	st.start()
+	var used: Dictionary = {}  # this fight only: class id -> {skill id: count}
 	var guard := 0
 	while not st.ended and guard < MAX_ROUNDS * 8:
 		guard += 1
@@ -102,13 +128,32 @@ static func fight(
 		if actor.side == Battler.Side.ENEMY:
 			st.step()
 		else:
-			_player_turn(st, actor, dmg_by_class)
+			_player_turn(st, actor, dmg_by_class, used)
+	_add_usage(usage, used)
 	return {"result": int(st.result), "rounds": st.round_number}
 
 
-## Scripted player policy: heal a badly hurt ally when possible, otherwise use
-## the highest expected-damage affordable skill, focusing the weakest enemy.
-static func _player_turn(st: CombatState, actor: Battler, dmg_by_class: Dictionary) -> void:
+## Folds one fight's skill usage into `usage`, per class id:
+## {"actions": {skill id: count}, "fights": fights it acted in,
+##  "distinct": sum over those fights of the distinct skills it used}.
+static func _add_usage(usage: Dictionary, used: Dictionary) -> void:
+	for cid in used:
+		var u: Dictionary = usage.get_or_add(cid, {"actions": {}, "fights": 0, "distinct": 0})
+		var counts: Dictionary = used[cid]
+		for sid in counts:
+			u["actions"][sid] = int(u["actions"].get(sid, 0)) + int(counts[sid])
+		u["fights"] = int(u["fights"]) + 1
+		u["distinct"] = int(u["distinct"]) + counts.size()
+
+
+## Scripted player policy: heal a badly hurt ally when possible; a Warrior
+## Provokes when he isn't taunting, 2+ enemies are alive and he can afford it;
+## otherwise use the highest expected-damage affordable skill (scored as the
+## hero's effective skill, so talent variants count), focusing the weakest
+## enemy. `used` counts the skills each class picked this fight.
+static func _player_turn(
+	st: CombatState, actor: Battler, dmg_by_class: Dictionary, used: Dictionary = {}
+) -> void:
 	var hero: Hero = actor.hero
 	var usable: Array[SkillData] = []
 	for s in hero.class_data.skills:
@@ -134,9 +179,11 @@ static func _player_turn(st: CombatState, actor: Battler, dmg_by_class: Dictiona
 				pick = s
 				break
 	if pick == null:
+		pick = _provoke_pick(st, actor, usable)
+	if pick == null:
 		var best := -1.0
 		for s in usable:
-			var score := _damage_score(s, st)
+			var score := _damage_score(Party.get_effective_skill(hero, s), st)
 			if score > best:
 				best = score
 				pick = s
@@ -158,12 +205,27 @@ static func _player_turn(st: CombatState, actor: Battler, dmg_by_class: Dictiona
 			if o.get_hp() < target.get_hp():
 				target = o
 
+	var counts: Dictionary = used.get_or_add(hero.class_data.id, {})
+	counts[pick.id] = int(counts.get(pick.id, 0)) + 1
 	var before := _enemy_hp_total(st)
 	st.player_action(pick, target)
 	var dealt := before - _enemy_hp_total(st)
 	if dealt > 0:
 		var key: String = hero.class_data.id
 		dmg_by_class[key] = int(dmg_by_class.get(key, 0)) + dealt
+
+
+## The Warrior's taunt skill when the Provoke rule applies, else null. Warrior
+## only: no other class's policy changes.
+static func _provoke_pick(st: CombatState, actor: Battler, usable: Array[SkillData]) -> SkillData:
+	if actor.hero.class_data.id != "warrior" or actor.has_taunt():
+		return null
+	if _alive_count(st.enemies) < 2:
+		return null
+	for s in usable:
+		if Party.get_effective_skill(actor.hero, s).taunt:
+			return s
+	return null
 
 
 ## Rough expected-damage heuristic used to choose a skill.
@@ -210,8 +272,15 @@ static func _party_hp_pct(heroes: Array[Hero]) -> float:
 ## `gear_offset` shifts how well-equipped the party is assumed to be:
 ##  0 = best-in-slot for the depth (optimistic), -1 = one tier behind
 ##  (realistic), -2 = two behind / naked early (pessimistic).
+## `build` is a talent build (see apply_build); `usage`, when given, collects
+## skill usage per dungeon level: usage[dl] = {class id: usage} (see _add_usage).
 static func encounter_report(
-	class_ids: Array, trials: int = 100, levels: Array = [], gear_offset: int = -1
+	class_ids: Array,
+	trials: int = 100,
+	levels: Array = [],
+	gear_offset: int = -1,
+	build: Dictionary = {},
+	usage: Dictionary = {}
 ) -> Dictionary:
 	var by_dungeon: Array = levels if levels.size() == 4 else LEVEL_BY_DUNGEON
 	var out: Dictionary = {}
@@ -219,14 +288,15 @@ static func encounter_report(
 		var level: int = int(by_dungeon[dl - 1])
 		var gear: int = clampi(dl - 1 + gear_offset, -1, 3)
 		var run := DungeonRun.generate(dl)
+		var dl_usage: Dictionary = usage.get_or_add(dl, {})
 		for fl in range(0, 4):
 			var wins := 0
 			var rounds := 0
 			var hp_left := 0.0
 			var dmg: Dictionary = {}
 			for i in trials:
-				var heroes := make_party(class_ids, level, gear)
-				var res := fight(heroes, run.roll_encounter(fl), dmg)
+				var heroes := make_party(class_ids, level, gear, build)
+				var res := fight(heroes, run.roll_encounter(fl), dmg, dl_usage)
 				if int(res["result"]) == int(CombatState.Result.VICTORY):
 					wins += 1
 				rounds += int(res["rounds"])
@@ -246,8 +316,8 @@ static func encounter_report(
 			# sampling run.roll_boss() repeatedly would measure a single randomly
 			# chosen boss and make the numbers jump between report runs.
 			run.boss = i % DungeonRun.BOSS_ENCOUNTERS.size()
-			var heroes := make_party(class_ids, level, gear)
-			var res := fight(heroes, run.roll_boss(), bdmg)
+			var heroes := make_party(class_ids, level, gear, build)
+			var res := fight(heroes, run.roll_boss(), bdmg, dl_usage)
 			if int(res["result"]) == int(CombatState.Result.VICTORY):
 				bwins += 1
 			brounds += int(res["rounds"])
