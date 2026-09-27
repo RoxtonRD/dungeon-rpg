@@ -173,3 +173,12 @@ The Characters screen hides Cast for Rage skills (Provoke would have paid
 from MP). Rage only exists in a fight. This was the #43 engineer's call,
 and it is accepted.
 
+**D-021 · Feel gate 1 passed: v3-A (Rage) stays, and stamina is shelved.**
+Roxton's playtest (2026-09-27): Rage feels "much better than mana", and
+its pace is good in fights with 2+ enemies. Execute was used only as the
+last blow, so its cooldown never mattered. Warrior 2/3 therefore gives it
+a mid-fight option (the *Sunder* fork). Choices were "sometimes obvious,
+sometimes real", which is what forks and synergy target. His strongest
+finding was that combat is hard to read (who hit whom, what effect
+landed), so readability (#45) goes before 2/3.
+
