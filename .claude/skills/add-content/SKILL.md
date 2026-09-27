@@ -23,6 +23,15 @@ optional icon, and **registration** wherever the game lists content. Most
 - **Icons are optional** and come from game-icons.net (D-002). Missing
   icons fall back gracefully.
 
+## Replacing a skill (D-027)
+
+If a skill changes into something very different, **don't edit it in
+place**. Create a new `.tres` with a new basename and id, point the class's
+`skills` array at it, and leave the old file untouched, so switching back
+is a one-line change. Rename or delete the old one only after Roxton has
+decided. After the save freeze line, a swap also needs a save migration
+(saves key skills by basename).
+
 ## Skill (`SkillData`, `scripts/data/skill_data.gd`)
 
 1. `resources/skills/<class>_<name>.tres`, using a sibling as the

@@ -226,3 +226,25 @@ calls, accepted).**
 - Reaper's refund has no log line yet; the Rage bar shows it. A popup can
   come with 3/3 if the playtest asks for it.
 
+---
+
+## 2026-09-27 — Feel gate 2 (Warrior talents)
+
+**D-026 · Feel gate 2 passed: talents and scarce SP stay.**
+Roxton played the Tank and Executioner builds: they play differently (one
+defensive and Rage-building, one attack-oriented), though "not very
+different" yet. The permanent pick made him hesitate, which is the goal.
+Sunder made Execute a mid-fight decision. 5 SP for 8 nodes "was good",
+given the 10-level cap. Part 3/3 (passive, reaction, synergy) is expected
+to widen the gap between builds; the sim report (#56) measures it.
+
+**D-027 · Replacing a skill: add a new resource, keep the old one.**
+Roxton's idea: when a skill changes into something very different, don't
+rewrite A into B. Author B as a new `.tres`, point the class's `skills`
+list at it, and keep A's file untouched, so switching back is a one-line
+data change. No in-game enable/disable system is needed: the class's list
+*is* the switch. Runtime A/B testing gets a dev command,
+`DevTools.swap_skill(class_id, slot, skill_id)` (part 3/3). Saves
+reference skills by basename, so after the save freeze line a swap needs
+a migration step (D-004).
+

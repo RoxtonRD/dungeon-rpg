@@ -21,20 +21,17 @@ back after weeks away, this is the only thing you need to read.*
 - **Feel gate 1 passed** (2026-09-27): Rage beats mana (D-021).
 - **Readability confirmed** by Roxton: "who did what to whom" is readable
   without the log (#49).
-- **Next up** (items 1–3 run in parallel; only #1 uses the editor):
-  1. Roxton: merge PR #54 (talent screen), then **feel gate 2**: two
-     Warrior builds, two fights each
-  2. qa-balance: sim with Warrior talent builds + headless runner, #56
-     (worktree)
-  3. release-engineer: Android debug APK (API 36) + install doc, #55
-     (worktree), then Roxton installs it on his phone (**Phase 0 exit**)
-  4. advisor: brief 3/3 (Backstab synergy + one passive + the Parry
-     reaction) from the gate 2 feedback and the sim report
-  5. Before the rollout (1.3): **live numbers in skill descriptions** (a
-     boosted Sunder still says "DEF −6"; the boost's −2 cost isn't
-     mentioned). Descriptions become templates filled from the effective
-     skill (content-data + gameplay-engineer).
-  6. Roxton: branch protection on `main` (require PR + both CI checks)
+- **Feel gate 2 passed** (D-026): talents and scarce SP stay.
+- **Next up:**
+  1. In progress (worktrees): sim talent builds #56, Android debug APK #55
+     (then Roxton installs it on his phone: **Phase 0 exit**)
+  2. Roxton: pick the Warrior's passive (options in the 2026-09-27
+     session)
+  3. advisor: brief 3/3: Backstab synergy + the chosen passive + the
+     Parry reaction + `DevTools.swap_skill` (D-027), informed by the #56
+     report
+  4. Before the rollout (1.3): live numbers in skill descriptions
+  5. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
