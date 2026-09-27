@@ -48,7 +48,8 @@ stop and report back instead of guessing.
 ## Done means
 
 - It runs in the editor without errors (check the Godot log via MCP),
-  and the `smoke-test` skill passes. Attach its screenshots to the PR.
+  and the `smoke-test` skill passes. Send its screenshots to Roxton with
+  `SendUserFile` in your final report; `gh` can't attach images to a PR.
 - CI is green.
 - The PR description says what changed, how to verify it in the game, and
   whether saves or balance are affected.

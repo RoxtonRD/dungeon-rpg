@@ -6,8 +6,9 @@ Closes #
 
 ## How it was verified
 
-<!-- The brief's verification steps and their results. Screenshots for UI
-     (phone resolution; both languages if text changed). -->
+<!-- The brief's verification steps and their results. `gh` can't attach
+     images: send screenshots to Roxton with the SendUserFile tool in your
+     final report, and list here what each one shows. -->
 
 ## Impact checklist
 

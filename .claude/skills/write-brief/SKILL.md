@@ -44,6 +44,8 @@ Use the sections in `.github/ISSUE_TEMPLATE/brief.md`:
   the real `user://` save, include a checksum-before-and-after step.
   **Every editor-driver brief touches it**: running the game can save
   (D-018).
+- **Screenshots** go to Roxton through `SendUserFile` in the worker's
+  final report (`gh` can't attach images). Never ask for them "in the PR".
 - **Hand-offs from earlier reports**: carry forward tips that previous
   workers put in their "what was wrong in the brief" notes.
 - **Start prompt**: always begins with "Read `.claude/agents/<role>.md`.
