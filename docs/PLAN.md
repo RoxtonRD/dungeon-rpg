@@ -22,16 +22,22 @@ back after weeks away, this is the only thing you need to read.*
 - **Readability confirmed** by Roxton: "who did what to whom" is readable
   without the log (#49).
 - **Feel gate 2 passed** (D-026): talents and scarce SP stay.
+- **Sim findings** (D-028): fights too short (0.7–3 rounds); the level
+  curve is unmeasured; the dungeon 3 boss spikes.
 - **Next up:**
-  1. In progress (worktrees): sim talent builds #56, Android debug APK #55
-     (then Roxton installs it on his phone: **Phase 0 exit**)
-  2. Roxton: pick the Warrior's passive (options in the 2026-09-27
-     session)
-  3. advisor: brief 3/3: Backstab synergy + the chosen passive + the
-     Parry reaction + `DevTools.swap_skill` (D-027), informed by the #56
-     report
-  4. Before the rollout (1.3): live numbers in skill descriptions
-  5. Roxton: branch protection on `main` (require PR + both CI checks)
+  1. Roxton: merge PRs #59 + #60, then the **Phase 0 exit**: delete
+     `android/` in the main checkout, run `tools/export_android.sh`,
+     install with the `adb install -r` line from `docs/release/android.md`,
+     and play a minute
+  2. gameplay-engineer: Warrior 3/3, Bloodlust + Parry + Backstab synergy
+     + `swap_skill`, #62 (editor)
+  3. qa-balance: campaign bot (real XP, level curve, run length, TPK), #61
+     (worktree, parallel with #62)
+  4. Roxton: feel gate 3 (Bloodlust vs Parry tension)
+  5. advisor: from #61's numbers, brief **encounters + dungeon pressure
+     (1.5)**; revisit the SP schedule if levels are low
+  6. Before the rollout (1.3): live numbers in skill descriptions
+  7. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
@@ -76,7 +82,7 @@ the fun work.
 | **Save tests** (#35): round-trip, crash-safety, v3 fixture, isolated `user://` | qa-balance |
 | ✅ **Format + syntax hook** (#31 → PR #37): gdformat pass, PostToolUse hook, CI format check; gdlint non-blocking (52 style warnings) | qa-balance |
 | Branch protection on `main`: require a PR and the CI check | Roxton |
-| Target SDK 34 → 36; confirm the Godot 4.7 export template; install a build on the phone | release-engineer |
+| ✅ Target SDK 36, export filters, `tools/export_android.sh` + `docs/release/android.md` (#55 → PR #59); **Roxton installs it on the phone** | release-engineer |
 | Log in to Play Console: check the account is active, identity verification is done, and note the account creation date | Roxton |
 
 **Exit:** the game runs on your phone; a save interrupted mid-write loses
@@ -108,7 +114,7 @@ unknown.
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
-| 1.5 | **Dungeon pressure**: combat quota per floor, rests restore partially, the Fountain stops being a free full heal, close the walk-back regen loop (P1–P4 in `archive/roadmap-v3.md`). Per-floor enemy pools (`cultist` and `ogre` exist but never spawn) | gameplay-engineer + content-data |
+| 1.5 | **(Priority after 3/3, D-028) Dungeon pressure + encounters**: fights last longer and ask for more than one move (enemy groups, roles, abilities), guided by the campaign bot (#61); plus combat quota per floor, rests restore partially, the Fountain stops being a free full heal, close the walk-back regen loop (P1–P4 in `archive/roadmap-v3.md`). Per-floor enemy pools (`cultist` and `ogre` exist but never spawn) | gameplay-engineer + content-data |
 | 1.6 | **Combat readability**: ✅ (a) who did what to whom: action banner, target marking, stronger hits, status popups (#45 → PR #49); (b) later: turn-order strip, round counter | ui-assets |
 
 **Exit:** you play three runs in a row because you want to, and the bot
@@ -143,7 +149,7 @@ Can start once Phase 2 is underway.
 | Privacy policy page (the game collects nothing, but the page is still required), Data safety form, IARC rating | release-engineer |
 | Store listing in pt-BR and English: icon, feature graphic, screenshots | ui-assets + content-data |
 | itch.io page (already exists) gets a web build as a public playtest channel | release-engineer |
-| **Export filters:** exclude `test/`, `test/fixtures/`, `scripts/dev/` and `addons/gdUnit4/` from release exports (found in the #35 review) | release-engineer |
+| **Export hardening:** `test/` and `addons/gdUnit4/` are already excluded (PR #59). Also exclude `addons/godot_ai/*`, and add a CI boot check of the exported pack (D-030) | release-engineer |
 | **Newer-save guard:** when `load_game()` refuses a save from a newer build, the main menu must say so instead of silently starting a new game, which would overwrite that save (found in the #28 review) | gameplay-engineer + ui-assets |
 | **Cross the save freeze line**: fixture saves captured; migrations mandatory from here on | gameplay-engineer + qa-balance |
 
