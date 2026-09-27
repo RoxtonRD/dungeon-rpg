@@ -156,3 +156,20 @@ state-changing call (`PLAN.md` Phase 0). Parallel sessions share the same
 `user://` folder: the #35 guard caught the #32 session saving mid-run.
 The save tests themselves are isolated in `user://test_saves/`.
 
+---
+
+## 2026-09-27 — Warrior slice 1/3 (#43, reviewed after merge)
+
+**D-019 · Cooldown semantics: "cooldown N" = usable again on your Nth turn
+after using it.**
+The counter is set to N when the skill is used and drops by 1 at the start
+of each of the caster's turns, so the skill is locked for N−1 turns (the
+#43 engineer flagged this). We keep the mechanic and tune the numbers, not
+the rule: Execute's `cooldown = 3` means locked for 2 Warrior turns. If
+the playtest wants it locked longer, raise the number.
+
+**D-020 · Rage classes have no out-of-combat casts.**
+The Characters screen hides Cast for Rage skills (Provoke would have paid
+from MP). Rage only exists in a fight. This was the #43 engineer's call,
+and it is accepted.
+
