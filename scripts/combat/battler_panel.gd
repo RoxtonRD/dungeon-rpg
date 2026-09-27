@@ -22,6 +22,14 @@ const POPUP_HOLD_TIME := 1.2
 const POPUP_FADE_TIME := 0.4
 ## Vertical gap between stacked status popups from the same action.
 const STATUS_POPUP_STEP := 26.0
+## Label and colour of each damage popup tag, by tag (CombatState.damage_popup).
+const POPUP_TAGS := {
+	"crit": ["UI_POPUP_CRIT", Color(1.0, 0.82, 0.25)],
+	"exposed": ["UI_POPUP_EXPOSED", Color(1.0, 0.45, 0.3)],
+	"parried": ["UI_POPUP_PARRIED", Color(0.7, 0.85, 1.0)],
+}
+## Vertical gap between stacked tag labels over one number.
+const POPUP_TAG_STEP := 24.0
 ## Offsets for numbers that overlap in time (multi-hit on one card): each
 ## extra number steps sideways and down so it never touches the previous one.
 const NUMBER_POPUP_OFFSETS: Array[Vector2] = [
@@ -300,16 +308,23 @@ func flash_active() -> void:
 
 ## Floating combat number that rises from the portrait, holds, then fades.
 ## `color` distinguishes physical / magic damage and healing (set by the
-## caller). A crit is larger, with a "CRIT!" label above it.
-func show_popup(text: String, color: Color, crit: bool = false) -> void:
+## caller). Each tag (see CombatState.damage_popup) adds a label above the
+## number, stacked upwards; a crit also makes the number larger.
+func show_popup(text: String, color: Color, tags := PackedStringArray()) -> void:
+	var crit := tags.has("crit")
 	var off := NUMBER_POPUP_OFFSETS[_number_popups_live % NUMBER_POPUP_OFFSETS.size()]
 	_number_popups_live += 1
 	var lbl := _make_popup_label(text, color, 40 if crit else 32)
 	var tw := _float_label(lbl, (30.0 if crit else 26.0) + off.y, 40.0, off.x)
 	tw.chain().tween_callback(func(): _number_popups_live = maxi(0, _number_popups_live - 1))
-	if crit:
-		var crit_lbl := _make_popup_label(tr("UI_POPUP_CRIT"), Color(1.0, 0.82, 0.25), 22)
-		_float_label(crit_lbl, -8.0 + off.y, 40.0, off.x)
+	var row := 0
+	for tag in tags:
+		if not POPUP_TAGS.has(tag):
+			continue
+		var style: Array = POPUP_TAGS[tag]
+		var tag_lbl := _make_popup_label(tr(style[0]), style[1], 22)
+		_float_label(tag_lbl, -8.0 - row * POPUP_TAG_STEP + off.y, 40.0, off.x)
+		row += 1
 
 
 ## Status text ("DEF +5", "Taunting", ...) shown lower on the card than the
