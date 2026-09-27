@@ -248,3 +248,42 @@ data change. No in-game enable/disable system is needed: the class's list
 reference skills by basename, so after the save freeze line a swap needs
 a migration step (D-004).
 
+---
+
+## 2026-09-27 — Sim report (#56 → PR #60) and the Android build (#55 → PR #59)
+
+**D-028 · The sim says fights are too short, and the level curve is
+unmeasured. After Warrior 3/3, encounters come before any rollout.**
+`docs/reports/sim-warrior-talents.md`, 200 fights per cell, seed 1:
+- Normal fights end in **0.7–3 rounds** with ~100% wins; only bosses last
+  4–6. The Warrior acts 2–3 times per fight and Rage starts at 0, so Slash
+  is 62–65% of his actions and he averages ~1.7 distinct skills per
+  fight. The slice criterion (3+ distinct, none >50%) fails **because of
+  fight length, not the talent design**. It is likely a root of the
+  original "testing is boring".
+- The sim *assumes* heroes are level 2–5 across dungeons 1–4. If that's
+  true, the Warrior has 1–2 SP in the 1.0 campaign, and the tree Roxton
+  played at level 10 is mostly unreachable. The campaign bot (#61)
+  measures the real curve.
+- The difficulty curve is uneven: the dungeon 3 boss wins 50–62%, the
+  dungeon 4 boss ~84%.
+
+So once 3/3 is in, the next lever is **encounter design and dungeon
+pressure (PLAN 1.5)**, guided by the #61 numbers, before rolling talents
+out to other classes. The SP schedule (D-022) may be revisited once real
+levels are known.
+
+**D-029 · Bloodlust is the Warrior's first passive, in a pick-one list.**
+Roxton picked Bloodlust (+2% damage per 10 Rage held, placeholder).
+Passives are modelled as a pick-one list per class, so more options
+(Thick Hide, Unstoppable, …) can be added later as data.
+
+**D-030 · Android debug builds are reproducible (`tools/export_android.sh`,
+API 36).**
+The export excludes `test/` and `addons/gdUnit4/`. The Godot AI plugin
+already strips its `_mcp_game_helper` autoload from exports. Shipping it
+would leak memory on a phone, because it queues logs until an editor
+attaches. Follow-up (Phase 3): also exclude `addons/godot_ai/*`, and add a
+CI boot check of the exported pack so a stripped-but-missing autoload
+can't slip through.
+
