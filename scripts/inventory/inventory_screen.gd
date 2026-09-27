@@ -4,6 +4,7 @@
 extends Control
 
 const ITEM_DIR := "res://resources/items/"
+const TALENT_SCREEN := preload("res://scripts/talents/talent_screen.tscn")
 
 @onready var hero_tab_bar: HBoxContainer = %HeroTabBar
 @onready var full_body_tex: TextureRect = %FullBodyTex
@@ -297,6 +298,9 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 	for child in skill_rows.get_children():
 		child.queue_free()
 
+	if hero.class_data.uses_talents:
+		skill_rows.add_child(_make_talents_button(hero))
+
 	for skill in hero.class_data.skills:
 		# Only show skills the hero has already unlocked.
 		if hero.level < skill.unlock_level:
@@ -310,13 +314,19 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		row.custom_minimum_size = Vector2(0, 44)
 		row.add_child(_make_icon(skill.icon_or_null()))
 
-		# Skill name + tier
-		var tier := Party.get_skill_tier(hero, skill)
+		# Skill name + tier. Talent classes have no tiers: they show the skill as
+		# the hero really uses it (the picked variant, boost included).
+		var shown := skill
+		var tier_part := ""
+		if hero.class_data.uses_talents:
+			shown = Party.get_effective_skill(hero, skill)
+		else:
+			tier_part = "  T%d" % Party.get_skill_tier(hero, skill)
 		var name_lbl := Label.new()
 		var uses_rage := hero.class_data.resource_type == ClassData.ResourceType.RAGE
 		var resource_name := tr("RES_RAGE") if uses_rage else tr("RES_MP")
 		name_lbl.text = (
-			"%s  T%d  ·  %d %s" % [tr(skill.display_name), tier, skill.mp_cost, resource_name]
+			"%s%s  ·  %d %s" % [tr(shown.display_name), tier_part, shown.mp_cost, resource_name]
 		)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 15)
@@ -346,9 +356,59 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 			row.add_child(up_btn)
 
 		entry.add_child(row)
-		if not skill.description.is_empty():
-			entry.add_child(_make_desc_label(tr(skill.description)))
+		if not shown.description.is_empty():
+			entry.add_child(_make_desc_label(tr(shown.description)))
 		skill_rows.add_child(entry)
+
+
+## "Talents" button that opens the talent overlay, with an "N SP" badge when
+## the hero has points to spend.
+func _make_talents_button(hero: Hero) -> Button:
+	var btn := Button.new()
+	btn.text = tr("UI_TALENTS")
+	btn.custom_minimum_size = Vector2(0, 52)
+	btn.pressed.connect(_open_talents.bind(hero))
+	if hero.sp_available > 0:
+		var badge := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(1, 0.82, 0.35, 1)
+		style.set_corner_radius_all(12)
+		style.content_margin_left = 10
+		style.content_margin_right = 10
+		style.content_margin_top = 2
+		style.content_margin_bottom = 2
+		badge.add_theme_stylebox_override("panel", style)
+		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var lbl := Label.new()
+		lbl.text = tr("UI_TALENT_SP") % hero.sp_available
+		lbl.add_theme_font_size_override("font_size", 16)
+		lbl.add_theme_color_override("font_color", Color(0.12, 0.08, 0.04))
+		badge.add_child(lbl)
+		# Pinned 12 px from the button's right edge, vertically centred; the grow
+		# directions let it size itself to the label.
+		badge.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+		badge.offset_left = -12
+		badge.offset_right = -12
+		badge.offset_top = 0
+		badge.offset_bottom = 0
+		badge.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		badge.grow_vertical = Control.GROW_DIRECTION_BOTH
+		btn.add_child(badge)
+	return btn
+
+
+## Opens the talent screen as a full-screen overlay on top of this screen;
+## closing it refreshes the Characters screen (SP, skill names).
+func _open_talents(hero: Hero) -> void:
+	var overlay := TALENT_SCREEN.instantiate()
+	overlay.setup(hero)
+	overlay.closed.connect(_on_talents_closed.bind(overlay))
+	add_child(overlay)
+
+
+func _on_talents_closed(overlay: Node) -> void:
+	overlay.queue_free()
+	_refresh()
 
 
 # ── Out-of-combat healing ─────────────────────────────────────────────────────
