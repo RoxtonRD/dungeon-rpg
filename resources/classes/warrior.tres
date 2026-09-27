@@ -13,6 +13,7 @@ script = ExtResource("1")
 id = "warrior"
 display_name = "CLASS_WARRIOR"
 resource_type = 1
+uses_talents = true
 base_hp = 38
 atk = 7
 def = 5

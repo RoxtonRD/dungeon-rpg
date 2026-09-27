@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "execute_reaper"
+display_name = "SKILL_WARRIOR_REAPER"
+description = "SKILLD_WARRIOR_REAPER"
+mp_cost = 50
+cooldown = 3
+unlock_level = 5
+max_upgrade_level = 4
+skill_type = 0
+target = 0
+power = 2.5
+crit_chance = 0.5
+finisher = true
+on_kill_rage = 30
+on_kill_reset_cooldown = true

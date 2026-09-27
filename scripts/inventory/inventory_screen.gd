@@ -335,8 +335,9 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 			cast_btn.pressed.connect(_on_cast.bind(hero, skill))
 			row.add_child(cast_btn)
 
-		# Upgrade button — only shown when the skill can ever be upgraded
-		if skill.max_upgrade_level > 1:
+		# Upgrade button — only shown when the skill can ever be upgraded. Talent
+		# classes don't have tiers (their talent screen replaces this).
+		if skill.max_upgrade_level > 1 and not hero.class_data.uses_talents:
 			var up_btn := Button.new()
 			up_btn.text = tr("UI_UPGRADE")
 			up_btn.custom_minimum_size = Vector2(90, 0)

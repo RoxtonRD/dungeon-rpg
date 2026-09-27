@@ -72,11 +72,32 @@ enum DamageStat { AUTO, ATK, MAG }
 @export_group("Damage Over Time")
 @export var dot_damage: int = 0
 @export var dot_duration: int = 0
+## Translation key of the DoT's status popup ("Poison %d", "Bleed %d").
+@export var dot_popup_key: String = "UI_POPUP_POISON"
 
 @export_group("Heal Over Time")
 ## HP restored to the target at the end of each round while active.
 @export var heal_over_time: int = 0
 @export var hot_duration: int = 0
+
+@export_group("Rage")
+## Rage this action gives the caster when it deals damage. -1 means the default
+## (Battler.RAGE_PER_DAMAGING_ACTION).
+@export var rage_on_action: int = -1
+## Multiplies the Rage the bearer gains from hits taken, while the status this
+## skill grants is active (Vengeance).
+@export var rage_taken_mult: float = 1.0
+## Rage refunded to the caster when this action kills a foe.
+@export var on_kill_rage: int = 0
+## A kill with this action resets its own cooldown.
+@export var on_kill_reset_cooldown: bool = false
+
+@export_group("Talents")
+## The two talent variants of a hero skill (talent classes only, see
+## ClassData.uses_talents). Each is a complete SkillData that replaces this
+## one once the hero picks it. Null on variants and on enemy skills.
+@export var fork_a: SkillData
+@export var fork_b: SkillData
 
 @export_group("Enemy AI")
 @export var use_condition: UseCondition = UseCondition.NONE

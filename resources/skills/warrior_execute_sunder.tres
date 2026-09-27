@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "execute_sunder"
+display_name = "SKILL_WARRIOR_SUNDER"
+description = "SKILLD_WARRIOR_SUNDER"
+mp_cost = 50
+cooldown = 3
+unlock_level = 5
+max_upgrade_level = 4
+skill_type = 0
+target = 0
+power = 2.0
+crit_chance = 0.5
+mod_def = -6
+mod_duration = 3

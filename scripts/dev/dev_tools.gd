@@ -93,24 +93,114 @@ func heal_party() -> String:
 
 
 ## Sets each hero's level directly (like BalanceSim), keeping Skill Points
-## consistent with it: a hero has 1 SP per level in total, spent or not.
+## consistent with it: a hero has 1 SP per level in total, spent or not (talent
+## classes: Party.talent_sp_for_level).
 func _apply_level(level: int) -> int:
 	var lvl := clampi(level, 1, Party.LEVEL_CAP)
 	for h in Party.heroes:
 		h.level = lvl
 		h.xp = 0
-		var spent := 0
-		for key in h.sp_spent:
-			spent += int(h.sp_spent[key])
-		if spent > lvl:
-			# Lowered below what was already spent: refund everything.
-			h.sp_spent = {}
-			spent = 0
-		h.sp_available = lvl - spent
-		Party.reconcile_surplus_sp(h)
+		if h.class_data.uses_talents:
+			_apply_talent_sp(h)
+		else:
+			_apply_tier_sp(h)
 		h.hp = h.max_hp()
 		h.mp = h.max_mp()
 	return lvl
+
+
+# ── Talents ───────────────────────────────────────────────────────────────────
+
+
+## Sets a talent directly, ignoring SP and level: hero `hero_index` uses fork
+## `fork` ("a" or "b") of the skill `skill_id` (its id, e.g. "execute", or its
+## key, e.g. "warrior_execute"), boosted or not. Lets Roxton play the forks
+## before the talent screen exists.
+func set_talent(hero_index: int, skill_id: String, fork: String, boost := false) -> String:
+	if not enabled:
+		return _disabled()
+	if hero_index < 0 or hero_index >= Party.heroes.size():
+		return "Error: no hero at index %d (party size %d)." % [hero_index, Party.heroes.size()]
+	var h := Party.heroes[hero_index]
+	if not h.class_data.uses_talents:
+		return "Error: %s (%s) has no talents." % [h.display_name(), h.class_data.id]
+	if fork != "a" and fork != "b":
+		return 'Error: fork must be "a" or "b", got "%s".' % fork
+	var skill := _class_skill(h, skill_id)
+	if skill == null:
+		return "Error: %s has no skill '%s'." % [h.class_data.id, skill_id]
+	h.talents[Party._skill_key(skill)] = {"fork": fork, "boost": boost}
+	var effective := Party.get_effective_skill(h, skill)
+	return (
+		"%s: %s -> fork %s%s (%s)."
+		% [
+			h.display_name(),
+			skill.id,
+			fork,
+			" + boost" if boost else "",
+			TranslationServer.translate(effective.display_name)
+		]
+	)
+
+
+## One line per talent-class hero: level, banked SP and each skill's talent.
+func talents_summary() -> String:
+	if not enabled:
+		return _disabled()
+	var lines: Array[String] = []
+	for i in Party.heroes.size():
+		var h := Party.heroes[i]
+		if not h.class_data.uses_talents:
+			continue
+		var parts: Array[String] = []
+		for skill in h.class_data.skills:
+			var t := Party.get_talent(h, skill)
+			if t.is_empty():
+				parts.append("%s: -" % skill.id)
+			else:
+				parts.append(
+					"%s: %s%s" % [skill.id, t["fork"], "+boost" if t.get("boost", false) else ""]
+				)
+		lines.append(
+			(
+				"[%d] %s L%d, SP %d | %s"
+				% [i, h.display_name(), h.level, h.sp_available, ", ".join(parts)]
+			)
+		)
+	if lines.is_empty():
+		return "No talent-class heroes in the party."
+	return "\n".join(lines)
+
+
+## A hero's class skill by id ("execute") or key ("warrior_execute"), or null.
+func _class_skill(h: Hero, skill_id: String) -> SkillData:
+	var wanted := skill_id.strip_edges()
+	for skill in h.class_data.skills:
+		if skill.id == wanted or Party._skill_key(skill) == wanted:
+			return skill
+	return null
+
+
+## 1 SP per level: refunds every tier when the level no longer covers them.
+func _apply_tier_sp(h: Hero) -> void:
+	var spent := 0
+	for key in h.sp_spent:
+		spent += int(h.sp_spent[key])
+	if spent > h.level:
+		# Lowered below what was already spent: refund everything.
+		h.sp_spent = {}
+		spent = 0
+	h.sp_available = h.level - spent
+	Party.reconcile_surplus_sp(h)
+
+
+## Talent SP for the level: refunds every talent when the level no longer
+## covers them.
+func _apply_talent_sp(h: Hero) -> void:
+	var earned := Party.talent_sp_for_level(h.level)
+	if Party.sp_in_talents(h) > earned:
+		h.talents = {}
+	h.sp_available = earned - Party.sp_in_talents(h)
 
 
 # ── Gold & items ──────────────────────────────────────────────────────────────

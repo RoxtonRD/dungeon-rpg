@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cleave_heavy"
+display_name = "SKILL_WARRIOR_HEAVY_ARC"
+description = "SKILLD_WARRIOR_HEAVY_ARC"
+mp_cost = 40
+unlock_level = 1
+max_upgrade_level = 3
+skill_type = 0
+target = 1
+power = 0.7

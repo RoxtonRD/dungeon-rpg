@@ -1,5 +1,6 @@
 ## A single active status effect on a battler: buff, debuff, DoT, or barrier.
-## Created and owned by CombatState; never persisted.
+## Created by CombatState (or out-of-combat casting); party statuses live on the
+## Hero and are saved with it.
 class_name CombatStatus
 extends RefCounted
 
@@ -17,6 +18,8 @@ var mod_spd: int = 0
 
 ## Per-turn damage (DoT only).
 var dot_damage: int = 0
+## Translation key of the DoT's popup word ("Poison %d", "Bleed %d").
+var dot_popup_key: String = "UI_POPUP_POISON"
 
 ## Per-turn healing (REGEN only).
 var heal_per_turn: int = 0
@@ -26,6 +29,8 @@ var duration: int = 0
 
 ## Forces enemies to target the bearer.
 var taunt: bool = false
+## Multiplies the Rage the bearer gains from hits taken (Vengeance).
+var rage_taken_mult: float = 1.0
 
 
 ## Builds every status a buff/heal skill grants: an optional barrier, an optional
@@ -59,6 +64,7 @@ static func build_for_skill(skill: SkillData) -> Array[CombatStatus]:
 		st.mod_spd = skill.mod_spd
 		st.duration = skill.mod_duration
 		st.taunt = skill.taunt
+		st.rage_taken_mult = skill.rage_taken_mult
 		out.append(st)
 	if skill.heal_over_time > 0 and skill.hot_duration > 0:
 		var hot := CombatStatus.new()
@@ -86,6 +92,8 @@ func to_dict() -> Dictionary:
 		"hot": heal_per_turn,
 		"dur": duration,
 		"taunt": taunt,
+		"rage_taken_mult": rage_taken_mult,
+		"dot_popup_key": dot_popup_key,
 	}
 
 
@@ -101,4 +109,6 @@ static func from_dict(d: Dictionary) -> CombatStatus:
 	st.heal_per_turn = int(d.get("hot", 0))
 	st.duration = int(d.get("dur", 0))
 	st.taunt = bool(d.get("taunt", false))
+	st.rage_taken_mult = float(d.get("rage_taken_mult", 1.0))
+	st.dot_popup_key = str(d.get("dot_popup_key", "UI_POPUP_POISON"))
 	return st

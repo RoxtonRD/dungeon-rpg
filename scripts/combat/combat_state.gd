@@ -101,32 +101,50 @@ func skill_is_auto_targeted(skill: SkillData) -> bool:
 
 ## The single gate for a hero using a skill: unlocked at the hero's level,
 ## enough of the class resource (MP or Rage) and not on cooldown. The combat
-## buttons, player_action and the balance sim all ask this.
+## buttons, player_action and the balance sim all ask this. `skill` is the
+## class's base skill; the cost is the effective skill's (Party.combat_cost).
 func can_use(actor: Battler, skill: SkillData) -> bool:
 	if actor.side != Battler.Side.PARTY:
 		return true  # enemies don't pay costs or track cooldowns
 	if actor.hero.level < skill.unlock_level:
 		return false
-	if actor.resource_amount() < skill.mp_cost:
+	if actor.resource_amount() < Party.combat_cost(actor.hero, skill):
 		return false
 	return actor.cooldown_left(skill) == 0
 
 
-## Resolves the player's chosen action. `target` may be null when the skill
-## auto-targets (SELF / ALL / ALLIES / RANDOM).
+## Resolves the player's chosen action. `skill` is the class's base skill; it
+## resolves as the hero's effective skill (tier upgrade or talent variant), and
+## its cooldown stays keyed by the base skill. `target` may be null when the
+## skill auto-targets (SELF / ALL / ALLIES / RANDOM).
 func player_action(skill: SkillData, target: Battler) -> void:
 	if ended or current_actor == null or current_actor.side != Battler.Side.PARTY:
 		return
 	var actor := current_actor
+	var cost := Party.combat_cost(actor.hero, skill)
 	if not can_use(actor, skill):
-		if not actor.uses_rage() and actor.hero.mp < skill.mp_cost:
+		if not actor.uses_rage() and actor.hero.mp < cost:
 			_log(tr("LOG_NO_MP"))
 		return
-	actor.spend_resource(skill.mp_cost)
-	actor.start_cooldown(skill)
-	var scaled := Party.get_upgraded_skill(actor.hero, skill)
-	_apply_skill(actor, scaled, target)
+	var effective := Party.get_effective_skill(actor.hero, skill)
+	actor.spend_resource(cost)
+	actor.start_cooldown(skill, effective.cooldown)
+	var foes_before := _alive(_opposing_side(actor))
+	_apply_skill(actor, effective, target)
+	for foe in foes_before:
+		if not foe.is_alive():
+			_on_kill(actor, skill, effective)
+			break
 	_after_action()
+
+
+## On-kill talent effects (Reaper): refund Rage and reset the skill's cooldown.
+## Runs once per action, however many foes it killed.
+func _on_kill(actor: Battler, base: SkillData, effective: SkillData) -> void:
+	if effective.on_kill_rage > 0:
+		actor.gain_rage(effective.on_kill_rage)
+	if effective.on_kill_reset_cooldown:
+		actor.reset_cooldown(base)
 
 
 ## Living party members — the pick list for a heal/mana item.
@@ -368,8 +386,12 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 			for t in targets:
 				dealt += _apply_damage_hit(caster, caster_stats, skill, t, skill.skill_type)
 	# Once per damaging action, however many targets or hits it had.
+	# A skill may override the amount (Momentum).
 	if dealt > 0:
-		caster.gain_rage(Battler.RAGE_PER_DAMAGING_ACTION)
+		var rage_gain := Battler.RAGE_PER_DAMAGING_ACTION
+		if skill.rage_on_action >= 0:
+			rage_gain = skill.rage_on_action
+		caster.gain_rage(rage_gain)
 
 
 func _gather_targets(caster: Battler, skill: SkillData, picked: Battler) -> Array[Battler]:
@@ -495,7 +517,7 @@ func _apply_damage_hit(
 	var t_def := int(floor(float(t_stats["def"]) * 0.4)) if is_mag else int(t_stats["def"])
 	var dmg := maxi(1, int(floor(raw - t_def)))
 	target.set_hp(target.get_hp() - dmg)
-	target.gain_rage(Battler.RAGE_PER_HIT_TAKEN)
+	target.gain_rage(target.rage_per_hit_taken())
 	hp_changed.emit(target)
 	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS, crit)
 	var crit_label := tr("LOG_CRIT_SUFFIX") if crit else ""
@@ -518,6 +540,7 @@ func _apply_damage_hit(
 		dot.kind = CombatStatus.Kind.DOT
 		dot.source_name = skill.display_name
 		dot.dot_damage = skill.dot_damage
+		dot.dot_popup_key = skill.dot_popup_key
 		dot.duration = skill.dot_duration
 		target.statuses.append(dot)
 		status_applied.emit(target, dot)
