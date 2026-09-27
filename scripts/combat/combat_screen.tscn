@@ -38,6 +38,21 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 10
 
+[node name="ActionBanner" type="PanelContainer" parent="VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ActionBannerLabel" type="Label" parent="VBox/ActionBanner"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+vertical_alignment = 1
+text_overrun_behavior = 3
+auto_translate_mode = 2
+
 [node name="LogPanel" type="PanelContainer" parent="VBox" unique_id=199422373]
 layout_mode = 2
 size_flags_horizontal = 3
