@@ -22,6 +22,10 @@ var sp_available: int = 0
 ## SP spent per skill, keyed by the skill's .tres filename (no extension).
 ## A missing key means 0 SP spent, i.e. the skill is at upgrade tier 1.
 var sp_spent: Dictionary = {}
+## Talent choices (talent classes only, see ClassData.uses_talents), keyed by
+## the base skill's key like sp_spent: {"fork": "a" | "b", "boost": bool}.
+## A missing key means no fork picked yet.
+var talents: Dictionary = {}
 ## Permanent bonus to max MP, gained when Skill Points are converted because
 ## the hero has no skill left to upgrade (see Party.award_sp).
 var bonus_mp: int = 0
@@ -53,8 +57,9 @@ static func create(from_class: ClassData) -> Hero:
 	h.class_data = from_class
 	h.level = 1
 	h.xp = 0
-	# Level-1 heroes start with 1 SP (prototype: Party.makeChar).
-	h.sp_available = 1
+	# Level-1 heroes start with 1 SP (prototype: Party.makeChar); talent
+	# classes start with none (their first SP comes at level 2).
+	h.sp_available = Party.talent_sp_for_level(1) if from_class.uses_talents else 1
 	h.row = int(from_class.role)  # default: warriors/rogues front, mages/clerics back
 	h.hp = h.max_hp()
 	h.mp = h.max_mp()
@@ -138,6 +143,7 @@ func to_dict() -> Dictionary:
 		"xp": xp,
 		"sp_available": sp_available,
 		"sp_spent": sp_spent.duplicate(),
+		"talents": talents.duplicate(true),
 		"bonus_mp": bonus_mp,
 		"hp": hp,
 		"mp": mp,
@@ -164,8 +170,14 @@ static func from_dict(data: Dictionary) -> Hero:
 	h.level = int(data.get("level", 1))
 	h.xp = int(data.get("xp", 0))
 	h.sp_available = int(data.get("sp_available", 0))
+	# JSON parses every number as a float; SP counts are ints.
 	var spent_in: Dictionary = data.get("sp_spent", {})
-	h.sp_spent = spent_in.duplicate()
+	for key in spent_in:
+		h.sp_spent[key] = int(spent_in[key])
+	var talents_in: Dictionary = data.get("talents", {})
+	for key in talents_in:
+		var t: Dictionary = talents_in[key]
+		h.talents[key] = {"fork": str(t.get("fork", "")), "boost": bool(t.get("boost", false))}
 	h.bonus_mp = int(data.get("bonus_mp", 0))
 	h.hp = int(data.get("hp", 0))
 	h.mp = int(data.get("mp", 0))
@@ -183,4 +195,9 @@ static func from_dict(data: Dictionary) -> Hero:
 	# A save from before a class lost its MP (the Warrior now spends Rage) can
 	# hold more MP than the hero's max; never show "8/0".
 	h.mp = mini(h.mp, h.max_mp())
+	# A talent-class hero from a save before talents (no "talents" key) spent
+	# SP on tiers: drop those and give back the SP talents allow at this level.
+	if h.class_data.uses_talents and not data.has("talents"):
+		h.sp_spent = {}
+		h.sp_available = maxi(0, Party.talent_sp_for_level(h.level) - Party.sp_in_talents(h))
 	return h

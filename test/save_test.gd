@@ -282,7 +282,7 @@ func _set_up_known_state() -> void:
 		)
 	)
 	# Set fields directly: never award_xp (it can save the game).
-	var hero: Hero = Party.heroes[0]
+	var hero: Hero = Party.heroes[1]  # a mana hero: the Warrior has no MP to lose
 	hero.level = 3
 	hero.xp = 7
 	hero.sp_available = 2

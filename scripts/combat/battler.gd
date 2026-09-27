@@ -145,6 +145,15 @@ func gain_rage(amount: int) -> void:
 		rage = clampi(rage + amount, 0, RAGE_MAX)
 
 
+## Rage gained from one hit taken: RAGE_PER_HIT_TAKEN times the strongest
+## active multiplier (Vengeance's taunt triples it).
+func rage_per_hit_taken() -> int:
+	var mult := 1.0
+	for st in statuses:
+		mult = maxf(mult, st.rage_taken_mult)
+	return roundi(RAGE_PER_HIT_TAKEN * mult)
+
+
 ## The amount of this battler's class resource available to pay skill costs.
 func resource_amount() -> int:
 	if uses_rage():
@@ -160,10 +169,18 @@ func spend_resource(amount: int) -> void:
 		hero.mp -= amount
 
 
-## Puts a skill on its cooldown (no-op when it has none).
-func start_cooldown(skill: SkillData) -> void:
-	if skill.cooldown > 0:
-		cooldowns[cooldown_key(skill)] = skill.cooldown
+## Puts a skill on its cooldown (no-op when it has none). `turns` overrides
+## the skill's own cooldown: a talent variant cools down under its base skill's
+## key, for as long as the variant says.
+func start_cooldown(skill: SkillData, turns: int = -1) -> void:
+	var length := skill.cooldown if turns < 0 else turns
+	if length > 0:
+		cooldowns[cooldown_key(skill)] = length
+
+
+## Makes a skill usable again right away.
+func reset_cooldown(skill: SkillData) -> void:
+	cooldowns.erase(cooldown_key(skill))
 
 
 ## Turns left on a skill's cooldown (0 = ready).

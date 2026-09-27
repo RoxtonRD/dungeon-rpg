@@ -17,6 +17,10 @@ enum ResourceType { MANA, RAGE }
 @export var role: Role = Role.FRONT
 ## What SkillData.mp_cost is paid from for this class's skills.
 @export var resource_type: ResourceType = ResourceType.MANA
+## True for classes that spend Skill Points on talents (a fork and a boost per
+## skill, see Party.get_effective_skill) instead of upgrade tiers. Only the
+## Warrior, for now.
+@export var uses_talents: bool = false
 
 @export_group("Base Stats (level 1)")
 @export var base_hp: int = 1

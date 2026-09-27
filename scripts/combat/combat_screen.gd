@@ -329,7 +329,7 @@ func _status_popup_text(st: CombatStatus) -> String:
 		CombatStatus.Kind.BARRIER:
 			return tr("UI_STATUS_BARRIER").capitalize()
 		CombatStatus.Kind.DOT:
-			return tr("UI_POPUP_POISON") % st.dot_damage
+			return tr(st.dot_popup_key) % st.dot_damage
 		CombatStatus.Kind.REGEN:
 			return tr("UI_POPUP_REGEN") % st.heal_per_turn
 	var lines: PackedStringArray = []
@@ -450,14 +450,16 @@ func _populate_skill_buttons() -> void:
 
 
 ## "Name · 30 Rage" (or MP), plus the turns left when the skill is on cooldown.
+## Name and cost are the effective skill's (a talent variant replaces the base).
 func _label_for_skill(actor: Battler, skill: SkillData) -> String:
 	var hero := actor.hero
-	var name_part := tr(skill.display_name)
+	var name_part := tr(Party.get_effective_skill(hero, skill).display_name)
 	var tier := Party.get_skill_tier(hero, skill)
 	if tier > 1:
 		name_part += " (T%d)" % tier
 	var resource_name := tr("RES_RAGE") if actor.uses_rage() else tr("RES_MP")
-	var label := "%s · %d %s" % [name_part, skill.mp_cost, resource_name]
+	var cost := Party.combat_cost(hero, skill)
+	var label := "%s · %d %s" % [name_part, cost, resource_name]
 	var turns_left := actor.cooldown_left(skill)
 	if turns_left > 0:
 		label += "\n" + tr("UI_SKILL_COOLDOWN") % turns_left

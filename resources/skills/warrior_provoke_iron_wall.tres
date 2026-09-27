@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "provoke_iron_wall"
+display_name = "SKILL_WARRIOR_IRON_WALL"
+description = "SKILLD_WARRIOR_IRON_WALL"
+mp_cost = 20
+unlock_level = 3
+max_upgrade_level = 3
+skill_type = 3
+target = 2
+mod_def = 10
+mod_duration = 3
+taunt = true

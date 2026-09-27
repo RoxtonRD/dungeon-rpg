@@ -148,13 +148,17 @@ func award_xp(hero: Hero, amount: int) -> Array[SkillData]:
 	return unlocked
 
 
-## Performs a single level-up: +1 level, +1 SP (or converted to MP), full
-## HP/MP restore. Per-level stat growth is applied automatically because
-## Hero's max_hp/atk/etc. are derived from class_data + level. Returns
-## SkillData entries whose unlock_level matches the new level.
+## Performs a single level-up: +1 level, +1 SP (or converted to MP; talent
+## classes only gain SP on even levels), no HP/MP restore. Per-level stat
+## growth is applied automatically because Hero's max_hp/atk/etc. are derived
+## from class_data + level. Returns SkillData entries whose unlock_level matches
+## the new level.
 func level_up(hero: Hero) -> Array[SkillData]:
 	hero.level += 1
-	award_sp(hero, 1)
+	var sp_gain := 1
+	if hero.class_data.uses_talents:
+		sp_gain = talent_sp_for_level(hero.level) - talent_sp_for_level(hero.level - 1)
+	award_sp(hero, sp_gain)
 	# Deliberately no HP/MP restore: levelling mid-run used to wipe out all
 	# accumulated attrition, which is what made deep runs trivial. The hero
 	# still gains max HP/MP from the level, they just don't get topped up.
@@ -192,11 +196,12 @@ func has_upgradable_skills(hero: Hero) -> bool:
 ## Grants `points` Skill Points to a hero. When the hero has no skill left to
 ## upgrade (now or in the future), the points are instead converted to permanent
 ## max MP. Returns the MP gained (0 when the points were granted as SP), so
-## callers can surface a "converted" message.
+## callers can surface a "converted" message. Talent classes never convert:
+## spare SP stays banked.
 func award_sp(hero: Hero, points: int) -> int:
 	if points <= 0:
 		return 0
-	if has_upgradable_skills(hero):
+	if hero.class_data.uses_talents or has_upgradable_skills(hero):
 		hero.sp_available += points
 		return 0
 	var mp_gain := points * SP_TO_MP
@@ -212,6 +217,8 @@ func award_sp(hero: Hero, points: int) -> int:
 ## strand points in sp_available, letting a hero hold more SP than the skill
 ## tiers can ever absorb. Safe to call anytime; returns the max MP gained.
 func reconcile_surplus_sp(hero: Hero) -> int:
+	if hero.class_data.uses_talents:
+		return 0  # talent SP is never converted
 	if hero.sp_available <= 0 or has_upgradable_skills(hero):
 		return 0
 	var leftover := hero.sp_available
@@ -234,6 +241,8 @@ func get_skill_tier(hero: Hero, skill: SkillData) -> int:
 
 
 func can_upgrade_skill(hero: Hero, skill: SkillData) -> bool:
+	if hero.class_data.uses_talents:
+		return false  # talent classes buy forks and boosts instead
 	if hero.level < skill.unlock_level:
 		return false
 	if get_skill_tier(hero, skill) >= skill.max_upgrade_level:
@@ -259,7 +268,12 @@ func upgrade_skill(hero: Hero, skill: SkillData) -> bool:
 ## is carried verbatim from prototype party.js getUpgradedSkill — see the
 ## inline note below for one comment-vs-code discrepancy in the source.
 func get_upgraded_skill(hero: Hero, skill: SkillData) -> SkillData:
-	var tier := get_skill_tier(hero, skill)
+	return _scaled_to_tier(skill, get_skill_tier(hero, skill))
+
+
+## `skill` duplicated and scaled to upgrade `tier` (1 = unchanged). Shared by
+## tier upgrades and talent boosts (a boost is the tier-2 scaling).
+func _scaled_to_tier(skill: SkillData, tier: int) -> SkillData:
 	if tier <= 1:
 		return skill
 	var bonus := tier - 1  # 1, 2, or 3
@@ -295,6 +309,103 @@ func get_upgraded_skill(hero: Hero, skill: SkillData) -> SkillData:
 	if s.mp_cost >= 3:
 		s.mp_cost = maxi(1, s.mp_cost - bonus * 2)
 	return s
+
+
+# ── Talents (talent classes only) ─────────────────────────────────────────────
+# Each skill of a talent class has a fork (pick variant A or B, 1 SP, from the
+# skill's unlock level) and then a boost (1 SP). Forks are permanent for now.
+# See ClassData.uses_talents and Hero.talents.
+
+
+## Total SP a talent-class hero earns by `level`: +1 at levels 2, 4, 6, 8 and
+## 10, so 0, 1, 1, 2, 2, … 5. A Tome of Mastery adds to this.
+func talent_sp_for_level(level: int) -> int:
+	return floori(clampi(level, 0, LEVEL_CAP) / 2.0)
+
+
+## SP a hero has put into talents: 1 per fork, 1 per boost.
+func sp_in_talents(hero: Hero) -> int:
+	var total := 0
+	for key in hero.talents:
+		var t: Dictionary = hero.talents[key]
+		if t.get("fork", "") != "":
+			total += 1
+		if t.get("boost", false):
+			total += 1
+	return total
+
+
+## The talent choice for a base skill, or {} when no fork is picked.
+func get_talent(hero: Hero, skill: SkillData) -> Dictionary:
+	return hero.talents.get(_skill_key(skill), {})
+
+
+## True when the hero can spend 1 SP to pick `fork` ("a" or "b") for `skill`.
+func can_pick_fork(hero: Hero, skill: SkillData, fork: String) -> bool:
+	if not hero.class_data.uses_talents or not hero.class_data.skills.has(skill):
+		return false
+	if fork != "a" and fork != "b":
+		return false
+	if (skill.fork_a if fork == "a" else skill.fork_b) == null:
+		return false
+	if hero.level < skill.unlock_level:
+		return false
+	if not get_talent(hero, skill).is_empty():
+		return false  # already picked, and permanent
+	return hero.sp_available >= 1
+
+
+## Spends 1 SP to pick a fork. Returns false if not allowed.
+func pick_fork(hero: Hero, skill: SkillData, fork: String) -> bool:
+	if not can_pick_fork(hero, skill, fork):
+		return false
+	hero.talents[_skill_key(skill)] = {"fork": fork, "boost": false}
+	hero.sp_available -= 1
+	return true
+
+
+## True when the hero can spend 1 SP to boost `skill` (its fork is picked).
+func can_boost(hero: Hero, skill: SkillData) -> bool:
+	var t := get_talent(hero, skill)
+	if t.is_empty() or t.get("boost", false):
+		return false
+	return hero.sp_available >= 1
+
+
+## Spends 1 SP to boost a skill. Returns false if not allowed.
+func boost_skill(hero: Hero, skill: SkillData) -> bool:
+	if not can_boost(hero, skill):
+		return false
+	hero.talents[_skill_key(skill)]["boost"] = true
+	hero.sp_available -= 1
+	return true
+
+
+## The skill as this hero actually uses it. Talent classes: the picked variant
+## (or the base skill), then the tier-2 scaling when boosted. Other classes:
+## the tier-upgraded skill (get_upgraded_skill). `base` is the class's skill.
+func get_effective_skill(hero: Hero, base: SkillData) -> SkillData:
+	if not hero.class_data.uses_talents:
+		return get_upgraded_skill(hero, base)
+	var t := get_talent(hero, base)
+	var skill := base
+	match t.get("fork", ""):
+		"a":
+			skill = base.fork_a if base.fork_a != null else base
+		"b":
+			skill = base.fork_b if base.fork_b != null else base
+	if t.get("boost", false):
+		skill = _scaled_to_tier(skill, 2)
+	return skill
+
+
+## What using `base` costs this hero in combat. Talent classes pay the effective
+## skill's cost (a variant or a boost can change it). Other classes have always
+## paid the base cost in combat, whatever the tier, and still do.
+func combat_cost(hero: Hero, base: SkillData) -> int:
+	if hero.class_data.uses_talents:
+		return get_effective_skill(hero, base).mp_cost
+	return base.mp_cost
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────
