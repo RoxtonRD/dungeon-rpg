@@ -18,14 +18,15 @@ back after weeks away, this is the only thing you need to read.*
 - **Done:** save hardening (#33), tests + CI (#34), format hook (#37),
   save tests (#40), dev cheat panel (#41), **Warrior 1/3: Rage +
   cooldowns (#43)**
+- **Feel gate 1 passed** (2026-09-27): Rage beats mana (D-021).
 - **Next up:**
-  1. **Roxton: play the Warrior**, 3 fights via the dev panel. This is the
-     **feel gate** for combat v3; the questions are in the session notes
-     of 2026-09-27.
-  2. advisor: brief Warrior slice 2/3 (skill forks) from that feedback.
-     Carry forward: Slash's description still says "costs no MP"
-     (content); `save_test` drives a Warrior's MP to −1 and should use a
-     mana hero (qa); fix `sp_spent` floats on load.
+  1. ui-assets: combat readability, #45 (editor), **now**
+  2. Roxton + advisor: pick the Warrior's skill forks and the SP rule
+     (combat-v3.md §4), then the advisor briefs Warrior 2/3. Carry
+     forward: Slash's "costs no MP" text; `save_test` should use a mana
+     hero; `sp_spent` floats on load.
+  3. Roxton: list the other combat ideas, and the advisor triages them
+     (now / after the slice / parking lot)
   4. release-engineer: target SDK 36 + a build on the phone, brief not
      written yet
   5. Roxton: branch protection on `main` (require PR + both CI checks)
@@ -106,7 +107,7 @@ unknown.
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
 | 1.5 | **Dungeon pressure**: combat quota per floor, rests restore partially, the Fountain stops being a free full heal, close the walk-back regen loop (P1–P4 in `archive/roadmap-v3.md`). Per-floor enemy pools (`cultist` and `ogre` exist but never spawn) | gameplay-engineer + content-data |
-| 1.6 | **Combat readability**: turn-order strip, round counter, resource bars that read differently per resource | ui-assets |
+| 1.6 | **Combat readability**: (a) who did what to whom: action banner, target marking, stronger hits, status popups (#45); (b) later: turn-order strip, round counter | ui-assets |
 
 **Exit:** you play three runs in a row because you want to, and the bot
 report shows every floor has fights and the run length is inside the
