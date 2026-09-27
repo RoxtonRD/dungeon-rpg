@@ -314,7 +314,14 @@ func _scaled_to_tier(skill: SkillData, tier: int) -> SkillData:
 # ── Talents (talent classes only) ─────────────────────────────────────────────
 # Each skill of a talent class has a fork (pick variant A or B, 1 SP, from the
 # skill's unlock level) and then a boost (1 SP). Forks are permanent for now.
+# A hero also picks one passive and learns one reaction (1 SP each, permanent),
+# stored in Hero.talents under the reserved keys below.
 # See ClassData.uses_talents and Hero.talents.
+
+## Hero.talents key of the picked passive's id.
+const PASSIVE_KEY := "_passive"
+## Hero.talents key of the learned reaction: {"id": String, "enabled": bool}.
+const REACTION_KEY := "_reaction"
 
 
 ## Total SP a talent-class hero earns by `level`: +1 at levels 2, 4, 6, 8 and
@@ -323,10 +330,14 @@ func talent_sp_for_level(level: int) -> int:
 	return floori(clampi(level, 0, LEVEL_CAP) / 2.0)
 
 
-## SP a hero has put into talents: 1 per fork, 1 per boost.
+## SP a hero has put into talents: 1 per fork, 1 per boost, 1 for the passive
+## and 1 for the reaction.
 func sp_in_talents(hero: Hero) -> int:
 	var total := 0
 	for key in hero.talents:
+		if key == PASSIVE_KEY or key == REACTION_KEY:
+			total += 1
+			continue
 		var t: Dictionary = hero.talents[key]
 		if t.get("fork", "") != "":
 			total += 1
@@ -378,6 +389,86 @@ func boost_skill(hero: Hero, skill: SkillData) -> bool:
 		return false
 	hero.talents[_skill_key(skill)]["boost"] = true
 	hero.sp_available -= 1
+	return true
+
+
+## The hero's picked passive, or null.
+func get_passive(hero: Hero) -> PassiveData:
+	var id: String = hero.talents.get(PASSIVE_KEY, "")
+	for passive in hero.class_data.passives:
+		if passive.id == id:
+			return passive
+	return null
+
+
+## True when the hero can spend 1 SP to pick `passive`: one of its class's, at
+## its unlock level, and no passive picked yet (the pick is permanent).
+func can_pick_passive(hero: Hero, passive: PassiveData) -> bool:
+	if passive == null or not hero.class_data.passives.has(passive):
+		return false
+	if hero.level < passive.unlock_level:
+		return false
+	if hero.talents.has(PASSIVE_KEY):
+		return false
+	return hero.sp_available >= 1
+
+
+## Spends 1 SP to pick a passive. Returns false if not allowed.
+func pick_passive(hero: Hero, passive: PassiveData) -> bool:
+	if not can_pick_passive(hero, passive):
+		return false
+	hero.talents[PASSIVE_KEY] = passive.id
+	hero.sp_available -= 1
+	return true
+
+
+## The hero's learned reaction, switched on or not, or null.
+func get_reaction(hero: Hero) -> ReactionData:
+	var learned: Dictionary = hero.talents.get(REACTION_KEY, {})
+	for reaction in hero.class_data.reactions:
+		if reaction.id == learned.get("id", ""):
+			return reaction
+	return null
+
+
+## True when the hero's learned reaction is switched on.
+func is_reaction_enabled(hero: Hero) -> bool:
+	var learned: Dictionary = hero.talents.get(REACTION_KEY, {})
+	return bool(learned.get("enabled", false))
+
+
+## The reaction combat should use for this hero: learned and switched on, or null.
+func get_active_reaction(hero: Hero) -> ReactionData:
+	return get_reaction(hero) if is_reaction_enabled(hero) else null
+
+
+## True when the hero can spend 1 SP to learn `reaction`: one of its class's, at
+## its unlock level, and no reaction learned yet (learning is permanent).
+func can_learn_reaction(hero: Hero, reaction: ReactionData) -> bool:
+	if reaction == null or not hero.class_data.reactions.has(reaction):
+		return false
+	if hero.level < reaction.unlock_level:
+		return false
+	if hero.talents.has(REACTION_KEY):
+		return false
+	return hero.sp_available >= 1
+
+
+## Spends 1 SP to learn a reaction, switched on. Returns false if not allowed.
+func learn_reaction(hero: Hero, reaction: ReactionData) -> bool:
+	if not can_learn_reaction(hero, reaction):
+		return false
+	hero.talents[REACTION_KEY] = {"id": reaction.id, "enabled": true}
+	hero.sp_available -= 1
+	return true
+
+
+## Switches the learned reaction on or off (free). Callers only offer this
+## outside combat. Returns false when the hero has no reaction.
+func set_reaction_enabled(hero: Hero, enabled: bool) -> bool:
+	if not hero.talents.has(REACTION_KEY):
+		return false
+	hero.talents[REACTION_KEY]["enabled"] = enabled
 	return true
 
 

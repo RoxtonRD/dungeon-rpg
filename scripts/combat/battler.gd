@@ -116,6 +116,15 @@ func effective_stats() -> Dictionary:
 	return s
 
 
+## True when an active DEBUFF lowers this battler's DEF (Wide Arc, Sunder), the
+## setup SkillData.bonus_vs_def_debuff pays off on.
+func has_def_debuff() -> bool:
+	for st in statuses:
+		if st.kind == CombatStatus.Kind.DEBUFF and st.mod_def < 0:
+			return true
+	return false
+
+
 func has_taunt() -> bool:
 	for st in statuses:
 		if st.taunt:
@@ -152,6 +161,29 @@ func rage_per_hit_taken() -> int:
 	for st in statuses:
 		mult = maxf(mult, st.rage_taken_mult)
 	return roundi(RAGE_PER_HIT_TAKEN * mult)
+
+
+## Multiplier from the hero's passive on the damage it deals right now
+## (Bloodlust: +2% per 10 Rage held). 1.0 for enemies and heroes without one.
+func passive_damage_mult() -> float:
+	if side != Battler.Side.PARTY:
+		return 1.0
+	var passive := Party.get_passive(hero)
+	return passive.damage_mult(rage) if passive != null else 1.0
+
+
+## The reaction this battler would use against a hit from `skill` resolving as
+## `dmg_kind`, or null: it must be learned, switched on, apply to that hit, and
+## be affordable. The chance roll is the caller's.
+func reaction_for(skill: SkillData, dmg_kind: SkillData.SkillType) -> ReactionData:
+	if side != Battler.Side.PARTY:
+		return null
+	var reaction := Party.get_active_reaction(hero)
+	if reaction == null or not reaction.applies(skill, dmg_kind):
+		return null
+	if resource_amount() < reaction.rage_cost:
+		return null
+	return reaction
 
 
 ## The amount of this battler's class resource available to pay skill costs.

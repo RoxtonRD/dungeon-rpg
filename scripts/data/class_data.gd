@@ -41,6 +41,12 @@ enum ResourceType { MANA, RAGE }
 @export_group("Skills & Art")
 ## The 4 skills this class can learn (v1 scope). Order = unlock order.
 @export var skills: Array[SkillData] = []
+## Passives a hero of this class can pick from (one per hero, 1 SP, permanent;
+## see Party.pick_passive).
+@export var passives: Array[PassiveData] = []
+## Reactions a hero of this class can learn (one per hero, 1 SP, permanent,
+## with a free on/off toggle; see Party.learn_reaction).
+@export var reactions: Array[ReactionData] = []
 ## Hand-drawn portrait (skin 1's head-crop). Used as a last-ditch fallback by
 ## HeroArt; skins normally resolve straight from the class folder.
 @export var portrait: Texture2D

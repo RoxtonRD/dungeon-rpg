@@ -20,6 +20,7 @@ const COMBAT_SCENE := "res://scripts/combat/combat_screen.tscn"
 const CLASS_DIR := "res://resources/classes/"
 const ENEMY_DIR := "res://resources/enemies/"
 const ITEM_DIR := "res://resources/items/"
+const SKILL_DIR := "res://resources/skills/"
 const DEFAULT_CLASSES: Array = ["warrior", "cleric", "rogue", "mage"]
 ## Names given to quick_party heroes, by slot.
 const QUICK_NAMES: Array[String] = ["Aria", "Bram", "Cora", "Dax"]
@@ -28,6 +29,9 @@ const MAX_ENEMIES := 4
 
 ## True only in debug builds. Every API call checks it first.
 var enabled := false
+## Classes changed by swap_skill, by id. Holding them keeps the edited
+## resources in the cache, so every later load() sees the swap until restart.
+var _swapped_classes: Dictionary = {}
 
 
 func _ready() -> void:
@@ -143,6 +147,78 @@ func set_talent(hero_index: int, skill_id: String, fork: String, boost := false)
 	)
 
 
+## Sets hero `hero_index`'s passive by id (e.g. "bloodlust"), ignoring SP and
+## level. An empty id removes it.
+func set_passive(hero_index: int, id: String) -> String:
+	if not enabled:
+		return _disabled()
+	if hero_index < 0 or hero_index >= Party.heroes.size():
+		return "Error: no hero at index %d (party size %d)." % [hero_index, Party.heroes.size()]
+	var h := Party.heroes[hero_index]
+	var wanted := id.strip_edges()
+	if wanted.is_empty():
+		h.talents.erase(Party.PASSIVE_KEY)
+		return "%s: passive removed." % h.display_name()
+	var ids: Array[String] = []
+	for passive in h.class_data.passives:
+		ids.append(passive.id)
+	if not ids.has(wanted):
+		return "Error: %s has no passive '%s'. Valid: %s." % [h.class_data.id, wanted, ids]
+	h.talents[Party.PASSIVE_KEY] = wanted
+	return "%s: passive -> %s." % [h.display_name(), wanted]
+
+
+## Sets hero `hero_index`'s reaction by id (e.g. "parry"), switched on or off,
+## ignoring SP and level. An empty id removes it.
+func set_reaction(hero_index: int, id: String, reaction_enabled := true) -> String:
+	if not enabled:
+		return _disabled()
+	if hero_index < 0 or hero_index >= Party.heroes.size():
+		return "Error: no hero at index %d (party size %d)." % [hero_index, Party.heroes.size()]
+	var h := Party.heroes[hero_index]
+	var wanted := id.strip_edges()
+	if wanted.is_empty():
+		h.talents.erase(Party.REACTION_KEY)
+		return "%s: reaction removed." % h.display_name()
+	var ids: Array[String] = []
+	for reaction in h.class_data.reactions:
+		ids.append(reaction.id)
+	if not ids.has(wanted):
+		return "Error: %s has no reaction '%s'. Valid: %s." % [h.class_data.id, wanted, ids]
+	h.talents[Party.REACTION_KEY] = {"id": wanted, "enabled": reaction_enabled}
+	return (
+		"%s: reaction -> %s (%s)." % [h.display_name(), wanted, "on" if reaction_enabled else "off"]
+	)
+
+
+## Swaps skill `slot` (0-based) of class `class_id` for the skill `skill_id`
+## (its .tres name, e.g. "rogue_backstab"), for A/B tests (D-027). Runtime
+## only: the class .tres is never written and saves don't store class skill
+## lists, so a restart undoes it. Swap the old skill back to undo it sooner.
+func swap_skill(class_id: String, slot: int, skill_id: String) -> String:
+	if not enabled:
+		return _disabled()
+	if _in_combat():
+		return "Error: finish or flee the current fight first."
+	var cid := class_id.strip_edges()
+	if not Party.ALL_CLASS_IDS.has(cid):
+		return "Error: unknown class id '%s'. Valid: %s." % [cid, Party.ALL_CLASS_IDS]
+	var sid := skill_id.strip_edges()
+	if not ResourceLoader.exists(SKILL_DIR + sid + ".tres"):
+		return "Error: unknown skill id '%s'." % sid
+	# The cached resource: the same object every hero of the class points at.
+	var cd := load(CLASS_DIR + cid + ".tres") as ClassData
+	if slot < 0 or slot >= cd.skills.size():
+		return "Error: slot must be 0..%d, got %d." % [cd.skills.size() - 1, slot]
+	var old: SkillData = cd.skills[slot]
+	cd.skills[slot] = load(SKILL_DIR + sid + ".tres") as SkillData
+	_swapped_classes[cid] = cd
+	return (
+		"%s slot %d: %s -> %s (runtime only, not saved; restart to undo)."
+		% [cid, slot, Party._skill_key(old), sid]
+	)
+
+
 ## One line per talent-class hero: level, banked SP and each skill's talent.
 func talents_summary() -> String:
 	if not enabled:
@@ -161,6 +237,14 @@ func talents_summary() -> String:
 				parts.append(
 					"%s: %s%s" % [skill.id, t["fork"], "+boost" if t.get("boost", false) else ""]
 				)
+		var passive := Party.get_passive(h)
+		parts.append("passive: %s" % (passive.id if passive != null else "-"))
+		var reaction := Party.get_reaction(h)
+		if reaction == null:
+			parts.append("reaction: -")
+		else:
+			var state := "on" if Party.is_reaction_enabled(h) else "off"
+			parts.append("reaction: %s (%s)" % [reaction.id, state])
 		lines.append(
 			(
 				"[%d] %s L%d, SP %d | %s"
