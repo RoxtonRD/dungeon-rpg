@@ -26,8 +26,16 @@ enum LogKind { INFO, DAMAGE, CRIT, HEAL, BARRIER }
 signal log_appended(line: String, kind: LogKind)
 signal hp_changed(battler: Battler)
 ## Emitted alongside hp_changed when an amount should pop up on a battler.
-signal damage_popup(battler: Battler, amount: int, kind: PopupKind)
+## `crit` is true only for a critical damage hit.
+signal damage_popup(battler: Battler, amount: int, kind: PopupKind, crit: bool)
 signal turn_started(battler: Battler)
+## Presentation only: emitted once per action (hero or enemy, skill or item),
+## before its effects resolve, so the UI can name the action and mark its
+## targets. An item is passed as a stand-in SkillData carrying the item's
+## name. `targets` is empty for RANDOM multi-hit skills (rolled per hit).
+signal action_started(caster: Battler, skill: SkillData, targets: Array[Battler])
+## Presentation only: emitted whenever a status is added to a battler.
+signal status_applied(target: Battler, status: CombatStatus)
 signal combat_ended(result: Result, rewards: Dictionary)
 
 var party: Array[Battler] = []
@@ -140,6 +148,7 @@ func player_item(item_id: String, target: Battler) -> void:
 
 
 func _apply_item(user: Battler, item: ItemData, target: Battler) -> void:
+	_emit_item_action(user, item, target)
 	_log(tr("LOG_ITEM") % [user.display_name(), tr(item.display_name)], LogKind.HEAL)
 	if item.use_revive_party > 0.0:
 		for b in party:
@@ -147,7 +156,7 @@ func _apply_item(user: Battler, item: ItemData, target: Battler) -> void:
 				var amt := maxi(1, int(round(b.max_hp * item.use_revive_party)))
 				b.set_hp(amt)
 				hp_changed.emit(b)
-				damage_popup.emit(b, amt, PopupKind.HEAL)
+				damage_popup.emit(b, amt, PopupKind.HEAL, false)
 		return
 	if target == null:
 		return
@@ -155,10 +164,26 @@ func _apply_item(user: Battler, item: ItemData, target: Battler) -> void:
 		var before := target.get_hp()
 		target.set_hp(before + item.use_heal)
 		hp_changed.emit(target)
-		damage_popup.emit(target, target.get_hp() - before, PopupKind.HEAL)
+		damage_popup.emit(target, target.get_hp() - before, PopupKind.HEAL, false)
 	if item.use_mp > 0 and target.side == Battler.Side.PARTY:
 		target.hero.mp = mini(target.hero.max_mp(), target.hero.mp + item.use_mp)
 		hp_changed.emit(target)
+
+
+## action_started for an item: a stand-in SkillData carries the item's name
+## (and HEAL, so the UI reads it as friendly).
+func _emit_item_action(user: Battler, item: ItemData, target: Battler) -> void:
+	var as_skill := SkillData.new()
+	as_skill.display_name = item.display_name
+	as_skill.skill_type = SkillData.SkillType.HEAL
+	var targets: Array[Battler] = []
+	if item.use_revive_party > 0.0:
+		for b in party:
+			if not b.is_alive():
+				targets.append(b)
+	elif target != null:
+		targets.append(target)
+	action_started.emit(user, as_skill, targets)
 
 
 ## 60% chance of success per prototype combat.js.
@@ -278,7 +303,7 @@ func _tick_statuses() -> void:
 					LogKind.DAMAGE
 				)
 				hp_changed.emit(b)
-				damage_popup.emit(b, st.dot_damage, PopupKind.MAG)
+				damage_popup.emit(b, st.dot_damage, PopupKind.MAG, false)
 			elif st.kind == CombatStatus.Kind.REGEN:
 				var before := b.get_hp()
 				b.set_hp(before + st.heal_per_turn)
@@ -289,7 +314,7 @@ func _tick_statuses() -> void:
 						LogKind.HEAL
 					)
 					hp_changed.emit(b)
-					damage_popup.emit(b, healed, PopupKind.HEAL)
+					damage_popup.emit(b, healed, PopupKind.HEAL, false)
 			st.duration -= 1
 			if st.duration <= 0:
 				b.statuses.remove_at(i)
@@ -304,6 +329,7 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 	# Total damage this action dealt, for the caster's Rage.
 	var dealt := 0
 	var targets: Array[Battler] = _gather_targets(caster, skill, picked)
+	action_started.emit(caster, skill, targets)
 	match skill.skill_type:
 		SkillData.SkillType.BUFF:
 			for t in targets:
@@ -380,6 +406,7 @@ func _gather_targets(caster: Battler, skill: SkillData, picked: Battler) -> Arra
 func _apply_buff(target: Battler, skill: SkillData) -> void:
 	for st in CombatStatus.build_for_skill(skill):
 		target.statuses.append(st)
+		status_applied.emit(target, st)
 
 
 func _apply_debuff(target: Battler, skill: SkillData) -> void:
@@ -392,6 +419,7 @@ func _apply_debuff(target: Battler, skill: SkillData) -> void:
 	st.mod_spd = skill.mod_spd
 	st.duration = skill.mod_duration
 	target.statuses.append(st)
+	status_applied.emit(target, st)
 
 
 func _apply_heal(
@@ -401,7 +429,7 @@ func _apply_heal(
 	target.set_hp(target.get_hp() + heal_amount)
 	_log(tr("LOG_HEAL") % [caster.display_name(), target.display_name(), heal_amount], LogKind.HEAL)
 	hp_changed.emit(target)
-	damage_popup.emit(target, heal_amount, PopupKind.HEAL)
+	damage_popup.emit(target, heal_amount, PopupKind.HEAL, false)
 	_apply_regen(target, skill)
 
 
@@ -416,6 +444,7 @@ func _apply_regen(target: Battler, skill: SkillData) -> void:
 	st.heal_per_turn = skill.heal_over_time
 	st.duration = skill.hot_duration
 	target.statuses.append(st)
+	status_applied.emit(target, st)
 
 
 ## Revives a fallen ally at `skill.power` of their max HP. Reading the fraction
@@ -428,7 +457,7 @@ func _apply_revive(caster: Battler, skill: SkillData, target: Battler) -> void:
 	target.set_hp(amount)
 	_log(tr("LOG_REVIVE") % [caster.display_name(), target.display_name()], LogKind.HEAL)
 	hp_changed.emit(target)
-	damage_popup.emit(target, amount, PopupKind.HEAL)
+	damage_popup.emit(target, amount, PopupKind.HEAL, false)
 
 
 func _apply_damage_hit(
@@ -468,7 +497,7 @@ func _apply_damage_hit(
 	target.set_hp(target.get_hp() - dmg)
 	target.gain_rage(Battler.RAGE_PER_HIT_TAKEN)
 	hp_changed.emit(target)
-	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS)
+	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS, crit)
 	var crit_label := tr("LOG_CRIT_SUFFIX") if crit else ""
 	_log(
 		(
@@ -491,6 +520,7 @@ func _apply_damage_hit(
 		dot.dot_damage = skill.dot_damage
 		dot.duration = skill.dot_duration
 		target.statuses.append(dot)
+		status_applied.emit(target, dot)
 	# Debuff rider on damage skills.
 	if (
 		skill.mod_duration > 0
@@ -505,12 +535,13 @@ func _apply_damage_hit(
 		deb.mod_spd = skill.mod_spd
 		deb.duration = skill.mod_duration
 		target.statuses.append(deb)
+		status_applied.emit(target, deb)
 	# Drain: caster heals for 50% of damage dealt.
 	if skill.drain:
 		var healed := int(floor(dmg * 0.5))
 		caster.set_hp(caster.get_hp() + healed)
 		hp_changed.emit(caster)
-		damage_popup.emit(caster, healed, PopupKind.HEAL)
+		damage_popup.emit(caster, healed, PopupKind.HEAL, false)
 	return dmg
 
 
@@ -537,6 +568,8 @@ func _enemy_take_turn() -> void:
 
 	# Self-targeting skills (self-buff, regen).
 	if skill.target == SkillData.TargetType.SELF:
+		var self_target: Array[Battler] = [e]
+		action_started.emit(e, skill, self_target)
 		if skill.skill_type == SkillData.SkillType.BUFF:
 			_apply_buff(e, skill)
 			_log(tr("LOG_USE") % [e.display_name(), tr(skill.display_name)])
@@ -548,7 +581,7 @@ func _enemy_take_turn() -> void:
 			e.set_hp(e.get_hp() + heal_amount)
 			_log(tr("LOG_REGEN") % [e.display_name(), heal_amount], LogKind.HEAL)
 			hp_changed.emit(e)
-			damage_popup.emit(e, heal_amount, PopupKind.HEAL)
+			damage_popup.emit(e, heal_amount, PopupKind.HEAL, false)
 		return
 
 	# Pick a party target for ONE-target skills; taunt overrides front-first.

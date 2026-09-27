@@ -23,11 +23,31 @@ const TEST_ENEMY_PATHS: Array[String] = [
 ## Delay between consecutive enemy actions, in seconds. FLAG: tune me (0.6–0.8).
 const ENEMY_TURN_DELAY: float = 0.8
 ## Pause after the player's own action resolves so they can read it. FLAG: tune me.
-const PLAYER_ACTION_DELAY: float = 0.5
+const PLAYER_ACTION_DELAY: float = 0.8
 ## Delay after a turn begins before processing it (lets the highlight register).
 const TURN_LEAD_DELAY: float = 0.6
 ## Chance for a boss kill to drop a Tomo de Maestria (tome_sp). FLAG: tune me.
 const BOSS_TOME_DROP_CHANCE: float = 0.25
+
+## How long the action banner and target outlines take to fade out.
+const BANNER_FADE_TIME: float = 0.3
+
+## Action banner and target outline colours: hostile red, friendly green.
+const HOSTILE_COLOR := Color(1.0, 0.3, 0.25)
+const FRIENDLY_COLOR := Color(0.35, 1.0, 0.45)
+const BANNER_HERO_TEXT := Color(1.0, 0.96, 0.88)
+const BANNER_HERO_BORDER := Color(0.75, 0.7, 0.55)
+const BANNER_ENEMY_TEXT := Color(1.0, 0.5, 0.45)
+
+## Status popup colours, by status kind (taunt gets its own).
+const STATUS_COLORS := {
+	CombatStatus.Kind.BUFF: Color(0.45, 0.85, 1.0),
+	CombatStatus.Kind.DEBUFF: Color(0.85, 0.5, 1.0),
+	CombatStatus.Kind.DOT: Color(0.6, 0.92, 0.25),
+	CombatStatus.Kind.BARRIER: Color(0.62, 0.7, 1.0),
+	CombatStatus.Kind.REGEN: Color(0.5, 1.0, 0.55),
+}
+const TAUNT_COLOR := Color(1.0, 0.62, 0.25)
 
 ## Boss background; the default combat background is set in the .tscn.
 const BG_BOSS: Texture2D = preload("res://assets/backgrounds/bg_boss.png")
@@ -54,6 +74,8 @@ func _delay(base: float) -> float:
 @onready var result_label: Label = %ResultLabel
 @onready var rewards_label: Label = %RewardsLabel
 @onready var continue_button: Button = %ContinueButton
+@onready var action_banner: PanelContainer = %ActionBanner
+@onready var action_banner_label: Label = %ActionBannerLabel
 
 var state: CombatState
 
@@ -67,6 +89,13 @@ var _pending_result: int = 0
 var _pending_rewards: Dictionary = {}
 ## Dungeon level the fight was entered at — drives loot-drop tier weighting.
 var _loot_level: int = 1
+## The action currently named by the banner (null when none is shown).
+var _banner_caster: Battler = null
+var _banner_skill: SkillData = null
+var _banner_style: StyleBoxFlat
+var _banner_tween: Tween
+## Whose turn it is next, held back while the current action is on screen.
+var _next_active: Battler = null
 
 
 func _ready() -> void:
@@ -78,6 +107,12 @@ func _ready() -> void:
 	end_panel.visible = false
 	target_prompt.visible = false
 	cancel_button.visible = false
+	_banner_style = StyleBoxFlat.new()
+	_banner_style.bg_color = Color(0.06, 0.06, 0.08, 0.85)
+	_banner_style.set_border_width_all(2)
+	_banner_style.set_corner_radius_all(6)
+	action_banner.add_theme_stylebox_override("panel", _banner_style)
+	action_banner.modulate.a = 0.0
 	# Defer the default bootstrap so external callers can call setup() first.
 	call_deferred("_bootstrap_if_needed")
 
@@ -110,6 +145,8 @@ func setup(heroes: Array[Hero], enemies: Array[EnemyData], loot_level: int = 1) 
 	state.hp_changed.connect(_on_hp_changed)
 	state.damage_popup.connect(_on_damage_popup)
 	state.turn_started.connect(_on_turn_started)
+	state.action_started.connect(_on_action_started)
+	state.status_applied.connect(_on_status_applied)
 	state.combat_ended.connect(_on_combat_ended)
 	state.start()
 	_process_turn()
@@ -184,7 +221,7 @@ func _on_hp_changed(b: Battler) -> void:
 	_panel_for(b).refresh()
 
 
-func _on_damage_popup(b: Battler, amount: int, kind: CombatState.PopupKind) -> void:
+func _on_damage_popup(b: Battler, amount: int, kind: CombatState.PopupKind, crit: bool) -> void:
 	var color: Color
 	var text: String
 	var tint: Color
@@ -192,24 +229,138 @@ func _on_damage_popup(b: Battler, amount: int, kind: CombatState.PopupKind) -> v
 		CombatState.PopupKind.HEAL:
 			color = Color(0.5, 1.0, 0.55)  # green number
 			text = "+%d" % amount
-			tint = Color(1.0, 1.0, 1.0, 0.40)  # white wash
+			tint = Color(1.0, 1.0, 1.0, 0.5)  # white wash
 		CombatState.PopupKind.MAG:
 			color = Color(0.62, 0.7, 1.0)  # blue number
 			text = str(amount)
-			tint = Color(0.9, 0.15, 0.15, 0.5)  # red wash
+			tint = Color(0.95, 0.1, 0.1, 0.7)  # red wash
 		_:  # PHYS
 			color = Color(1.0, 0.85, 0.45)  # warm number
 			text = str(amount)
-			tint = Color(0.9, 0.15, 0.15, 0.5)  # red wash
+			tint = Color(0.95, 0.1, 0.1, 0.7)  # red wash
 	var panel := _panel_for(b)
 	panel.flash_hit(tint)
-	panel.show_popup(text, color)
+	panel.show_popup(text, color, crit)
+	if kind != CombatState.PopupKind.HEAL:
+		panel.shake()
+		_mark_random_hit(b)
 
 
+# ── Action feedback (banner, target outlines, status popups) ──────────────────
+
+
+## Names the action in the banner and outlines its targets. The banner holds
+## until the next action replaces it or the player's turn / end panel comes up.
+func _on_action_started(caster: Battler, skill: SkillData, targets: Array[Battler]) -> void:
+	for p in _all_panels():
+		p.clear_target_mark()
+	_banner_caster = caster
+	_banner_skill = skill
+	_set_active_panel(caster)
+	var mark_color := HOSTILE_COLOR if _is_hostile(skill) else FRIENDLY_COLOR
+	for t in targets:
+		_panel_for(t).mark_target(mark_color)
+	_show_banner(caster, skill)
+
+
+## Damage, multi-hit and debuffs are hostile; heals, buffs, revives and items
+## are friendly.
+func _is_hostile(skill: SkillData) -> bool:
+	match skill.skill_type:
+		SkillData.SkillType.HEAL, SkillData.SkillType.BUFF, SkillData.SkillType.REVIVE:
+			return false
+	return true
+
+
+## RANDOM multi-hit skills pick targets per hit, so their outlines are added
+## as the hits land (opposing side only, so a DoT tick is never mistaken for
+## part of the action).
+func _mark_random_hit(b: Battler) -> void:
+	if _banner_skill == null or _banner_skill.target != SkillData.TargetType.RANDOM:
+		return
+	if b.side == _banner_caster.side:
+		return
+	var panel := _panel_for(b)
+	if not panel.is_target_marked():
+		panel.mark_target(HOSTILE_COLOR)
+
+
+func _show_banner(caster: Battler, skill: SkillData) -> void:
+	if _banner_tween != null and _banner_tween.is_valid():
+		_banner_tween.kill()
+	var is_enemy := caster.side == Battler.Side.ENEMY
+	action_banner_label.text = "%s — %s" % [caster.display_name(), tr(skill.display_name)]
+	action_banner_label.add_theme_color_override(
+		"font_color", BANNER_ENEMY_TEXT if is_enemy else BANNER_HERO_TEXT
+	)
+	_banner_style.border_color = HOSTILE_COLOR if is_enemy else BANNER_HERO_BORDER
+	action_banner.modulate.a = 1.0
+
+
+## Fades the banner and every target outline once the action has been read.
+func _end_action_feedback() -> void:
+	if _banner_caster == null:
+		return
+	_banner_caster = null
+	_banner_skill = null
+	if not state.ended:
+		_set_active_panel(_next_active)
+	var fade := _delay(BANNER_FADE_TIME)
+	if _banner_tween != null and _banner_tween.is_valid():
+		_banner_tween.kill()
+	_banner_tween = create_tween()
+	_banner_tween.tween_property(action_banner, "modulate:a", 0.0, fade)
+	for p in _all_panels():
+		p.clear_target_mark(fade)
+
+
+func _on_status_applied(target: Battler, st: CombatStatus) -> void:
+	var text := _status_popup_text(st)
+	if text.is_empty():
+		return
+	var color: Color = TAUNT_COLOR if st.taunt else STATUS_COLORS.get(st.kind, Color.WHITE)
+	_panel_for(target).show_status_popup(text, color)
+
+
+## "Taunting", "DEF +5", "ATK -3", "Poison 4", "Barrier", "Regen +4". A status
+## with several effects gets one line each; an empty one gets "".
+func _status_popup_text(st: CombatStatus) -> String:
+	match st.kind:
+		CombatStatus.Kind.BARRIER:
+			return tr("UI_STATUS_BARRIER").capitalize()
+		CombatStatus.Kind.DOT:
+			return tr("UI_POPUP_POISON") % st.dot_damage
+		CombatStatus.Kind.REGEN:
+			return tr("UI_POPUP_REGEN") % st.heal_per_turn
+	var lines: PackedStringArray = []
+	if st.taunt:
+		lines.append(tr("UI_POPUP_TAUNT"))
+	var mods := [
+		["STAT_ATK", st.mod_atk],
+		["STAT_DEF", st.mod_def],
+		["STAT_MAG", st.mod_mag],
+		["STAT_SPD", st.mod_spd],
+	]
+	for m in mods:
+		if m[1] != 0:
+			lines.append("%s %+d" % [tr(m[0]), m[1]])
+	return "\n".join(lines)
+
+
+## The next actor is known as soon as an action resolves, but while that
+## action is still on screen the caster keeps the highlight; the next actor's
+## is applied when the action's feedback ends (or its own action starts).
 func _on_turn_started(b: Battler) -> void:
+	_next_active = b
+	if _banner_caster == null:
+		_set_active_panel(b)
+
+
+func _set_active_panel(b: Battler) -> void:
 	for p in _all_panels():
 		p.set_active(false)
-	_panel_for(b).set_active(true)
+	if b != null:
+		_panel_for(b).set_active(true)
 
 
 func _on_combat_ended(r: CombatState.Result, rewards: Dictionary) -> void:
@@ -244,6 +395,7 @@ func _process_turn() -> void:
 
 
 func _show_player_turn_ui() -> void:
+	_end_action_feedback()
 	_picking_target = false
 	_pending_skill = null
 	_pending_item = ""
@@ -549,6 +701,7 @@ func _tome_display_name() -> String:
 
 
 func _show_end_panel() -> void:
+	_end_action_feedback()
 	_clear_skill_buttons()
 	for p in _all_panels():
 		p.set_selectable(false)
