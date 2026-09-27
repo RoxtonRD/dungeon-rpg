@@ -118,6 +118,38 @@ small new `SkillData` field such as "bonus against status X".
 
 ---
 
+## 4b · Talents (decided 2026-09-27, D-022, D-023)
+
+The Warrior's talents replace upgrade tiers:
+
+- **Nodes per skill:** a **fork** (A or B, 1 SP; needs the skill's unlock
+  level) and a **boost** (1 SP; needs the fork). 4 skills × 2 nodes = 8
+  nodes.
+- **Scarce SP:** 0 at creation, +1 at levels 2/4/6/8/10 = **5 SP for 8
+  nodes**, so you can't take everything. Tomes of Mastery still add SP.
+  Spare SP never converts to MP.
+- **The Warrior's forks** (placeholders for the sim): Slash: *Rending*
+  (bleed) / *Momentum* (20 Rage per action; it was called "Fury" in
+  earlier drafts, but Fúria is the resource's pt-BR name). Cleave: *Wide
+  Arc* / *Heavy Arc*. Provoke: *Iron Wall* / *Vengeance*. Execute:
+  *Reaper* / *Sunder* (the mid-fight option).
+- **Build order:** 2a is logic, data and save, playable via DevTools
+  (#47). 2b is the **talent screen**. 3/3 is the Backstab synergy plus
+  **one passive and one reaction** as prototypes.
+
+**Passives and reactions (the direction for 3/3 and the rollout):**
+- Depth comes from **passives and reactions, not more active skills**.
+  Four action buttons stays the phone-friendly maximum.
+- **Reactions trigger automatically, by chance, and cost the class's own
+  resource** (Warrior *Parry* costs Rage; a future Rogue *Dodge* costs
+  Energy). **There are no mid-turn prompts.** The player's control is a
+  per-hero on/off toggle on the talent screen: the trade-off is decided as
+  a stance, not per hit.
+- Passives and reactions go in the **same SP pool and talent screen**, so
+  the options always outnumber the points.
+- This is where the stamina idea (v3-B) lives on: a reaction that spends
+  the resource you wanted for your next skill.
+
 ## 5 · Synergy table (to fill in after the slice)
 
 | Class | Sets up | Pays off on |
