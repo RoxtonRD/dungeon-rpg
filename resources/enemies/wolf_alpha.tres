@@ -9,8 +9,8 @@
 script = ExtResource("1")
 id = "wolf_alpha"
 display_name = "ENEMY_WOLF_ALPHA"
-max_hp = 28
-atk = 7
+max_hp = 42
+atk = 5
 def = 3
 spd = 7
 xp_reward = 15

@@ -10,8 +10,8 @@
 script = ExtResource("1")
 id = "bandit"
 display_name = "ENEMY_BANDIT"
-max_hp = 28
-atk = 7
+max_hp = 42
+atk = 5
 def = 3
 spd = 6
 xp_reward = 13

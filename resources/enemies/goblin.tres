@@ -9,8 +9,8 @@
 script = ExtResource("1")
 id = "goblin"
 display_name = "ENEMY_GOBLIN"
-max_hp = 18
-atk = 5
+max_hp = 27
+atk = 4
 def = 2
 spd = 5
 xp_reward = 8
