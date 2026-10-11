@@ -28,16 +28,14 @@ back after weeks away, this is the only thing you need to read.*
 - **Level curve decided:** A at ×3 XP (D-036).
 - **Encounters v3** (D-038), briefed as E1–E4; art direction D-037.
 - **Feel gate 3 passed** (D-040): the Warrior prototype is complete.
+- **Encounters E1–E3 merged** (D-041, D-042); E4 (tuning) is running.
 - **Next up:**
-  1. Roxton: merge PR #81 (E1, approved) and this docs PR; run
-     `tools/after-merge.sh`
-  2. advisor: launch **E2** content #78 and **E3** dungeon pressure #79 as
-     background agents (in parallel)
-  3. advisor: after E2 + E3, launch **E4** bot policy + balance loop #80
-  4. Roxton: **encounters feel gate** after E4
-  5. Later: the talent screen's long scroll (ui-assets); live numbers in
-     skill descriptions; then the **talent rollout to other classes (1.3)**
-  6. Roxton: branch protection on `main` (require PR + both CI checks)
+  1. qa-balance: **E4** bot policy + balance loop #80 (background, advisor
+     reviews)
+  2. Roxton: **encounters feel gate** after E4 merges
+  3. Then: the talent screen's long scroll (ui-assets); live numbers in
+     skill descriptions; the **talent rollout to the other classes (1.3)**
+  4. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---

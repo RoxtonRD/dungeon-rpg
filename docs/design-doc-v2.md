@@ -35,9 +35,10 @@
 
 - Tipos sorteados na geração, com pesos por andar (mais combates e
   eventos em andares fundos; ajustáveis em constantes).
-- Reusa 100% do existente: encounters e pools atuais, os 4 eventos
-  (fonte, mercador, altar, baú), descanso, tesouro. A sala de combate
-  abre a tela de combate atual sem mudanças.
+- Reusa 100% do existente: os 4 eventos (fonte, mercador, altar, baú),
+  descanso, tesouro. A sala de combate abre a tela de combate atual.
+  *(Atualizado em 2026-10: os encontros agora vêm de **grupos autorados por
+  andar** e há **salas de elite** opcionais; veja "Encontros v3" abaixo.)*
 - Scaling de dificuldade: manter a fórmula
   `pow(1.5, dungeon_level−1) × (1 + (andar−1)×0.15)` — agora com 4 andares.
   O escalonamento por masmorra é **exponencial** porque o poder do grupo
@@ -109,15 +110,40 @@
   cada combate: o Battler compartilha a lista por referência, então tudo que o
   combate aplica/consome já é a lista persistente.
 - `GameState.turn_counter` avança a cada rodada de combate **e a cada sala
-  percorrida**; as durações caem junto (`Party.tick_statuses`).
+  nova explorada** (revisitar salas já exploradas não conta, D-038/E3); as
+  durações caem junto (`Party.tick_statuses`).
 - Andar aplica regeneração e veneno. Veneno nunca mata fora de combate (piso de
   1 HP) — não existe caminho de derrota fora do combate.
 - **Pré-buff é intencional**: curas e buffs podem ser lançados na tela
   Personagens gastando MP, e permanecem ao entrar na sala de combate.
-- Limpos ao descansar, ao terminar/abandonar a run e no TPK.
-- Compromisso aceito: como revisitar salas é grátis, andar entre duas salas
-  conhecidas re-aplica regeneração. Se incomodar, basta condicionar o tick a
-  salas ainda não exploradas.
+- O descanso limpa **debuffs e DoT** (buffs ficam); tudo é limpo ao
+  terminar/abandonar a run e no TPK.
+- Resolvido (E3): o tick só acontece em sala nova, então andar entre salas
+  conhecidas não re-aplica regeneração.
+
+## Encontros v3 (E1–E3, outubro 2026)
+
+Resumo; a especificação completa está na skill `design-encounter` e em
+D-038..D-041.
+
+- **Papéis de IA** (`EnemyData.ai_role`): BRUTE, SKIRMISHER, CASTER e
+  SUPPORT, cada um com seu jeito de escolher alvo; provocar (taunt) sempre
+  tem prioridade.
+- **Ataques telegrafados** (`SkillData.telegraph_turns`): o inimigo gasta
+  um turno "carregando" (status CHARGING + banner) e o golpe cai no turno
+  seguinte; se ele morrer antes, o golpe se perde.
+- **Grupos de encontro** (`EncounterGroupData` em `resources/encounters/`):
+  5 grupos normais por andar e 2 grupos de elite nos andares 2–4.
+- **Salas de elite**: opcionais (nunca no único caminho até a escada), nos
+  andares 2–4; recompensa XP ×1,5, ouro ×2 e um item garantido.
+- **Pressão no calabouço** (E3):
+  - descanso: +50% do HP máx. e +25% do MP máx.; heróis caídos voltam
+    com 25% de HP e 25% de MP;
+  - Fonte: +30% do HP;
+  - cota de lutas por andar: mín. 2/3/4/3, máx. = mín. + 2 (o descanso
+    é o último tipo convertido em luta);
+  - sem tick ao revisitar salas.
+- Os números são ajustados pelo bot (E4, skill `balance-loop`).
 
 ## Loot (tiers + drops)
 
