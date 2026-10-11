@@ -445,3 +445,24 @@ encounters (E1–E4) give fights room for skills to matter (D-028).
   15%; 7.4–8.8 combat minutes per dungeon. Difficulty is up (Smash hit
   22 per hero on F3); E4 tunes it.
 
+---
+
+## 2026-10-11 — E2 (#84) and E3 (#83, #85) merged
+
+**D-042 · Encounter content and dungeon pressure are in; tuning is next.**
+- **E2:** goblin_shaman, wolf_alpha (SUPPORT), skeleton_archer
+  (SKIRMISHER), orc_warlord (elite BRUTE with a telegraphed Crushing Blow);
+  the cultist now appears, with a second AOE; 5 normal groups per floor
+  and 2 elite groups on F2–F4.
+- **E3:** rests restore 50% HP + 25% MP; revived heroes come back at 25%
+  HP + 25% MP; the Fountain heals 30% HP; the fight quota is min
+  2/3/4/3, max min+2, and REST rooms are converted last; no status ticks
+  on revisits; elites are never on the only path to the stairs.
+- **Bot after both** (the E2 and E3 runs): fights are still 2.1–2.5 rounds
+  (target 3–5); ~15 fights per dungeon; F4 spikes (cultist AOE, ogres in
+  normal groups).
+- **E4 (#80)** tunes this with the `balance-loop` skill.
+- Merge-order note: #83 merged before its follow-up commit, so #85 carried
+  it; #84's conflict was only the generated `.translation` binaries,
+  which were rebuilt from the merged CSV.
+
