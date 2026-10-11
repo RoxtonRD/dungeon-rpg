@@ -22,22 +22,21 @@ back after weeks away, this is the only thing you need to read.*
 - **Readability confirmed** by Roxton: "who did what to whom" is readable
   without the log (#49).
 - **Feel gate 2 passed** (D-026): talents and scarce SP stay.
-- **Sim findings** (D-028, D-031): fights too short; **the campaign only
-  reaches level ~4–5**, so most of the talent tree is unreachable in 1.0.
+- **Phase 0 exit done:** the game runs on Roxton's phone (2026-10-11).
+- **Bot v2** (D-034): ×3 XP reaches level ~10 at the final boss; fights
+  stay short, and the run is ~6–9 min of combat per dungeon.
 - **Next up:**
-  1. Roxton: merge PRs #64, #65 and this docs PR; `git cleanup`
-  2. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)
-  3. qa-balance: campaign bot v2 (potions, rests, market, retries, XP
-     what-if), #66 (worktree)
-  4. Roxton: **the level-curve decision** (D-031: A faster XP / B SP every
-     level / C lower cap), with #66's numbers
-  5. advisor: brief **encounters + dungeon pressure (1.5)**, the next big
-     lever (D-028)
-  6. ui-assets (later): the talent screen's new sections sit at the bottom
-     of a long scroll; tidy it up
-  7. Before the rollout (1.3): live numbers in skill descriptions
-  8. Roxton: branch protection on `main` (require PR + both CI checks)
-- **Phase 0 exit:** the phone install is pending, if not done yet.
+  1. Roxton: merge PR #68 (bot v2, approved once CI is green) and this
+     docs PR; `git cleanup`
+  2. Roxton: **the level-curve decision** (D-031 options; the advisor
+     recommends A at ×3, see D-034)
+  3. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)
+  4. advisor: brief **encounters + dungeon pressure (1.5)**, the next big
+     lever, sized against the chosen level curve
+  5. ui-assets (later): the talent screen's new sections sit at the bottom
+     of a long scroll
+  6. Before the rollout (1.3): live numbers in skill descriptions
+  7. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
