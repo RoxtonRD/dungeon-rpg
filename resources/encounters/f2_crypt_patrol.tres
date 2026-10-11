@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1")
 id = "f2_crypt_patrol"
-members = Array[String](["skeleton", "skeleton", "orc"])
+members = Array[String](["skeleton", "skeleton", "bat"])
 floor_min = 2
-floor_max = 4
+floor_max = 2

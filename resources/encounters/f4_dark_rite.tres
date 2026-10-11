@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EncounterGroupData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/encounter_group_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "f4_dark_rite"
+members = Array[String](["orc", "cultist", "cultist"])
+floor_min = 4
+floor_max = 4

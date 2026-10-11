@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = "f4_ogre_chieftain"
-members = Array[String](["ogre", "orc", "orc", "dark_elf"])
+members = Array[String](["ogre", "orc", "orc", "cultist"])
 floor_min = 4
 floor_max = 4
 elite = true

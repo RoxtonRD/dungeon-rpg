@@ -4,7 +4,8 @@
 
 [resource]
 script = ExtResource("1")
-id = "f1_crypt_patrol"
-members = Array[String](["skeleton", "skeleton"])
-floor_min = 1
-floor_max = 1
+id = "f4_warlord_horde"
+members = Array[String](["orc_warlord", "orc", "orc", "cultist"])
+floor_min = 4
+floor_max = 4
+elite = true

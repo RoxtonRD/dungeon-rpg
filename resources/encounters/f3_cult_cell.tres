@@ -4,8 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = "f2_ogre_bruiser"
-members = Array[String](["ogre", "bandit", "dark_elf"])
-floor_min = 2
-floor_max = 2
-elite = true
+id = "f3_cult_cell"
+members = Array[String](["skeleton", "cultist", "skeleton_archer"])
+floor_min = 3
+floor_max = 3

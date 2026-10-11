@@ -5,6 +5,7 @@
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_shadow.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_curse.tres" id="3"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_xdivs"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_dark_flame.tres" id="4"]
 
 [resource]
 script = ExtResource("1")
@@ -20,5 +21,5 @@ xp_reward = 14
 gold_min = 6
 gold_max = 12
 ai_role = 2
-skills = Array[ExtResource("3_xdivs")]([ExtResource("2"), ExtResource("3")])
+skills = Array[ExtResource("3_xdivs")]([ExtResource("2"), ExtResource("3"), ExtResource("4")])
 portrait = ExtResource("1_ghjni")

@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = "f2_bandit_gang"
-members = Array[String](["bandit", "bandit", "dark_elf"])
+id = "f2_wolf_pack"
+members = Array[String](["wolf_alpha", "wolf", "wolf"])
 floor_min = 2
-floor_max = 4
+floor_max = 2

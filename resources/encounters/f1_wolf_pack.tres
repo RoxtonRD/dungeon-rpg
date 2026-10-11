@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1")
 id = "f1_wolf_pack"
-members = Array[String](["wolf", "wolf", "bat"])
+members = Array[String](["goblin", "wolf", "wolf"])
 floor_min = 1
 floor_max = 1
