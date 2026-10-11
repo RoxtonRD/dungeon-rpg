@@ -287,3 +287,41 @@ attaches. Follow-up (Phase 3): also exclude `addons/godot_ai/*`, and add a
 CI boot check of the exported pack so a stripped-but-missing autoload
 can't slip through.
 
+---
+
+## 2026-09-28 — Campaign bot v1 (#61 → PR #64), Warrior 3/3 (#62 → PR #65)
+
+**D-031 · The campaign reaches only level ~4–5 by design. The level
+curve is Roxton's call; bot v2 measures the options.**
+Bot v1 (full clear, real XP split four ways) puts heroes at **level ~2.2
+at the dungeon 1 boss**, from ~6 fights. With `xp_for_next = 20·L^1.5`,
+level 10 needs ~2,200 XP per hero, about 250 average fights for a party
+of 4, against ~25–30 fights in the whole campaign. So in 1.0 the Warrior
+earns ~2 of his 5 talent SP, and the tree Roxton played at level 10 is out
+of reach. v1's 97% dungeon-1 wipe rate is **not** trusted: the bot never
+used consumables, rested at the first rest room it found, and stopped at
+the first wipe. Bot v2 (#66) plays sensibly and runs an XP-multiplier
+what-if. The options, for Roxton:
+- **(A) faster XP**, so the campaign ends near level 9–10: the whole tree
+  by the finale, with ascension continuing in the endless mode (D-024).
+  *Advisor's recommendation.*
+- **(B) keep the slow XP; SP every level** from level 2: 5 SP by level
+  ~6; levels 7–10 belong to the endless mode.
+- **(C) lower the 1.0 cap to ~6**, with SP every level, and raise it via
+  ascension later.
+
+**D-032 · Warrior 3/3 rules settled during implementation (accepted).**
+- "Single-target physical" = aimed at one target and dealing physical
+  damage. A multi-hit on one chosen target can be parried; random-target
+  multi-hits can't.
+- Bloodlust reads Rage **after** the skill's cost is paid, so spending on
+  Execute lowers that same hit's bonus (the hold-versus-spend tension).
+- `ReactionData.rage_cost` is paid from the class's own resource; rename
+  it to `cost` when a non-Rage reaction arrives.
+- The talent screen's fork, passive and reaction cards now share one card
+  builder and one confirm dialog.
+
+**D-033 · Godot ignores `.claude/`.** `.claude/.gdignore` stops the
+editor from scanning agent worktrees (full project copies), which had put
+~888 errors in the editor log.
+

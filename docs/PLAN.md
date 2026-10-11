@@ -22,22 +22,22 @@ back after weeks away, this is the only thing you need to read.*
 - **Readability confirmed** by Roxton: "who did what to whom" is readable
   without the log (#49).
 - **Feel gate 2 passed** (D-026): talents and scarce SP stay.
-- **Sim findings** (D-028): fights too short (0.7–3 rounds); the level
-  curve is unmeasured; the dungeon 3 boss spikes.
+- **Sim findings** (D-028, D-031): fights too short; **the campaign only
+  reaches level ~4–5**, so most of the talent tree is unreachable in 1.0.
 - **Next up:**
-  1. Roxton: merge PRs #59 + #60, then the **Phase 0 exit**: delete
-     `android/` in the main checkout, run `tools/export_android.sh`,
-     install with the `adb install -r` line from `docs/release/android.md`,
-     and play a minute
-  2. gameplay-engineer: Warrior 3/3, Bloodlust + Parry + Backstab synergy
-     + `swap_skill`, #62 (editor)
-  3. qa-balance: campaign bot (real XP, level curve, run length, TPK), #61
-     (worktree, parallel with #62)
-  4. Roxton: feel gate 3 (Bloodlust vs Parry tension)
-  5. advisor: from #61's numbers, brief **encounters + dungeon pressure
-     (1.5)**; revisit the SP schedule if levels are low
-  6. Before the rollout (1.3): live numbers in skill descriptions
-  7. Roxton: branch protection on `main` (require PR + both CI checks)
+  1. Roxton: merge PRs #64, #65 and this docs PR; `git cleanup`
+  2. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)
+  3. qa-balance: campaign bot v2 (potions, rests, market, retries, XP
+     what-if), #66 (worktree)
+  4. Roxton: **the level-curve decision** (D-031: A faster XP / B SP every
+     level / C lower cap), with #66's numbers
+  5. advisor: brief **encounters + dungeon pressure (1.5)**, the next big
+     lever (D-028)
+  6. ui-assets (later): the talent screen's new sections sit at the bottom
+     of a long scroll; tidy it up
+  7. Before the rollout (1.3): live numbers in skill descriptions
+  8. Roxton: branch protection on `main` (require PR + both CI checks)
+- **Phase 0 exit:** the phone install is pending, if not done yet.
 - **Blocked on:** nothing
 
 ---
@@ -110,7 +110,7 @@ unknown.
 | Step | What | Owner |
 |---|---|---|
 | 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
-| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); ✅ **2a** talents logic + data (#47 → PR #51); ✅ **2b** talent screen (#52 → PR #54); **3/3** the Backstab synergy + one passive + one reaction (D-023). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
+| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); ✅ **2a** talents logic + data (#47 → PR #51); ✅ **2b** talent screen (#52 → PR #54); ✅ **3/3** Backstab synergy + Bloodlust + Parry + `swap_skill` (#62 → PR #65). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
