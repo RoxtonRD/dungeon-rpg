@@ -58,10 +58,37 @@ if [ "${#real[@]}" -gt 0 ]; then
 	say "Commit them (or ask the advisor to), or discard them with 'git restore <file>', then run this again."
 	exit 1
 fi
+# Untracked files that origin/main now tracks would block the pull. If a
+# file is byte-identical upstream (e.g. an addon installed locally and then
+# merged through a PR), it is safe to remove; anything else stops here.
+untracked_same=()
+while IFS= read -r f; do
+	[ -z "$f" ] && continue
+	upstream="$(git rev-parse -q --verify "origin/main:$f" 2>/dev/null || true)"
+	[ -z "$upstream" ] && continue
+	if [ "$(git hash-object "$f")" = "$upstream" ]; then
+		untracked_same+=("$f")
+	else
+		real+=("$f (untracked, differs from origin/main)")
+	fi
+done < <(git ls-files --others --exclude-standard)
+
+if [ "${#real[@]}" -gt 0 ]; then
+	say "after-merge: you have local changes that are NOT on origin/main:"
+	printf '  %s
+' "${real[@]}"
+	say "Commit them (or ask the advisor to), or discard them, then run this again."
+	exit 1
+fi
 if [ "${#identical[@]}" -gt 0 ]; then
 	say "  ${#identical[@]} local edit(s) already identical on origin/main; discarding the local copies."
 	run git restore --staged --worktree -- "${identical[@]}"
-else
+fi
+if [ "${#untracked_same[@]}" -gt 0 ]; then
+	say "  ${#untracked_same[@]} untracked file(s) already identical on origin/main; removing the local copies."
+	run rm -f -- "${untracked_same[@]}"
+fi
+if [ "${#identical[@]}" -eq 0 ] && [ "${#untracked_same[@]}" -eq 0 ]; then
 	say "  none"
 fi
 
