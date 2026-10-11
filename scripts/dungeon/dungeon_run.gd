@@ -9,11 +9,8 @@ extends RefCounted
 
 const ENEMY_DIR := "res://resources/enemies/"
 
-## Enemy id pools by floor depth (index clamped). v1 roster only.
-const ENCOUNTER_POOLS := [
-	["goblin", "bat", "wolf", "skeleton"],
-	["bandit", "dark_elf", "orc", "skeleton", "wolf"],
-]
+## Normal and elite fights come from the authored groups in
+## resources/encounters/ (see EncounterGroupData and `roll_encounter`).
 ## Boss encounters, one rolled per run (see `boss`). Each is the boss plus
 ## thematic minions; the roll is stored on the run so it survives save/reload.
 ## Three comparable-but-distinct fights: a boss + tanky add, a boss + fragile
@@ -47,6 +44,10 @@ const LOOP_CHANCE := 0.35
 ## Per-floor chance that one ordinary room becomes a rare SHRINE (grants an
 ## event-exclusive skin). FLAG: tune me.
 const SHRINE_CHANCE := 0.12
+## Per-floor chance of one optional ELITE room, on floors 2-4 only (the 0-based
+## floor index must be at least ELITE_FIRST_FLOOR). FLAG: tune me.
+const ELITE_CHANCE := 0.6
+const ELITE_FIRST_FLOOR := 1
 
 ## Content weights per floor: COMBAT, TREASURE, EVENT, REST, EMPTY.
 ## Deeper floors lean harder into combat and events (docs/design-doc-v2.md).
@@ -135,6 +136,7 @@ static func _generate_floor(floor_index: int) -> Dictionary:
 	else:
 		_place_boss(rooms)
 	_maybe_place_shrine(rooms)
+	_maybe_place_elite(rooms, floor_index)
 	return rooms
 
 
@@ -152,6 +154,65 @@ static func _maybe_place_shrine(rooms: Dictionary) -> void:
 		eligible.append(room)
 	if not eligible.is_empty():
 		(eligible[randi() % eligible.size()] as DungeonRoom).kind = DungeonRoom.RoomType.SHRINE
+
+
+## Floors 2-4, ELITE_CHANCE of the time: turns one ordinary room into an ELITE
+## room. It is optional: it avoids the rooms every route to the stairs (or the
+## boss) has to pass through, unless the floor has no other room to give. Never
+## the start, stairs, boss or shrine room.
+static func _maybe_place_elite(rooms: Dictionary, floor_index: int) -> void:
+	if floor_index < ELITE_FIRST_FLOOR or randf() >= ELITE_CHANCE:
+		return
+	var required := _required_rooms(rooms)
+	var optional: Array = []
+	var any: Array = []
+	for room in rooms.values():
+		if room.pos == Vector2i.ZERO:
+			continue
+		if (
+			room.kind
+			in [DungeonRoom.RoomType.STAIRS, DungeonRoom.RoomType.BOSS, DungeonRoom.RoomType.SHRINE]
+		):
+			continue
+		any.append(room)
+		if not required.has(room.pos):
+			optional.append(room)
+	var pool: Array = optional if not optional.is_empty() else any
+	if not pool.is_empty():
+		(pool[randi() % pool.size()] as DungeonRoom).kind = DungeonRoom.RoomType.ELITE
+
+
+## Positions of the rooms every route from the start to the floor's goal (the
+## stairs, or the boss on the last floor) must pass through.
+static func _required_rooms(rooms: Dictionary) -> Dictionary:
+	var goal := Vector2i(-9999, -9999)
+	for room in rooms.values():
+		if room.kind == DungeonRoom.RoomType.STAIRS or room.kind == DungeonRoom.RoomType.BOSS:
+			goal = room.pos
+	var required: Dictionary = {}
+	for pos in rooms:
+		if pos == Vector2i.ZERO or pos == goal:
+			continue
+		if not _reachable(rooms, pos).has(goal):
+			required[pos] = true
+	return required
+
+
+## Every room position reachable from the start without entering `blocked`.
+static func _reachable(rooms: Dictionary, blocked: Vector2i) -> Dictionary:
+	var seen: Dictionary = {Vector2i.ZERO: true}
+	var queue: Array = [Vector2i.ZERO]
+	while not queue.is_empty():
+		var pos: Vector2i = queue.pop_front()
+		var room: DungeonRoom = rooms[pos]
+		for dir in DungeonRoom.DIRS:
+			var npos: Vector2i = pos + dir["vec"]
+			if npos == blocked or seen.has(npos) or not rooms.has(npos):
+				continue
+			if (room.connections & dir["bit"]) != 0:
+				seen[npos] = true
+				queue.append(npos)
+	return seen
 
 
 static func _roll_kind(floor_index: int) -> DungeonRoom.RoomType:
@@ -285,12 +346,19 @@ func descend() -> void:
 # ── Encounters ────────────────────────────────────────────────────────────────
 
 
-func roll_encounter(floor_index: int) -> Array[EnemyData]:
-	var pool: Array = ENCOUNTER_POOLS[mini(floor_index, ENCOUNTER_POOLS.size() - 1)]
-	var count := randi_range(2, 4)
+## Rolls a fight for the 0-based `floor_index`: a weighted authored group valid
+## on that floor, scaled for the run. `elite` rolls from the elite groups (an
+## elite room); if a floor has none it falls back to a normal group.
+func roll_encounter(floor_index: int, elite: bool = false) -> Array[EnemyData]:
 	var out: Array[EnemyData] = []
-	for i in count:
-		out.append(_scale_enemy(_load_enemy(pool[randi() % pool.size()]), floor_index + 1))
+	var group := EncounterGroupData.pick(floor_index + 1, elite)
+	if group == null and elite:
+		group = EncounterGroupData.pick(floor_index + 1, false)
+	if group == null:
+		push_error("No encounter group for floor %d" % (floor_index + 1))
+		return out
+	for id in group.members:
+		out.append(_scale_enemy(_load_enemy(id), floor_index + 1))
 	return out
 
 

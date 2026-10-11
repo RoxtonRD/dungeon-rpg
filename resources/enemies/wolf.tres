@@ -17,5 +17,6 @@ spd = 8
 xp_reward = 10
 gold_min = 3
 gold_max = 7
+ai_role = 1
 skills = Array[ExtResource("3_oxm75")]([ExtResource("2"), ExtResource("3")])
 portrait = ExtResource("1_78dli")

@@ -6,8 +6,9 @@
 class_name DungeonRoom
 extends RefCounted
 
-## SHRINE is appended last so existing saved `kind` ints stay stable.
-enum RoomType { EMPTY, COMBAT, TREASURE, EVENT, REST, STAIRS, BOSS, SHRINE }
+## SHRINE and ELITE are appended last so existing saved `kind` ints stay stable.
+## ELITE is an optional, tougher fight with better rewards.
+enum RoomType { EMPTY, COMBAT, TREASURE, EVENT, REST, STAIRS, BOSS, SHRINE, ELITE }
 
 ## Passage bitmask values, matching DIRS order below.
 const NORTH := 1
@@ -54,7 +55,8 @@ func has_content() -> bool:
 			RoomType.EVENT,
 			RoomType.REST,
 			RoomType.BOSS,
-			RoomType.SHRINE
+			RoomType.SHRINE,
+			RoomType.ELITE
 		]
 	)
 
@@ -81,6 +83,8 @@ func type_name() -> String:
 			return tr("ROOM_BOSS")
 		RoomType.SHRINE:
 			return tr("ROOM_SHRINE")
+		RoomType.ELITE:
+			return tr("ROOM_ELITE")
 	return "?"
 
 

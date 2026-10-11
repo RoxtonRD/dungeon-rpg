@@ -4,7 +4,9 @@
 class_name CombatStatus
 extends RefCounted
 
-enum Kind { BUFF, DEBUFF, DOT, BARRIER, REGEN }
+## CHARGING is an enemy winding up a telegraphed skill; it is appended last so
+## saved kind ints stay stable.
+enum Kind { BUFF, DEBUFF, DOT, BARRIER, REGEN, CHARGING }
 
 var kind: Kind = Kind.BUFF
 ## Display name of the skill that applied this status — used in log lines.
@@ -31,6 +33,12 @@ var duration: int = 0
 var taunt: bool = false
 ## Multiplies the Rage the bearer gains from hits taken (Vengeance).
 var rage_taken_mult: float = 1.0
+
+## CHARGING only: the skill that lands on the bearer's next turn, and the hero a
+## single-target one is aimed at. Enemy-only and combat-only, so neither is
+## saved (a CHARGING status that is ever reloaded has no skill and is inert).
+var charge_skill: SkillData = null
+var charge_target: Battler = null
 
 
 ## Builds every status a buff/heal skill grants: an optional barrier, an optional

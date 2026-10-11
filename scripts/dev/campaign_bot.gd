@@ -337,11 +337,14 @@ static func _resolve_room(
 	if not room.has_content():
 		return true
 	match room.kind:
-		DungeonRoom.RoomType.COMBAT, DungeonRoom.RoomType.BOSS:
+		DungeonRoom.RoomType.COMBAT, DungeonRoom.RoomType.ELITE, DungeonRoom.RoomType.BOSS:
 			var is_boss := room.kind == DungeonRoom.RoomType.BOSS
+			var is_elite := room.kind == DungeonRoom.RoomType.ELITE
 			for attempt in MAX_REENGAGE:
+				# No elite policy yet (E4): an elite room is fought like any
+				# other, from the elite groups, without the reward bonus.
 				var enemies: Array[EnemyData] = (
-					run.roll_boss() if is_boss else run.roll_encounter(run.current_floor)
+					run.roll_boss() if is_boss else run.roll_encounter(run.current_floor, is_elite)
 				)
 				var res := _fight(heroes, enemies)
 				d["fights"] += 1

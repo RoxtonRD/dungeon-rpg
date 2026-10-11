@@ -104,6 +104,10 @@ enum DamageStat { AUTO, ATK, MAG }
 
 @export_group("Enemy AI")
 @export var use_condition: UseCondition = UseCondition.NONE
+## Turns an enemy spends winding up before this skill lands. 0 = instant. The
+## wind-up turn shows a Charging status; the skill lands on the enemy's next
+## turn unless it dies first.
+@export var telegraph_turns: int = 0
 
 
 ## Returns the per-skill icon at assets/icons/skills/{filename}.png, or null

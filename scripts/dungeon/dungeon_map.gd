@@ -26,6 +26,7 @@ const ROOM_VARIATION: Dictionary = {
 	DungeonRoom.RoomType.STAIRS: "StairsNodeButton",
 	DungeonRoom.RoomType.BOSS: "BossNodeButton",
 	DungeonRoom.RoomType.SHRINE: "ShrineNodeButton",
+	DungeonRoom.RoomType.ELITE: "EliteNodeButton",
 }
 # ── Popup backgrounds (treasure / rest / event). ──────────────────────────────
 const BG_TREASURE: Texture2D = preload("res://assets/backgrounds/bg_treasure.png")
@@ -312,6 +313,8 @@ func _trigger_room(room: DungeonRoom) -> void:
 	match room.kind:
 		DungeonRoom.RoomType.COMBAT:
 			_start_combat(run.roll_encounter(run.current_floor))
+		DungeonRoom.RoomType.ELITE:
+			_start_combat(run.roll_encounter(run.current_floor, true), true)
 		DungeonRoom.RoomType.BOSS:
 			_start_combat(run.roll_boss())
 		DungeonRoom.RoomType.TREASURE:
@@ -334,12 +337,12 @@ func _clear_current_room() -> void:
 # ── Combat ────────────────────────────────────────────────────────────────────
 
 
-func _start_combat(encounter: Array[EnemyData]) -> void:
+func _start_combat(encounter: Array[EnemyData], elite: bool = false) -> void:
 	var scene := load(COMBAT_SCENE) as PackedScene
 	_combat_overlay = scene.instantiate() as CombatScreen
 	add_child(_combat_overlay)
 	_combat_overlay.combat_finished.connect(_on_combat_finished)
-	_combat_overlay.setup(Party.heroes, encounter, run.level)
+	_combat_overlay.setup(Party.heroes, encounter, run.level, elite)
 
 
 func _on_combat_finished(result: int) -> void:

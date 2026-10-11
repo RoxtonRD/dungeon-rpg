@@ -11,8 +11,8 @@
 ##   while not state.ended:
 ##       state.player_action(skill, target)     # or state.player_flee()
 ##
-## Skill formulas, status interactions, AI selection and reward math are
-## carried verbatim from reference/combat.js.
+## Skill formulas, status interactions and reward math are carried verbatim from
+## reference/combat.js. Enemy AI follows EnemyData.ai_role (encounters v3).
 class_name CombatState
 extends RefCounted
 
@@ -39,6 +39,16 @@ signal action_started(caster: Battler, skill: SkillData, targets: Array[Battler]
 signal status_applied(target: Battler, status: CombatStatus)
 signal combat_ended(result: Result, rewards: Dictionary)
 
+## Elite fights pay out more (the guaranteed item drop is rolled by Loot).
+const ELITE_XP_MULT := 1.5
+const ELITE_GOLD_MULT := 2.0
+## An enemy below this share of its HP counts as hurt for a SUPPORT's heals.
+const SUPPORT_HEAL_BELOW := 0.5
+## Chance a CASTER with no area skill (or fewer than 3 targets) picks a debuff.
+const CASTER_DEBUFF_CHANCE := 0.5
+## id of the stand-in skill action_started carries for a wind-up turn.
+const WIND_UP_ID := "wind_up"
+
 var party: Array[Battler] = []
 var enemies: Array[Battler] = []
 ## Remaining actors in the current round, in initiative order.
@@ -49,10 +59,15 @@ var ended: bool = false
 var result: Result = Result.NONE
 var log_lines: Array[String] = []
 var rewards: Dictionary = {}
+## An elite room's fight: XP and gold are multiplied.
+var elite: bool = false
 
 
-static func build(heroes: Array[Hero], enemy_data_list: Array[EnemyData]) -> CombatState:
+static func build(
+	heroes: Array[Hero], enemy_data_list: Array[EnemyData], p_elite: bool = false
+) -> CombatState:
 	var c := CombatState.new()
+	c.elite = p_elite
 	for i in heroes.size():
 		c.party.append(Battler.for_hero(heroes[i], i))
 	for i in enemy_data_list.size():
@@ -291,6 +306,9 @@ func _calculate_rewards(r: Result) -> Dictionary:
 	for b in enemies:
 		xp_total += b.enemy_data.xp_reward
 		gold_total += randi_range(b.enemy_data.gold_min, b.enemy_data.gold_max)
+	if elite:
+		xp_total = roundi(xp_total * ELITE_XP_MULT)
+		gold_total = roundi(gold_total * ELITE_GOLD_MULT)
 	return {"xp": xp_total, "gold": gold_total}
 
 
@@ -334,6 +352,8 @@ func _tick_statuses() -> void:
 					)
 					hp_changed.emit(b)
 					damage_popup.emit(b, healed, PopupKind.HEAL, PackedStringArray())
+			if st.kind == CombatStatus.Kind.CHARGING:
+				continue  # counts down on its bearer's own turns, not by round
 			st.duration -= 1
 			if st.duration <= 0:
 				b.statuses.remove_at(i)
@@ -595,10 +615,36 @@ func _log_suffix(tags: PackedStringArray) -> String:
 
 
 # ── Enemy AI ──────────────────────────────────────────────────────────────────
+# An enemy's EnemyData.ai_role decides which skill it prefers and whom it aims
+# at; the pick inside that preference stays random (no lookahead). Taunt
+# overrides hostile targeting for every role.
+
+
+## True for the stand-in skill action_started carries on a wind-up turn, so the
+## UI words the banner "X is winding up Y" instead of "X — Y".
+static func is_wind_up(skill: SkillData) -> bool:
+	return skill.id == WIND_UP_ID
 
 
 func _enemy_take_turn() -> void:
 	var e := current_actor
+	var charge := e.charge_status()
+	if charge != null:
+		_continue_wind_up(e, charge)
+		return
+	var skill := _choose_enemy_skill(e)
+	if skill == null:
+		return
+	var picked := _pick_enemy_target(e, skill)
+	if skill.telegraph_turns > 0:
+		_begin_wind_up(e, skill, picked)
+		return
+	_enemy_use(e, skill, picked)
+
+
+## The skill the enemy uses this turn: a use_condition filter, then the role's
+## preference, then a random pick.
+func _choose_enemy_skill(e: Battler) -> SkillData:
 	var data := e.enemy_data
 	# Filter by use_condition (lowHp triggers below 50% HP, etc.).
 	var usable: Array[SkillData] = []
@@ -611,10 +657,162 @@ func _enemy_take_turn() -> void:
 	if usable.is_empty():
 		usable = data.skills
 	if usable.is_empty():
-		return
-	var skill: SkillData = usable[randi() % usable.size()]
-	var e_stats := e.effective_stats()
+		return null
+	match data.ai_role:
+		EnemyData.AiRole.CASTER:
+			return _caster_skill(usable)
+		EnemyData.AiRole.SUPPORT:
+			return _support_skill(e, usable)
+	return _random_skill(usable)
 
+
+## CASTER: area damage when 3+ heroes stand, otherwise a debuff or a damaging
+## spell.
+func _caster_skill(usable: Array[SkillData]) -> SkillData:
+	var area := _skills_where(
+		usable, func(sk): return sk.target == SkillData.TargetType.ALL and _is_offensive(sk)
+	)
+	if _alive(party).size() >= 3 and not area.is_empty():
+		return _random_skill(area)
+	var debuffs := _skills_where(usable, _is_debuff)
+	if not debuffs.is_empty() and randf() < CASTER_DEBUFF_CHANCE:
+		return _random_skill(debuffs)
+	var damage := _skills_where(usable, _is_offensive)
+	return _random_skill(damage if not damage.is_empty() else usable)
+
+
+## SUPPORT: heal a hurt ally, else buff one that lacks the buff, else attack.
+func _support_skill(e: Battler, usable: Array[SkillData]) -> SkillData:
+	var heals := _skills_where(usable, func(sk): return _heal_is_useful(e, sk))
+	if not heals.is_empty():
+		return _random_skill(heals)
+	var buffs := _skills_where(usable, func(sk): return _buff_is_useful(e, sk))
+	if not buffs.is_empty():
+		return _random_skill(buffs)
+	var attacks := _skills_where(usable, _is_offensive)
+	return _random_skill(attacks if not attacks.is_empty() else usable)
+
+
+func _heal_is_useful(e: Battler, sk: SkillData) -> bool:
+	if sk.skill_type != SkillData.SkillType.HEAL:
+		return false
+	match sk.target:
+		SkillData.TargetType.SELF:
+			return e.hp_fraction() < SUPPORT_HEAL_BELOW
+		SkillData.TargetType.ALLY, SkillData.TargetType.ALLIES:
+			return _hurt_ally() != null
+	return false
+
+
+func _buff_is_useful(e: Battler, sk: SkillData) -> bool:
+	if sk.skill_type != SkillData.SkillType.BUFF:
+		return false
+	match sk.target:
+		SkillData.TargetType.SELF:
+			return not _has_status_from(e, sk)
+		SkillData.TargetType.ALLY, SkillData.TargetType.ALLIES:
+			return _unbuffed_ally(sk) != null
+	return false
+
+
+## The living enemy with the lowest HP share, if it is under the heal threshold.
+func _hurt_ally() -> Battler:
+	var worst: Battler = null
+	for b in _alive(enemies):
+		if b.hp_fraction() >= SUPPORT_HEAL_BELOW:
+			continue
+		if worst == null or b.hp_fraction() < worst.hp_fraction():
+			worst = b
+	return worst
+
+
+## A living enemy that doesn't carry a status from `sk` yet.
+func _unbuffed_ally(sk: SkillData) -> Battler:
+	for b in _alive(enemies):
+		if not _has_status_from(b, sk):
+			return b
+	return null
+
+
+func _has_status_from(b: Battler, sk: SkillData) -> bool:
+	for st in b.statuses:
+		if st.source_name == sk.display_name:
+			return true
+	return false
+
+
+## Anything aimed at the other side (damage, debuffs); heals, buffs and revives
+## are friendly.
+func _is_offensive(sk: SkillData) -> bool:
+	match sk.skill_type:
+		SkillData.SkillType.HEAL, SkillData.SkillType.BUFF, SkillData.SkillType.REVIVE:
+			return false
+	return true
+
+
+## An offensive skill that lowers a stat, alone or as a rider on damage.
+func _is_debuff(sk: SkillData) -> bool:
+	if not _is_offensive(sk) or sk.mod_duration <= 0:
+		return false
+	return sk.mod_atk < 0 or sk.mod_def < 0 or sk.mod_mag < 0 or sk.mod_spd < 0
+
+
+func _skills_where(list: Array[SkillData], test: Callable) -> Array[SkillData]:
+	var out: Array[SkillData] = []
+	for sk in list:
+		if test.call(sk):
+			out.append(sk)
+	return out
+
+
+func _random_skill(list: Array[SkillData]) -> SkillData:
+	return list[randi() % list.size()]
+
+
+## Who the skill is aimed at (null for skills that auto-target).
+func _pick_enemy_target(e: Battler, skill: SkillData) -> Battler:
+	match skill.target:
+		SkillData.TargetType.ONE:
+			return _pick_hero_target(e)
+		SkillData.TargetType.ALLY:
+			if skill.skill_type == SkillData.SkillType.HEAL:
+				return _hurt_ally()
+			return _unbuffed_ally(skill)
+	return null
+
+
+## A hero to hit: a taunter if any, else the lowest-HP% hero for a SKIRMISHER,
+## else a random front-row hero (any hero if the front row is gone).
+func _pick_hero_target(e: Battler) -> Battler:
+	var alive_party: Array[Battler] = _alive(party)
+	if alive_party.is_empty():
+		return null
+	var taunters: Array[Battler] = []
+	for b in alive_party:
+		if b.has_taunt():
+			taunters.append(b)
+	var pool: Array[Battler] = []
+	if not taunters.is_empty():
+		pool = taunters
+	elif e.enemy_data.ai_role == EnemyData.AiRole.SKIRMISHER:
+		var lowest := 2.0
+		for b in alive_party:
+			lowest = minf(lowest, b.hp_fraction())
+		for b in alive_party:
+			if is_equal_approx(b.hp_fraction(), lowest):
+				pool.append(b)
+	else:
+		for b in alive_party:
+			if b.is_front_row():
+				pool.append(b)
+		if pool.is_empty():
+			pool = alive_party
+	return pool[randi() % pool.size()]
+
+
+## Resolves the skill now: self skills here, everything else through
+## _apply_skill.
+func _enemy_use(e: Battler, skill: SkillData, picked: Battler) -> void:
 	# Self-targeting skills (self-buff, regen).
 	if skill.target == SkillData.TargetType.SELF:
 		var self_target: Array[Battler] = [e]
@@ -623,6 +821,7 @@ func _enemy_take_turn() -> void:
 			_apply_buff(e, skill)
 			_log(tr("LOG_USE") % [e.display_name(), tr(skill.display_name)])
 		elif skill.skill_type == SkillData.SkillType.HEAL:
+			var e_stats := e.effective_stats()
 			var mag_val := int(e_stats["mag"])
 			if mag_val <= 0:
 				mag_val = int(e_stats["atk"])
@@ -632,27 +831,53 @@ func _enemy_take_turn() -> void:
 			hp_changed.emit(e)
 			damage_popup.emit(e, heal_amount, PopupKind.HEAL, PackedStringArray())
 		return
-
-	# Pick a party target for ONE-target skills; taunt overrides front-first.
-	var picked: Battler = null
-	if skill.target == SkillData.TargetType.ONE:
-		var alive_party: Array[Battler] = _alive(party)
-		var taunters: Array[Battler] = []
-		for b in alive_party:
-			if b.has_taunt():
-				taunters.append(b)
-		var pool: Array[Battler] = []
-		if not taunters.is_empty():
-			pool = taunters
-		else:
-			for b in alive_party:
-				if b.is_front_row():
-					pool.append(b)
-			if pool.is_empty():
-				pool = alive_party
-		if not pool.is_empty():
-			picked = pool[randi() % pool.size()]
 	_apply_skill(e, skill, picked)
+
+
+# ── Telegraphed skills ────────────────────────────────────────────────────────
+
+
+## The enemy spends this turn winding up `skill`: a Charging status that
+## remembers the skill and its target, and a banner naming the threat.
+func _begin_wind_up(e: Battler, skill: SkillData, picked: Battler) -> void:
+	var st := CombatStatus.new()
+	st.kind = CombatStatus.Kind.CHARGING
+	st.source_name = skill.display_name
+	st.duration = skill.telegraph_turns  # wind-up turns left, see _continue_wind_up
+	st.charge_skill = skill
+	st.charge_target = picked
+	e.statuses.append(st)
+	_announce_wind_up(e, skill, picked)
+	status_applied.emit(e, st)
+
+
+func _announce_wind_up(e: Battler, skill: SkillData, picked: Battler) -> void:
+	var stand_in := skill.duplicate() as SkillData
+	stand_in.id = WIND_UP_ID
+	action_started.emit(e, stand_in, _gather_targets(e, skill, picked))
+	_log(tr("UI_TELEGRAPH") % [e.display_name(), tr(skill.display_name)])
+
+
+## The enemy's turn while Charging: keep winding up if the telegraph is longer
+## than one turn, else the skill lands. A single-target skill hits the same
+## target if still standing, else a freshly picked one.
+func _continue_wind_up(e: Battler, st: CombatStatus) -> void:
+	var skill := st.charge_skill
+	if skill == null:
+		e.statuses.erase(st)  # a reloaded status carries no skill
+		return
+	st.duration -= 1
+	if st.duration > 0:
+		_announce_wind_up(e, skill, st.charge_target)
+		return
+	e.statuses.erase(st)
+	var picked := st.charge_target
+	if (
+		(skill.target == SkillData.TargetType.ONE or skill.target == SkillData.TargetType.ALLY)
+		and (picked == null or not picked.is_alive())
+	):
+		picked = _pick_enemy_target(e, skill)
+	_enemy_use(e, skill, picked)
 
 
 # ── Small helpers ─────────────────────────────────────────────────────────────
