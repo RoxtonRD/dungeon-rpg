@@ -88,14 +88,18 @@ static func _equip_best(h: Hero, max_tier: int) -> void:
 ## {skill basename: {"fork": "a"|"b", "boost": bool}}, in its listed order,
 ## through the real Party API. A pick the hero can't take yet (skill still
 ## level-locked, or no SP left) is skipped; later picks are still tried.
+## Safe to call again as SP comes in (the campaign bot does, between dungeons):
+## a fork already picked stays, and a boost it missed for lack of SP is bought
+## on a later call. On a fresh hero this spends exactly as a single call did.
 static func apply_build(h: Hero, build: Dictionary) -> void:
 	for key in build:
 		var pick: Dictionary = build[key]
 		for s in h.class_data.skills:
 			if s.resource_path.get_file().get_basename() != key:
 				continue
-			if Party.pick_fork(h, s, str(pick.get("fork", ""))) and pick.get("boost", false):
-				Party.boost_skill(h, s)
+			Party.pick_fork(h, s, str(pick.get("fork", "")))
+			if pick.get("boost", false):
+				Party.boost_skill(h, s)  # no-op unless the fork is picked
 
 
 static func heal_party(heroes: Array[Hero]) -> void:
@@ -109,7 +113,10 @@ static func heal_party(heroes: Array[Hero]) -> void:
 
 ## Fights `enemy_list` with `heroes` (HP/MP carry in and out). Accumulates
 ## damage dealt per class id into `dmg_by_class`, and skill usage per class id
-## into `usage` (see _add_usage). Returns {result, rounds}.
+## into `usage` (see _add_usage). Returns {result, rounds, xp, party_actions,
+## enemy_actions}: `rounds` counts from 0 (a fight won in the first round is 0),
+## `xp` is the fight's total XP reward (0 unless won), and the action counts
+## are turns taken (a flee attempt counts as a party action).
 static func fight(
 	heroes: Array[Hero],
 	enemy_list: Array[EnemyData],
@@ -119,6 +126,8 @@ static func fight(
 	var st := CombatState.build(heroes, enemy_list)
 	st.start()
 	var used: Dictionary = {}  # this fight only: class id -> {skill id: count}
+	var party_actions := 0
+	var enemy_actions := 0
 	var guard := 0
 	while not st.ended and guard < MAX_ROUNDS * 8:
 		guard += 1
@@ -127,10 +136,18 @@ static func fight(
 			break
 		if actor.side == Battler.Side.ENEMY:
 			st.step()
+			enemy_actions += 1
 		else:
 			_player_turn(st, actor, dmg_by_class, used)
+			party_actions += 1
 	_add_usage(usage, used)
-	return {"result": int(st.result), "rounds": st.round_number}
+	return {
+		"result": int(st.result),
+		"rounds": st.round_number,
+		"xp": int(st.rewards.get("xp", 0)),
+		"party_actions": party_actions,
+		"enemy_actions": enemy_actions,
+	}
 
 
 ## Folds one fight's skill usage into `usage`, per class id:
