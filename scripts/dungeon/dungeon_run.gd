@@ -49,6 +49,21 @@ const SHRINE_CHANCE := 0.12
 const ELITE_CHANCE := 0.6
 const ELITE_FIRST_FLOOR := 1
 
+## Fight quota per floor (D-038): the fewest COMBAT rooms each floor has, and
+## how many more than that it may have. The boss and elite rooms don't count.
+## Generation adjusts the rolled room kinds to land inside the range.
+const MIN_COMBAT_ROOMS := [2, 3, 4, 3]
+const MAX_EXTRA_COMBAT_ROOMS := 2
+
+## Rest rooms (D-038): each living hero regains these shares of max HP and MP;
+## a downed hero gets up at REST_REVIVE_HP_SHARE. Debuffs and DoTs are cleared.
+const REST_HP_SHARE := 0.5
+const REST_MP_SHARE := 0.25
+const REST_REVIVE_HP_SHARE := 0.25
+## The Fountain event: living heroes regain this share of max HP (no MP), and
+## DoTs are washed off.
+const FOUNTAIN_HP_SHARE := 0.3
+
 ## Content weights per floor: COMBAT, TREASURE, EVENT, REST, EMPTY.
 ## Deeper floors lean harder into combat and events (docs/design-doc-v2.md).
 const KIND_WEIGHTS := [
@@ -137,7 +152,79 @@ static func _generate_floor(floor_index: int) -> Dictionary:
 		_place_boss(rooms)
 	_maybe_place_shrine(rooms)
 	_maybe_place_elite(rooms, floor_index)
+	_apply_fight_quota(rooms, floor_index)
 	return rooms
+
+
+## Rooms whose kind the fight quota may change: everything except the start,
+## stairs, boss, shrine and elite rooms.
+static func _ordinary_rooms(rooms: Dictionary) -> Array:
+	var out: Array = []
+	for room in rooms.values():
+		if room.pos == Vector2i.ZERO:
+			continue
+		if (
+			room.kind
+			in [
+				DungeonRoom.RoomType.STAIRS,
+				DungeonRoom.RoomType.BOSS,
+				DungeonRoom.RoomType.SHRINE,
+				DungeonRoom.RoomType.ELITE,
+			]
+		):
+			continue
+		out.append(room)
+	return out
+
+
+## Brings the floor's COMBAT room count inside MIN_COMBAT_ROOMS ..
+## MIN_COMBAT_ROOMS + MAX_EXTRA_COMBAT_ROOMS by changing the kinds of random
+## ordinary rooms. Missing fights turn non-combat rooms into COMBAT; extra ones
+## are rerolled as a non-combat kind with the floor's weights. On a floor too
+## small for its minimum, the elite room (then the shrine) gives its room back
+## as a plain fight: the quota comes first.
+static func _apply_fight_quota(rooms: Dictionary, floor_index: int) -> void:
+	var min_fights: int = MIN_COMBAT_ROOMS[floor_index]
+	var max_fights: int = min_fights + MAX_EXTRA_COMBAT_ROOMS
+	var fights: Array = []
+	var others: Array = []
+	for room in _ordinary_rooms(rooms):
+		if room.kind == DungeonRoom.RoomType.COMBAT:
+			fights.append(room)
+		else:
+			others.append(room)
+
+	if fights.size() + others.size() < min_fights:
+		for kind in [DungeonRoom.RoomType.ELITE, DungeonRoom.RoomType.SHRINE]:
+			for room in rooms.values():
+				if room.kind == kind and fights.size() + others.size() < min_fights:
+					others.append(room)
+
+	while fights.size() < min_fights and not others.is_empty():
+		var room: DungeonRoom = others.pop_at(randi() % others.size())
+		room.kind = DungeonRoom.RoomType.COMBAT
+		fights.append(room)
+	while fights.size() > max_fights:
+		var room: DungeonRoom = fights.pop_at(randi() % fights.size())
+		room.kind = _roll_non_combat_kind(floor_index)
+
+
+## Rolls a room kind from the floor's weights with COMBAT left out.
+static func _roll_non_combat_kind(floor_index: int) -> DungeonRoom.RoomType:
+	var weights: Array = KIND_WEIGHTS[floor_index]
+	var total := 0.0
+	for i in weights.size():
+		if KIND_ORDER[i] != DungeonRoom.RoomType.COMBAT:
+			total += weights[i]
+	var r := randf() * total
+	var acc := 0.0
+	for i in weights.size():
+		if KIND_ORDER[i] == DungeonRoom.RoomType.COMBAT:
+			continue
+		acc += weights[i]
+		if r < acc:
+			return KIND_ORDER[i]
+	return DungeonRoom.RoomType.EMPTY
 
 
 ## Very rarely converts one ordinary room into a SHRINE (grants an event skin).
@@ -157,15 +244,14 @@ static func _maybe_place_shrine(rooms: Dictionary) -> void:
 
 
 ## Floors 2-4, ELITE_CHANCE of the time: turns one ordinary room into an ELITE
-## room. It is optional: it avoids the rooms every route to the stairs (or the
-## boss) has to pass through, unless the floor has no other room to give. Never
-## the start, stairs, boss or shrine room.
+## room. It is optional: it never sits on a room every route to the stairs (or
+## the boss) has to pass through; when the floor has no other room to give, no
+## elite is placed. Never the start, stairs, boss or shrine room.
 static func _maybe_place_elite(rooms: Dictionary, floor_index: int) -> void:
 	if floor_index < ELITE_FIRST_FLOOR or randf() >= ELITE_CHANCE:
 		return
 	var required := _required_rooms(rooms)
 	var optional: Array = []
-	var any: Array = []
 	for room in rooms.values():
 		if room.pos == Vector2i.ZERO:
 			continue
@@ -174,12 +260,10 @@ static func _maybe_place_elite(rooms: Dictionary, floor_index: int) -> void:
 			in [DungeonRoom.RoomType.STAIRS, DungeonRoom.RoomType.BOSS, DungeonRoom.RoomType.SHRINE]
 		):
 			continue
-		any.append(room)
 		if not required.has(room.pos):
 			optional.append(room)
-	var pool: Array = optional if not optional.is_empty() else any
-	if not pool.is_empty():
-		(pool[randi() % pool.size()] as DungeonRoom).kind = DungeonRoom.RoomType.ELITE
+	if not optional.is_empty():
+		(optional[randi() % optional.size()] as DungeonRoom).kind = DungeonRoom.RoomType.ELITE
 
 
 ## Positions of the rooms every route from the start to the floor's goal (the
@@ -297,13 +381,18 @@ func can_move_to(pos: Vector2i) -> bool:
 	return current_room().connects_to(pos)
 
 
-## Moves the party into an adjacent room. Walking advances the global turn, so
-## buffs/debuffs decay and regen/DoT tick while exploring, not just in combat.
+## Moves the party into an adjacent room. Entering a room for the first time
+## advances the global turn, so buffs/debuffs decay and regen/DoT tick while
+## exploring, not just in combat. Walking back through explored rooms is free
+## but ticks nothing, so it can't be used to farm regen (D-038).
 ## Returns any status log lines so the caller can surface them.
 func move_to(pos: Vector2i) -> Array[String]:
 	player_pos = pos
+	var first_visit := not current_room().explored
 	current_room().explored = true
 	_mark_adjacent_seen()
+	if not first_visit:
+		return []
 	GameState.turn_counter += 1
 	return Party.tick_statuses()
 
@@ -436,12 +525,17 @@ func _loot_pool() -> Array:
 # ── Rest ──────────────────────────────────────────────────────────────────────
 
 
+## A rest room (D-038): living heroes regain REST_HP_SHARE of max HP and
+## REST_MP_SHARE of max MP, downed heroes get up at REST_REVIVE_HP_SHARE, and
+## debuffs and DoTs are cleared. Buffs, barriers and regen stay.
 func resolve_rest() -> void:
 	for h in Party.heroes:
-		h.hp = h.max_hp()
-		h.mp = h.max_mp()
-	# A full rest clears lingering effects — debuffs included.
-	Party.clear_statuses()
+		if h.is_alive():
+			h.hp = mini(h.max_hp(), h.hp + roundi(h.max_hp() * REST_HP_SHARE))
+			h.mp = mini(h.max_mp(), h.mp + roundi(h.max_mp() * REST_MP_SHARE))
+		else:
+			h.hp = maxi(1, roundi(h.max_hp() * REST_REVIVE_HP_SHARE))
+	Party.clear_status_kinds([CombatStatus.Kind.DEBUFF, CombatStatus.Kind.DOT])
 
 
 # ── Shrine ────────────────────────────────────────────────────────────────────
@@ -530,8 +624,13 @@ func _move_on() -> String:
 	return tr("EVT_MOVE_ON")
 
 
+## Living heroes regain FOUNTAIN_HP_SHARE of max HP (no MP, no revive) and the
+## party's DoTs are washed off; every other status stays.
 func _fountain_drink() -> String:
-	resolve_rest()
+	for h in Party.heroes:
+		if h.is_alive():
+			h.hp = mini(h.max_hp(), h.hp + roundi(h.max_hp() * FOUNTAIN_HP_SHARE))
+	Party.clear_status_kinds([CombatStatus.Kind.DOT])
 	return tr("EVT_FOUNTAIN_R")
 
 
