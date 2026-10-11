@@ -54,9 +54,19 @@ const ELITE_FIRST_FLOOR := 1
 ## Generation adjusts the rolled room kinds to land inside the range.
 const MIN_COMBAT_ROOMS := [2, 3, 4, 3]
 const MAX_EXTRA_COMBAT_ROOMS := 2
+## The order in which the quota turns rooms into fights when a floor is short:
+## empty rooms go first and rest rooms only as a last resort, because rests are
+## the dungeon's pressure valve (D-038).
+const QUOTA_CONVERT_ORDER := [
+	DungeonRoom.RoomType.EMPTY,
+	DungeonRoom.RoomType.EVENT,
+	DungeonRoom.RoomType.TREASURE,
+	DungeonRoom.RoomType.REST,
+]
 
 ## Rest rooms (D-038): each living hero regains these shares of max HP and MP;
-## a downed hero gets up at REST_REVIVE_HP_SHARE. Debuffs and DoTs are cleared.
+## a downed hero gets up at REST_REVIVE_HP_SHARE and regains the same MP share.
+## Debuffs and DoTs are cleared.
 const REST_HP_SHARE := 0.5
 const REST_MP_SHARE := 0.25
 const REST_REVIVE_HP_SHARE := 0.25
@@ -108,8 +118,17 @@ static func generate(p_level: int = 1) -> DungeonRun:
 
 
 ## Builds one floor: connected room tree grown from (0,0), loop passages,
-## rolled content, then the stairs room (floors 1-3) or boss room (floor 4).
+## rolled content, the stairs room (floors 1-3) or boss room (floor 4), then
+## the fight quota.
 static func _generate_floor(floor_index: int) -> Dictionary:
+	var rooms := _rolled_floor(floor_index)
+	_apply_fight_quota(rooms, floor_index)
+	return rooms
+
+
+## Everything `_generate_floor` does except the fight quota (tests use it to see
+## what the quota changed).
+static func _rolled_floor(floor_index: int) -> Dictionary:
 	var rooms: Dictionary = {}
 	var start := DungeonRoom.new()
 	start.pos = Vector2i.ZERO
@@ -152,7 +171,6 @@ static func _generate_floor(floor_index: int) -> Dictionary:
 		_place_boss(rooms)
 	_maybe_place_shrine(rooms)
 	_maybe_place_elite(rooms, floor_index)
-	_apply_fight_quota(rooms, floor_index)
 	return rooms
 
 
@@ -179,8 +197,8 @@ static func _ordinary_rooms(rooms: Dictionary) -> Array:
 
 ## Brings the floor's COMBAT room count inside MIN_COMBAT_ROOMS ..
 ## MIN_COMBAT_ROOMS + MAX_EXTRA_COMBAT_ROOMS by changing the kinds of random
-## ordinary rooms. Missing fights turn non-combat rooms into COMBAT; extra ones
-## are rerolled as a non-combat kind with the floor's weights. On a floor too
+## ordinary rooms. Missing fights turn non-combat rooms into COMBAT in
+## QUOTA_CONVERT_ORDER (random within a kind); extra ones are rerolled as a non-combat kind with the floor's weights. On a floor too
 ## small for its minimum, the elite room (then the shrine) gives its room back
 ## as a plain fight: the quota comes first.
 static func _apply_fight_quota(rooms: Dictionary, floor_index: int) -> void:
@@ -201,12 +219,23 @@ static func _apply_fight_quota(rooms: Dictionary, floor_index: int) -> void:
 					others.append(room)
 
 	while fights.size() < min_fights and not others.is_empty():
-		var room: DungeonRoom = others.pop_at(randi() % others.size())
+		var room := _next_to_convert(others)
+		others.erase(room)
 		room.kind = DungeonRoom.RoomType.COMBAT
 		fights.append(room)
 	while fights.size() > max_fights:
 		var room: DungeonRoom = fights.pop_at(randi() % fights.size())
 		room.kind = _roll_non_combat_kind(floor_index)
+
+
+## A random room of the first QUOTA_CONVERT_ORDER kind found in `candidates`,
+## or any of them when none matches (an elite or shrine given back).
+static func _next_to_convert(candidates: Array) -> DungeonRoom:
+	for kind in QUOTA_CONVERT_ORDER:
+		var of_kind: Array = candidates.filter(func(r): return r.kind == kind)
+		if not of_kind.is_empty():
+			return of_kind[randi() % of_kind.size()]
+	return candidates[randi() % candidates.size()]
 
 
 ## Rolls a room kind from the floor's weights with COMBAT left out.
@@ -526,15 +555,15 @@ func _loot_pool() -> Array:
 
 
 ## A rest room (D-038): living heroes regain REST_HP_SHARE of max HP and
-## REST_MP_SHARE of max MP, downed heroes get up at REST_REVIVE_HP_SHARE, and
-## debuffs and DoTs are cleared. Buffs, barriers and regen stay.
+## REST_MP_SHARE of max MP, downed heroes get up at REST_REVIVE_HP_SHARE (and
+## regain the same MP), and debuffs and DoTs are cleared. Buffs, barriers and regen stay.
 func resolve_rest() -> void:
 	for h in Party.heroes:
 		if h.is_alive():
 			h.hp = mini(h.max_hp(), h.hp + roundi(h.max_hp() * REST_HP_SHARE))
-			h.mp = mini(h.max_mp(), h.mp + roundi(h.max_mp() * REST_MP_SHARE))
 		else:
 			h.hp = maxi(1, roundi(h.max_hp() * REST_REVIVE_HP_SHARE))
+		h.mp = mini(h.max_mp(), h.mp + roundi(h.max_mp() * REST_MP_SHARE))
 	Party.clear_status_kinds([CombatStatus.Kind.DEBUFF, CombatStatus.Kind.DOT])
 
 
