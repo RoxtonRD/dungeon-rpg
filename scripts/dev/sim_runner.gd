@@ -14,9 +14,11 @@
 ##   --out PATH   also write the report to PATH (relative to the project)
 ##
 ## Campaign report (campaign_bot.gd): "campaign", then any of
-##   --runs N     campaigns to play (default 100)
-##   --seed N     RNG seed (default 1)
-##   --out PATH   as above
+##   --runs N        campaigns to play per XP multiplier (default 100)
+##   --seed N        RNG seed (default 1)
+##   --xp-mult X     play only this XP multiplier (what-if, bot only; default
+##                   is the four in CampaignBot.XP_MULTS: 1, 2, 3 and 4)
+##   --out PATH      as above
 ##
 ## SAFETY: the talent-build report never calls GameState.save_game(). The
 ## campaign bot awards real XP, which can save the game, so it runs isolated
@@ -125,19 +127,26 @@ static func parse_args(args: PackedStringArray) -> Dictionary:
 	return opts
 
 
-## Turns "campaign" user args into {runs, seed, out, args}, or {error: message}.
+## Turns "campaign" user args into {runs, seed, out, mults, args}, or
+## {error: message}. `mults` is the XP multipliers to play.
 static func parse_campaign_args(args: PackedStringArray) -> Dictionary:
-	var opts := {"runs": 100, "seed": 1, "out": "", "args": args}
+	var mults: Array[float] = CampaignBot.XP_MULTS.duplicate()
+	var opts := {"runs": 100, "seed": 1, "out": "", "mults": mults, "args": args}
 	var i := 1  # args[0] is "campaign"
 	while i < args.size():
 		var a := args[i]
-		if not a in ["--runs", "--seed", "--out"]:
-			return {"error": "unknown campaign option: %s (--runs, --seed, --out)" % a}
+		if not a in ["--runs", "--seed", "--xp-mult", "--out"]:
+			return {"error": "unknown campaign option: %s (--runs, --seed, --xp-mult, --out)" % a}
 		if i + 1 >= args.size():
 			return {"error": "%s needs a value" % a}
 		var v := args[i + 1]
 		if a == "--out":
 			opts["out"] = v if v.contains("://") else "res://" + v
+		elif a == "--xp-mult":
+			if not v.is_valid_float() or float(v) <= 0.0:
+				return {"error": "--xp-mult needs a number above 0, got %s" % v}
+			var one: Array[float] = [float(v)]
+			opts["mults"] = one
 		elif not v.is_valid_int():
 			return {"error": "%s needs a number, got %s" % [a, v]}
 		else:
@@ -152,10 +161,10 @@ static func parse_campaign_args(args: PackedStringArray) -> Dictionary:
 ## {md: the Markdown report, guard: the real-save check, see CampaignBot}.
 static func campaign_report(opts: Dictionary) -> Dictionary:
 	var res := CampaignBot.run_isolated(
-		int(opts["runs"]), int(opts["seed"]), BUILDS[CAMPAIGN_BUILD]
+		int(opts["runs"]), int(opts["seed"]), BUILDS[CAMPAIGN_BUILD], opts["mults"]
 	)
 	var command := "tools/sim.sh %s" % " ".join(opts["args"])
-	var md := CampaignBot.report(res["campaigns"], int(opts["seed"]), CAMPAIGN_BUILD, command)
+	var md := CampaignBot.report(res["batches"], int(opts["seed"]), CAMPAIGN_BUILD, command)
 	return {"md": md, "guard": res["guard"]}
 
 

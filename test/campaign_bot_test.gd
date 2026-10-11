@@ -1,4 +1,4 @@
-## Smoke test for the campaign bot (#61): one campaign on a fixed seed must
+## Smoke test for the campaign bot (#61, #66): one campaign on a fixed seed must
 ## produce the per-dungeon tables, leave the real save untouched, and put the
 ## live GameState / Party state back.
 ##
@@ -32,12 +32,12 @@ func test_one_campaign_produces_tables() -> void:
 
 	assert_str(md).contains("**Seed:** 3")
 	assert_str(md).contains(
-		"| Dungeon | Level at boss | Fights | Rounds / fight | Est. minutes | TPK % |"
+		"| Dungeon | Level at boss | Fights | Rounds / fight | Est. minutes | Wipes | Stuck % |"
 	)
 	for dl in range(1, 5):
 		assert_str(md).contains("| D%d |" % dl)
 	assert_str(md).contains("| Dungeon | Campaigns in | Level at entry | Level at boss |")
-	assert_str(md).contains("| Dungeon | Campaigns in | TPK % | F1 | F2 | F3 | F4 | Boss |")
+	assert_str(md).contains("| Dungeon | Campaigns in | Wipes / campaign |")
 	assert_array(res["guard"]["changed"]).is_empty()
 	assert_dict(_real_save_checksums()).is_equal(before)
 	# The live state is back, and the scratch save folder is gone.
@@ -56,7 +56,12 @@ func test_same_seed_same_report() -> void:
 
 func test_bad_campaign_args_are_rejected() -> void:
 	for args in [
-		["campaign", "--runs"], ["campaign", "--runs", "0"], ["campaign", "--fights", "5"]
+		["campaign", "--runs"],
+		["campaign", "--runs", "0"],
+		["campaign", "--fights", "5"],
+		["campaign", "--xp-mult"],
+		["campaign", "--xp-mult", "0"],
+		["campaign", "--xp-mult", "lots"]
 	]:
 		var opts := SimRunner.parse_campaign_args(PackedStringArray(args))
 		assert_bool(opts.has("error")).override_failure_message(str(args)).is_true()
@@ -67,3 +72,33 @@ func _real_save_checksums() -> Dictionary:
 	for path in REAL_SAVE_FILES:
 		out[path] = FileAccess.get_md5(path) if FileAccess.file_exists(path) else ""
 	return out
+
+
+func test_xp_mult_option_and_what_if_rows() -> void:
+	var one := SimRunner.parse_campaign_args(
+		PackedStringArray(["campaign", "--xp-mult", "2.5", "--runs", "1"])
+	)
+	assert_array(one["mults"]).is_equal([2.5])
+	var all := SimRunner.parse_campaign_args(PackedStringArray(["campaign"]))
+	assert_array(all["mults"]).is_equal([1.0, 2.0, 3.0, 4.0])
+
+	var res := SimRunner.campaign_report(
+		SimRunner.parse_campaign_args(PackedStringArray(["campaign", "--runs", "1", "--seed", "3"]))
+	)
+	var md: String = res["md"]
+	assert_str(md).contains("## XP what-if")
+	for m in ["x1.0", "x2.0", "x3.0", "x4.0"]:
+		assert_str(md).contains("| %s |" % m)
+	assert_array(res["guard"]["changed"]).is_empty()
+
+
+func test_more_xp_means_higher_levels() -> void:
+	var mults: Array[float] = [1.0, 4.0]
+	var res := CampaignBot.run_isolated(1, 3, SimRunner.BUILDS[SimRunner.CAMPAIGN_BUILD], mults)
+	assert_array(res["guard"]["changed"]).is_empty()
+	var low: Array = res["batches"][0]["campaigns"][0]["dungeons"][0]["boss_levels"]
+	var high: Array = res["batches"][1]["campaigns"][0]["dungeons"][0]["boss_levels"]
+	(
+		assert_int(high.reduce(func(a, b): return a + b))
+		. is_greater(low.reduce(func(a, b): return a + b))
+	)
