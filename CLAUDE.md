@@ -70,9 +70,10 @@ Any system that does not directly serve this loop is out of scope.
 
 ## Art
 
-- **No generated art** (D-002). Icons come from
-  [game-icons.net](https://game-icons.net) (CC BY 3.0, credit on the
-  credits screen). Where art is missing, use flat colour or a `ColorRect`.
+- **Art direction: flat vector, drawn in code** (D-037). Theme StyleBoxes,
+  [game-icons.net](https://game-icons.net) SVGs (CC BY 3.0) and shader
+  backgrounds; credit every source on the credits screen. No art work in
+  Phase 1; where art is missing, use flat colour or a `ColorRect`.
 - Never invent art assets and never block on missing art.
 
 ## Working style

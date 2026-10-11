@@ -26,7 +26,7 @@ chosen at character creation (a sub-folder per identity), with outfits as
 the swappable part. Class-neutral common skins are dropped. Existing code
 stays until then, because ripping it out now is work no player sees.
 
-**D-002 · No more generated art.**
+**D-002 · No more generated art.** *(Superseded by D-037, 2026-10-11.)*
 Generating pixel art was the second big distraction. Skill and item icons
 come from [game-icons.net](https://game-icons.net) (CC BY 3.0, credit on the
 credits screen), tinted by rarity or element; an agent can pick them by
@@ -366,4 +366,58 @@ talent tree is reachable by the finale, and ascension continues it after
 makes the campaign easier (wipes ≈ 0), the encounter work (1.5) has to
 restore the challenge. Build: #71, which also moves the XP split out of
 the combat screen into `Party` so the game and the bot share one rule.
+
+---
+
+## 2026-10-11 — Art direction, encounter choices, background agents
+
+**D-037 · Art direction for 1.0: flat vector, drawn in code (replaces the
+blanket ban in D-002).**
+Roxton asked whether art can be produced if needed, for a simple launch
+look; he doesn't want to make art himself now. The advisor and agents
+can't paint images (no image generator), but they can produce a coherent
+**flat vector** look entirely inside Godot:
+- a Godot Theme of StyleBoxes for panels, frames and buttons;
+- **game-icons.net** SVGs (CC BY 3.0) for skills, items, statuses, and
+  hero/monster silhouettes in framed medallions;
+- **shader backgrounds** tinted per floor;
+- a small fixed palette.
+
+An Asset Store survey (2026-10-11) confirmed the route and found licensed
+pieces that fit: **TaleTone fantasy vector frames** (free, CC BY 4.0, SVG,
+9-slice) and **Fancy StyleBoxes** (MIT). Pixel-art packs are out (they'd
+clash with vector). The store has no suitable painted portraits or
+backgrounds. Rules:
+- no art work in Phase 1;
+- the Phase 2 art pass starts with a written style guide, and every asset
+  follows it;
+- painted or generated raster art is allowed only if it matches the style
+  guide and is time-boxed (the existing AI portraits and backgrounds are
+  re-evaluated against the style guide then);
+- every source is credited on the credits screen.
+
+Tools noted for later: Loc Audit Lite (MIT; flags strings not wrapped in
+`tr()`, which our tests don't catch), Simple GUI Transitions (MIT), and
+Dialogue Manager (MIT) if events grow.
+
+**D-038 · Encounters v3 choices.**
+Roxton (2026-10-11): **telegraphed attacks: yes**, **optional elite rooms:
+yes**, **rest rooms restore 50% HP + 25% MP**. The rest of the encounter
+design (authored groups per floor, the enemy roles brute / skirmisher /
+caster / support with role AI, fight-length targets of normal 3–5 rounds,
+elite 5–7, boss 8–10, and a minimum number of fights per floor) is in the
+encounter briefs (E1–E4).
+
+**D-039 · The advisor launches worktree tasks as background agents.**
+Approved by Roxton, as long as the advisor session's context stays
+manageable. Worktree-only tasks (qa-balance, content-data,
+release-engineer, research) are launched by the advisor as background
+agents in isolated worktrees, and the advisor receives only their final
+reports. Editor-driving tasks (gameplay-engineer and ui-assets with the
+Godot MCP) stay as sessions Roxton starts, since they need the main
+checkout and can collide with his playtesting. Roxton still merges every
+PR. When the advisor's context grows long, a fresh advisor session takes
+over; the docs and the session-start hook make that cheap. Roxton chose to
+skip generic Godot skill packs for now; project-specific skills are
+preferred.
 
