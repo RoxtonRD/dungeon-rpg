@@ -24,20 +24,20 @@ back after weeks away, this is the only thing you need to read.*
 - **Feel gate 2 passed** (D-026): talents and scarce SP stay.
 - **Sim findings** (D-028, D-031): fights too short; **the campaign only
   reaches level ~4–5**, so most of the talent tree is unreachable in 1.0.
+- **Level curve decided:** A at ×3 XP (D-036).
 - **Next up:**
-  1. Roxton: merge PRs #64, #65 and this docs PR; `git cleanup`
-  2. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)
-  3. qa-balance: campaign bot v2 (potions, rests, market, retries, XP
-     what-if), #66 (worktree)
-  4. Roxton: **the level-curve decision** (D-031: A faster XP / B SP every
-     level / C lower cap), with #66's numbers
-  5. advisor: brief **encounters + dungeon pressure (1.5)**, the next big
-     lever (D-028)
-  6. ui-assets (later): the talent screen's new sections sit at the bottom
-     of a long scroll; tidy it up
-  7. Before the rollout (1.3): live numbers in skill descriptions
-  8. Roxton: branch protection on `main` (require PR + both CI checks)
-- **Phase 0 exit:** the phone install is pending, if not done yet.
+  1. Roxton: merge PR #70 (plugin 4.3.0). Before `git cleanup`, run
+     `git restore addons/godot_ai project.godot` (the same changes are in
+     the PR)
+  2. gameplay-engineer: ×3 XP curve + XP split into Party, #71
+     (worktree, no editor)
+  3. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)
+  4. advisor: brief **encounters + dungeon pressure (1.5)**, sized for
+     the ×3 curve (fights longer and more tactical, the challenge restored)
+  5. ui-assets (later): the talent screen's new sections sit at the bottom
+     of a long scroll
+  6. Before the rollout (1.3): live numbers in skill descriptions
+  7. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
