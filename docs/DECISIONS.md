@@ -357,3 +357,13 @@ hook only formats files edited through Claude's tools, and only when
 Python resolves. Every role now runs `tools/format.sh` before pushing; CI
 remains the backstop.
 
+**D-036 · Level curve: option A at ×3 XP.**
+Roxton chose A (2026-10-11): the XP thresholds are divided by 3
+(`xp_for_next = (20/3)·L^1.5`), so the party reaches level ~10 at the
+dungeon 4 boss (bot v2: 4.2 / 6.2 / 8.1 / 9.8 at the bosses). The whole
+talent tree is reachable by the finale, and ascension continues it after
+1.0 (D-024). Enemy XP rewards are unchanged. Because faster levelling
+makes the campaign easier (wipes ≈ 0), the encounter work (1.5) has to
+restore the challenge. Build: #71, which also moves the XP split out of
+the combat screen into `Party` so the game and the bot share one rule.
+

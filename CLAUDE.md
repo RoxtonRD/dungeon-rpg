@@ -92,6 +92,10 @@ Any system that does not directly serve this loop is out of scope.
 - Headless Godot: `tools/godot.sh <args>`. Tests: `tools/test.sh`
   (gdUnit4 in `test/`). Formatting: `tools/format.sh`, run before every
   push. CI runs both on every PR.
+- After merging PRs, Roxton runs `tools/after-merge.sh` in the main
+  checkout (`--dry-run` to preview). It discards local edits already
+  identical upstream, stops on real ones, pulls, prunes, and says when to
+  restart Godot.
 - Skills in `.claude/skills/`: `write-brief`, `review-pr`, `add-content`,
   `smoke-test`. Use them when the task matches.
 - A session-start hook prints the **Now** block and open briefs, and

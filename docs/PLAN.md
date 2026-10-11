@@ -25,14 +25,15 @@ back after weeks away, this is the only thing you need to read.*
 - **Phase 0 exit done:** the game runs on Roxton's phone (2026-10-11).
 - **Bot v2** (D-034): ×3 XP reaches level ~10 at the final boss; fights
   stay short, and the run is ~6–9 min of combat per dungeon.
+- **Level curve decided:** A at ×3 XP (D-036).
 - **Next up:**
-  1. Roxton: merge PR #68 (bot v2, approved once CI is green) and this
-     docs PR; `git cleanup`
-  2. Roxton: **the level-curve decision** (D-031 options; the advisor
-     recommends A at ×3, see D-034)
+  1. Roxton: after merging, run **`tools/after-merge.sh`** in the main
+     checkout (it replaces `git cleanup`; `--dry-run` previews)
+  2. gameplay-engineer: ×3 XP curve + XP split into Party, #71
+     (worktree, no editor)
   3. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)
-  4. advisor: brief **encounters + dungeon pressure (1.5)**, the next big
-     lever, sized against the chosen level curve
+  4. advisor: brief **encounters + dungeon pressure (1.5)**, sized for
+     the ×3 curve (fights longer and more tactical, the challenge restored)
   5. ui-assets (later): the talent screen's new sections sit at the bottom
      of a long scroll
   6. Before the rollout (1.3): live numbers in skill descriptions
