@@ -720,29 +720,15 @@ func _show_end_panel() -> void:
 		GameState.gold += int(_pending_rewards["gold"])
 		var lines: Array[String] = []
 		lines.append(tr("UI_REWARDS") % [_pending_rewards["xp"], _pending_rewards["gold"]])
-		# XP is split across the party rather than paid in full to every hero —
-		# paying full to each made a 4-hero party level ~4x too fast, which is
-		# what let heroes outscale enemy growth entirely.
-		var xp_share := int(_pending_rewards["xp"]) / maxi(1, Party.heroes.size())
-		for h in Party.heroes:
-			# Downed heroes still earn XP, at half share, so a hero KO'd early in
-			# a run doesn't spiral levels behind the survivors. They must not be
-			# revived by it, so we re-down them after awarding.
-			var was_down := not h.is_alive()
-			var xp_award := xp_share
-			if was_down:
-				xp_award /= 2
-			var prev_level := h.level
-			var prev_bonus_mp := h.bonus_mp
-			var unlocked: Array[SkillData] = Party.award_xp(h, xp_award)
-			if was_down:
-				h.hp = 0
-			if h.level > prev_level:
+		var results := Party.distribute_combat_xp(int(_pending_rewards["xp"]))
+		for h in results:
+			var r: Dictionary = results[h]
+			if r["levels_gained"] > 0:
 				lines.append(tr("UI_LEVEL_UP") % [h.display_name(), h.level])
-				for skill in unlocked:
+				for skill in r["unlocked"]:
 					lines.append(tr("UI_NEW_SKILL") % tr(skill.display_name))
-			if h.bonus_mp > prev_bonus_mp:
-				lines.append(tr("UI_SP_CONVERT") % [h.display_name(), h.bonus_mp - prev_bonus_mp])
+			if r["mp_gained"] > 0:
+				lines.append(tr("UI_SP_CONVERT") % [h.display_name(), r["mp_gained"]])
 		# Rare boss-only drop: a Tomo de Maestria.
 		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
 			GameState.add_item("tome_sp")
