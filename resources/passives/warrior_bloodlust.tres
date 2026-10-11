@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PassiveData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/passive_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bloodlust"
+display_name = "PASSIVE_WARRIOR_BLOODLUST"
+description = "PASSIVED_WARRIOR_BLOODLUST"
+unlock_level = 2
+damage_pct_per_10_rage = 2.0

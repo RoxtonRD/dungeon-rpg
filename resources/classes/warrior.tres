@@ -7,6 +7,10 @@
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_jfbdk"]
 [ext_resource type="Resource" path="res://resources/skills/warrior_provoke.tres" id="4"]
 [ext_resource type="Resource" path="res://resources/skills/warrior_execute.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/data/passive_data.gd" id="6_passive"]
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="7_reaction"]
+[ext_resource type="Resource" path="res://resources/passives/warrior_bloodlust.tres" id="8_bloodlust"]
+[ext_resource type="Resource" path="res://resources/reactions/warrior_parry.tres" id="9_parry"]
 
 [resource]
 script = ExtResource("1")
@@ -24,4 +28,6 @@ atk_per_level = 2
 def_per_level = 2
 spd_per_level = 1
 skills = Array[ExtResource("3_jfbdk")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
+passives = Array[ExtResource("6_passive")]([ExtResource("8_bloodlust")])
+reactions = Array[ExtResource("7_reaction")]([ExtResource("9_parry")])
 portrait = ExtResource("1_2uuax")

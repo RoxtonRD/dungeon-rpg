@@ -26,8 +26,9 @@ enum LogKind { INFO, DAMAGE, CRIT, HEAL, BARRIER }
 signal log_appended(line: String, kind: LogKind)
 signal hp_changed(battler: Battler)
 ## Emitted alongside hp_changed when an amount should pop up on a battler.
-## `crit` is true only for a critical damage hit.
-signal damage_popup(battler: Battler, amount: int, kind: PopupKind, crit: bool)
+## `tags` label what happened to a damage hit: "crit", "exposed" (a bonus
+## against a DEF debuff) and "parried" (the target's reaction). Usually empty.
+signal damage_popup(battler: Battler, amount: int, kind: PopupKind, tags: PackedStringArray)
 signal turn_started(battler: Battler)
 ## Presentation only: emitted once per action (hero or enemy, skill or item),
 ## before its effects resolve, so the UI can name the action and mark its
@@ -174,7 +175,7 @@ func _apply_item(user: Battler, item: ItemData, target: Battler) -> void:
 				var amt := maxi(1, int(round(b.max_hp * item.use_revive_party)))
 				b.set_hp(amt)
 				hp_changed.emit(b)
-				damage_popup.emit(b, amt, PopupKind.HEAL, false)
+				damage_popup.emit(b, amt, PopupKind.HEAL, PackedStringArray())
 		return
 	if target == null:
 		return
@@ -182,7 +183,7 @@ func _apply_item(user: Battler, item: ItemData, target: Battler) -> void:
 		var before := target.get_hp()
 		target.set_hp(before + item.use_heal)
 		hp_changed.emit(target)
-		damage_popup.emit(target, target.get_hp() - before, PopupKind.HEAL, false)
+		damage_popup.emit(target, target.get_hp() - before, PopupKind.HEAL, PackedStringArray())
 	if item.use_mp > 0 and target.side == Battler.Side.PARTY:
 		target.hero.mp = mini(target.hero.max_mp(), target.hero.mp + item.use_mp)
 		hp_changed.emit(target)
@@ -321,7 +322,7 @@ func _tick_statuses() -> void:
 					LogKind.DAMAGE
 				)
 				hp_changed.emit(b)
-				damage_popup.emit(b, st.dot_damage, PopupKind.MAG, false)
+				damage_popup.emit(b, st.dot_damage, PopupKind.MAG, PackedStringArray())
 			elif st.kind == CombatStatus.Kind.REGEN:
 				var before := b.get_hp()
 				b.set_hp(before + st.heal_per_turn)
@@ -332,7 +333,7 @@ func _tick_statuses() -> void:
 						LogKind.HEAL
 					)
 					hp_changed.emit(b)
-					damage_popup.emit(b, healed, PopupKind.HEAL, false)
+					damage_popup.emit(b, healed, PopupKind.HEAL, PackedStringArray())
 			st.duration -= 1
 			if st.duration <= 0:
 				b.statuses.remove_at(i)
@@ -451,7 +452,7 @@ func _apply_heal(
 	target.set_hp(target.get_hp() + heal_amount)
 	_log(tr("LOG_HEAL") % [caster.display_name(), target.display_name(), heal_amount], LogKind.HEAL)
 	hp_changed.emit(target)
-	damage_popup.emit(target, heal_amount, PopupKind.HEAL, false)
+	damage_popup.emit(target, heal_amount, PopupKind.HEAL, PackedStringArray())
 	_apply_regen(target, skill)
 
 
@@ -479,7 +480,7 @@ func _apply_revive(caster: Battler, skill: SkillData, target: Battler) -> void:
 	target.set_hp(amount)
 	_log(tr("LOG_REVIVE") % [caster.display_name(), target.display_name()], LogKind.HEAL)
 	hp_changed.emit(target)
-	damage_popup.emit(target, amount, PopupKind.HEAL, false)
+	damage_popup.emit(target, amount, PopupKind.HEAL, PackedStringArray())
 
 
 func _apply_damage_hit(
@@ -508,19 +509,31 @@ func _apply_damage_hit(
 	# Finisher: double power when target is under 25% HP.
 	if skill.finisher and target.get_hp() <= int(target.max_hp * 0.25):
 		raw *= 2.0
-	var crit := false
+	var tags := PackedStringArray()
 	if skill.crit_chance > 0.0 and randf() < skill.crit_chance:
 		raw *= 1.8
-		crit = true
+		tags.append("crit")
+	# Synergy: a bonus against a target whose DEF is debuffed (Backstab).
+	if skill.bonus_vs_def_debuff > 0.0 and target.has_def_debuff():
+		raw *= 1.0 + skill.bonus_vs_def_debuff
+		tags.append("exposed")
+	# The caster's passive (Bloodlust: more damage the more Rage it holds).
+	raw *= caster.passive_damage_mult()
 	var t_stats := target.effective_stats()
 	# Magic damage uses 40% of DEF; physical uses full DEF.
 	var t_def := int(floor(float(t_stats["def"]) * 0.4)) if is_mag else int(t_stats["def"])
 	var dmg := maxi(1, int(floor(raw - t_def)))
+	# The target's reaction (Parry): by chance, pay its cost to cut the damage.
+	var reaction := target.reaction_for(skill, dmg_kind)
+	if reaction != null and randf() < reaction.chance:
+		target.spend_resource(reaction.rage_cost)
+		dmg = maxi(1, int(floor(dmg * reaction.damage_mult)))
+		tags.append("parried")
 	target.set_hp(target.get_hp() - dmg)
 	target.gain_rage(target.rage_per_hit_taken())
 	hp_changed.emit(target)
-	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS, crit)
-	var crit_label := tr("LOG_CRIT_SUFFIX") if crit else ""
+	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS, tags)
+	var crit := tags.has("crit")
 	_log(
 		(
 			tr("LOG_DAMAGE")
@@ -529,7 +542,7 @@ func _apply_damage_hit(
 				tr(skill.display_name),
 				target.display_name(),
 				dmg,
-				crit_label
+				_log_suffix(tags)
 			]
 		),
 		LogKind.CRIT if crit else LogKind.DAMAGE
@@ -564,8 +577,21 @@ func _apply_damage_hit(
 		var healed := int(floor(dmg * 0.5))
 		caster.set_hp(caster.get_hp() + healed)
 		hp_changed.emit(caster)
-		damage_popup.emit(caster, healed, PopupKind.HEAL, false)
+		damage_popup.emit(caster, healed, PopupKind.HEAL, PackedStringArray())
 	return dmg
+
+
+## The damage log line's ending for a hit's popup tags: " (CRITICAL)",
+## " (EXPOSED)", " (PARRIED)", or several of them.
+func _log_suffix(tags: PackedStringArray) -> String:
+	var suffix := ""
+	if tags.has("crit"):
+		suffix += tr("LOG_CRIT_SUFFIX")
+	if tags.has("exposed"):
+		suffix += tr("LOG_EXPOSED_SUFFIX")
+	if tags.has("parried"):
+		suffix += tr("LOG_PARRIED_SUFFIX")
+	return suffix
 
 
 # ── Enemy AI ──────────────────────────────────────────────────────────────────
@@ -604,7 +630,7 @@ func _enemy_take_turn() -> void:
 			e.set_hp(e.get_hp() + heal_amount)
 			_log(tr("LOG_REGEN") % [e.display_name(), heal_amount], LogKind.HEAL)
 			hp_changed.emit(e)
-			damage_popup.emit(e, heal_amount, PopupKind.HEAL, false)
+			damage_popup.emit(e, heal_amount, PopupKind.HEAL, PackedStringArray())
 		return
 
 	# Pick a party target for ONE-target skills; taunt overrides front-first.

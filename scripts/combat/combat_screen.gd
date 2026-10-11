@@ -221,7 +221,9 @@ func _on_hp_changed(b: Battler) -> void:
 	_panel_for(b).refresh()
 
 
-func _on_damage_popup(b: Battler, amount: int, kind: CombatState.PopupKind, crit: bool) -> void:
+func _on_damage_popup(
+	b: Battler, amount: int, kind: CombatState.PopupKind, tags: PackedStringArray
+) -> void:
 	var color: Color
 	var text: String
 	var tint: Color
@@ -240,7 +242,7 @@ func _on_damage_popup(b: Battler, amount: int, kind: CombatState.PopupKind, crit
 			tint = Color(0.95, 0.1, 0.1, 0.7)  # red wash
 	var panel := _panel_for(b)
 	panel.flash_hit(tint)
-	panel.show_popup(text, color, crit)
+	panel.show_popup(text, color, tags)
 	if kind != CombatState.PopupKind.HEAL:
 		panel.shake()
 		_mark_random_hit(b)

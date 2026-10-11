@@ -47,6 +47,9 @@ enum DamageStat { AUTO, ATK, MAG }
 @export var crit_chance: float = 0.0
 ## Doubles power when the target is below 25% HP.
 @export var finisher: bool = false
+## Damage bonus against a target with an active DEF debuff (a DEBUFF status
+## with mod_def < 0): the hit is multiplied by 1 + this. 0 = no bonus.
+@export var bonus_vs_def_debuff: float = 0.0
 ## Caster heals for 50% of the damage dealt (used by enemy skills).
 @export var drain: bool = false
 

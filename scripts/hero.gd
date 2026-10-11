@@ -24,7 +24,9 @@ var sp_available: int = 0
 var sp_spent: Dictionary = {}
 ## Talent choices (talent classes only, see ClassData.uses_talents), keyed by
 ## the base skill's key like sp_spent: {"fork": "a" | "b", "boost": bool}.
-## A missing key means no fork picked yet.
+## A missing key means no fork picked yet. Two reserved keys hold the rest:
+## Party.PASSIVE_KEY ("_passive": the passive's id) and Party.REACTION_KEY
+## ("_reaction": {"id": String, "enabled": bool}).
 var talents: Dictionary = {}
 ## Permanent bonus to max MP, gained when Skill Points are converted because
 ## the hero has no skill left to upgrade (see Party.award_sp).
@@ -176,7 +178,13 @@ static func from_dict(data: Dictionary) -> Hero:
 		h.sp_spent[key] = int(spent_in[key])
 	var talents_in: Dictionary = data.get("talents", {})
 	for key in talents_in:
+		if key == Party.PASSIVE_KEY:
+			h.talents[key] = str(talents_in[key])
+			continue
 		var t: Dictionary = talents_in[key]
+		if key == Party.REACTION_KEY:
+			h.talents[key] = {"id": str(t.get("id", "")), "enabled": bool(t.get("enabled", true))}
+			continue
 		h.talents[key] = {"fork": str(t.get("fork", "")), "boost": bool(t.get("boost", false))}
 	h.bonus_mp = int(data.get("bonus_mp", 0))
 	h.hp = int(data.get("hp", 0))
