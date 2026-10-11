@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "e_dark_flame"
+display_name = "ESKILL_DARK_FLAME"
+skill_type = 1
+target = 1
+power = 0.5
+dot_damage = 2
+dot_duration = 2
+dot_popup_key = "UI_POPUP_BURN"

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_crushing_blow.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="4"]
+
+[resource]
+script = ExtResource("1")
+id = "orc_warlord"
+display_name = "ENEMY_ORC_WARLORD"
+max_hp = 65
+atk = 11
+def = 5
+spd = 4
+xp_reward = 32
+gold_min = 15
+gold_max = 28
+ai_role = 0
+skills = Array[ExtResource("4")]([ExtResource("2"), ExtResource("3")])

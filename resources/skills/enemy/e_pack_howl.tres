@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "e_pack_howl"
+display_name = "ESKILL_PACK_HOWL"
+skill_type = 3
+target = 4
+power = 0.0
+mod_atk = 3
+mod_duration = 2

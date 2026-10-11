@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_mend.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_zap.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="4"]
+
+[resource]
+script = ExtResource("1")
+id = "goblin_shaman"
+display_name = "ENEMY_GOBLIN_SHAMAN"
+role = 1
+max_hp = 16
+atk = 3
+def = 1
+mag = 4
+spd = 6
+xp_reward = 11
+gold_min = 4
+gold_max = 9
+ai_role = 3
+skills = Array[ExtResource("4")]([ExtResource("2"), ExtResource("3")])

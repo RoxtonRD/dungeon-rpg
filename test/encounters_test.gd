@@ -410,12 +410,16 @@ func test_roll_encounter_builds_a_group_and_elite_rolls_an_elite_group() -> void
 			var fight := run.roll_encounter(floor_index)
 			assert_int(fight.size()).is_between(2, 4)
 	for floor_index in range(1, DungeonRun.NUM_FLOORS):
+		var elite_rosters: Array = []
+		for group in EncounterGroupData.candidates(floor_index + 1, true):
+			elite_rosters.append(group.members)
 		for roll in 20:
 			var fight := run.roll_encounter(floor_index, true)
 			var ids: Array[String] = []
 			for e in fight:
 				ids.append(e.id)
-			assert_array(ids).contains(["ogre"])
+			# The fight is one of that floor's elite groups, member for member.
+			assert_bool(elite_rosters.has(ids)).is_true()
 
 
 func test_weighted_pick_follows_the_weights() -> void:

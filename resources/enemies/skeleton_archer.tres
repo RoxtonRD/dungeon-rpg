@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://cnb51updtx31l" path="res://scripts/data/enemy_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_attack.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_aimed_shot.tres" id="3"]
+[ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="4"]
+
+[resource]
+script = ExtResource("1")
+id = "skeleton_archer"
+display_name = "ENEMY_SKELETON_ARCHER"
+role = 1
+max_hp = 18
+atk = 7
+def = 2
+spd = 6
+xp_reward = 12
+gold_min = 4
+gold_max = 10
+ai_role = 1
+skills = Array[ExtResource("4")]([ExtResource("2"), ExtResource("3")])

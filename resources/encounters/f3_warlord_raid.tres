@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1")
-id = "f3_ogre_warband"
-members = Array[String](["ogre", "orc", "skeleton", "dark_elf"])
+id = "f3_warlord_raid"
+members = Array[String](["orc_warlord", "bandit", "dark_elf", "skeleton_archer"])
 floor_min = 3
 floor_max = 3
 elite = true
