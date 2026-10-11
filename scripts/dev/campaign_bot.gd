@@ -849,7 +849,7 @@ static func _length_table(campaigns: Array) -> PackedStringArray:
 				+ "rests and potions used are the clearing run's; potions bought are for "
 				+ "that run's city visit. Est. minutes = %.0f s per party action + %.1f s "
 				+ "per enemy action, combat only: walking, menus, the city and reading events "
-				+ "are not counted, so real play is longer. \"Incl. wiped runs\" adds the "
+				+ 'are not counted, so real play is longer. "Incl. wiped runs" adds the '
 				+ "combat time of the wiped attempts. HP %% entering the boss: party HP / "
 				+ "party max HP (downed heroes count 0), over every campaign that reached "
 				+ "the boss."
@@ -863,8 +863,11 @@ static func _length_table(campaigns: Array) -> PackedStringArray:
 
 static func _wipe_table(campaigns: Array) -> PackedStringArray:
 	var out: PackedStringArray = ["## Wipes", ""]
-	out.append(
-		"| Dungeon | Campaigns in | Wipes / campaign | 0 wipes | 1 | 2 | 3 (stuck) | At F1 | F2 | F3 | F4 | Boss |"
+	(
+		out
+		. append(
+			"| Dungeon | Campaigns in | Wipes / campaign | 0 wipes | 1 | 2 | 3 (stuck) | At F1 | F2 | F3 | F4 | Boss |"
+		)
 	)
 	out.append("|---|---|---|---|---|---|---|---|---|---|---|---|")
 	var stuck := 0
@@ -890,17 +893,19 @@ static func _wipe_table(campaigns: Array) -> PackedStringArray:
 	out.append("")
 	out.append(
 		(
-			"Wipes counted over every attempt at that dungeon; the \"At\" columns say where "
-			+ "the party died. Campaigns finished (dungeon 4 beaten): %d of %d; stuck: %d. "
-			+ "Rooms left after %d fled or stalled fights in a row: %d."
+			(
+				'Wipes counted over every attempt at that dungeon; the "At" columns say where '
+				+ "the party died. Campaigns finished (dungeon 4 beaten): %d of %d; stuck: %d. "
+				+ "Rooms left after %d fled or stalled fights in a row: %d."
+			)
+			% [
+				campaigns.filter(func(c): return _finished(c)).size(),
+				campaigns.size(),
+				stuck,
+				MAX_REENGAGE,
+				unresolved,
+			]
 		)
-		% [
-			campaigns.filter(func(c): return _finished(c)).size(),
-			campaigns.size(),
-			stuck,
-			MAX_REENGAGE,
-			unresolved,
-		]
 	)
 	out.append("")
 	return out
@@ -940,18 +945,19 @@ static func _talent_table(campaigns: Array) -> PackedStringArray:
 	return out
 
 
-
 ## The XP what-if: the same campaigns with the XP awarded multiplied (bot only),
 ## one row per multiplier in `batches`.
 static func _what_if(batches: Array) -> PackedStringArray:
 	var out: PackedStringArray = ["## XP what-if", ""]
 	out.append(
 		(
-			"`--xp-mult` multiplies the XP awarded after each victory, in the bot only: "
-			+ "the game's numbers are untouched. Each row replays %d campaigns from the same "
-			+ "seed with the same policy, so the rows differ only by XP."
+			(
+				"`--xp-mult` multiplies the XP awarded after each victory, in the bot only: "
+				+ "the game's numbers are untouched. Each row replays %d campaigns from the same "
+				+ "seed with the same policy, so the rows differ only by XP."
+			)
+			% (batches[0]["campaigns"] as Array).size()
 		)
-		% (batches[0]["campaigns"] as Array).size()
 	)
 	out.append("")
 	out.append_array(_target_line(batches))
@@ -962,7 +968,9 @@ static func _what_if(batches: Array) -> PackedStringArray:
 	_what_if_table(out, "Stuck (campaign ended in that dungeon)", batches, _cell_stuck)
 	_what_if_table(out, "Est. minutes per dungeon (clearing run)", batches, _cell_minutes)
 	_what_if_table(out, "Rounds per fight", batches, _cell_rounds)
-	var fin := PackedStringArray(["### Campaigns finished", "", "| XP x | Beat dungeon 4 |", "|---|---|"])
+	var fin := PackedStringArray(
+		["### Campaigns finished", "", "| XP x | Beat dungeon 4 |", "|---|---|"]
+	)
 	for b in batches:
 		var n: int = (b["campaigns"] as Array).size()
 		var done: int = (b["campaigns"] as Array).filter(func(c): return _finished(c)).size()
@@ -1000,19 +1008,23 @@ static func _target_line(batches: Array) -> PackedStringArray:
 		return PackedStringArray(
 			[
 				(
-					"**Level %d-%d at the dungeon 4 boss: x%s XP** (mean hero level %.1f, over %d "
-					+ "campaigns that reached it)."
+					(
+						"**Level %d-%d at the dungeon 4 boss: x%s XP** (mean hero level %.1f, over %d "
+						+ "campaigns that reached it)."
+					)
+					% [int(TARGET_LEVEL_MIN), int(TARGET_LEVEL_MAX), label, best_mean, best_n]
 				)
-				% [int(TARGET_LEVEL_MIN), int(TARGET_LEVEL_MAX), label, best_mean, best_n]
 			]
 		)
 	return PackedStringArray(
 		[
 			(
-				"**No multiplier lands in level %d-%d at the dungeon 4 boss; the closest is "
-				+ "x%s XP** (mean hero level %.1f, over %d campaigns that reached it)."
+				(
+					"**No multiplier lands in level %d-%d at the dungeon 4 boss; the closest is "
+					+ "x%s XP** (mean hero level %.1f, over %d campaigns that reached it)."
+				)
+				% [int(TARGET_LEVEL_MIN), int(TARGET_LEVEL_MAX), label, best_mean, best_n]
 			)
-			% [int(TARGET_LEVEL_MIN), int(TARGET_LEVEL_MAX), label, best_mean, best_n]
 		]
 	)
 

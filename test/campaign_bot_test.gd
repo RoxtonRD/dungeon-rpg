@@ -98,6 +98,7 @@ func test_more_xp_means_higher_levels() -> void:
 	assert_array(res["guard"]["changed"]).is_empty()
 	var low: Array = res["batches"][0]["campaigns"][0]["dungeons"][0]["boss_levels"]
 	var high: Array = res["batches"][1]["campaigns"][0]["dungeons"][0]["boss_levels"]
-	assert_int(high.reduce(func(a, b): return a + b)).is_greater(
-		low.reduce(func(a, b): return a + b)
+	(
+		assert_int(high.reduce(func(a, b): return a + b))
+		. is_greater(low.reduce(func(a, b): return a + b))
 	)
