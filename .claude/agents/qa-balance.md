@@ -36,5 +36,7 @@ Read `CLAUDE.md`, the **Now** block of `docs/PLAN.md`, and your task brief.
 
 ## Done means
 
+- **Before every push: `tools/format.sh`** (formats and checks GDScript like CI does). The edit hook alone isn't enough: it only runs on Claude's Edit/Write tools, and only when Python is found.
+
 - Tests or the sim run from one documented command.
 - A short report: what was measured, the result, and what it suggests.

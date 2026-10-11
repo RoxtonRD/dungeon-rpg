@@ -89,8 +89,9 @@ Any system that does not directly serve this loop is out of scope.
 
 ## Tooling
 
-- Headless Godot: `tools/godot.sh <args>`. Tests: gdUnit4 in `test/`, and
-  CI runs them on every PR.
+- Headless Godot: `tools/godot.sh <args>`. Tests: `tools/test.sh`
+  (gdUnit4 in `test/`). Formatting: `tools/format.sh`, run before every
+  push. CI runs both on every PR.
 - Skills in `.claude/skills/`: `write-brief`, `review-pr`, `add-content`,
   `smoke-test`. Use them when the task matches.
 - A session-start hook prints the **Now** block and open briefs, and

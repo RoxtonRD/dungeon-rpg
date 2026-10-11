@@ -34,6 +34,8 @@ Read `CLAUDE.md`, the **Now** block of `docs/PLAN.md`, and your task brief.
 
 ## Done means
 
+- `tools/test.sh` passes (it checks every `.tres` loads and every key has both languages).
+
 - Every new key has both pt_BR and en.
 - Changed resources load (the brief says how to verify, usually a
   headless load or asking the editor driver to check).

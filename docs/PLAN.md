@@ -22,8 +22,9 @@ back after weeks away, this is the only thing you need to read.*
 - **Readability confirmed** by Roxton: "who did what to whom" is readable
   without the log (#49).
 - **Feel gate 2 passed** (D-026): talents and scarce SP stay.
-- **Sim findings** (D-028, D-031): fights too short; **the campaign only
-  reaches level ~4–5**, so most of the talent tree is unreachable in 1.0.
+- **Phase 0 exit done:** the game runs on Roxton's phone (2026-10-11).
+- **Bot v2** (D-034): ×3 XP reaches level ~10 at the final boss; fights
+  stay short, and the run is ~6–9 min of combat per dungeon.
 - **Level curve decided:** A at ×3 XP (D-036).
 - **Next up:**
   1. Roxton: merge PR #70 (plugin 4.3.0). Before `git cleanup`, run

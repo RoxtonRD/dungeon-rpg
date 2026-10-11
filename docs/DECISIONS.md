@@ -325,6 +325,38 @@ what-if. The options, for Roxton:
 editor from scanning agent worktrees (full project copies), which had put
 ~888 errors in the editor log.
 
+---
+
+## 2026-10-11 — Campaign bot v2 (#66 → PR #68)
+
+**D-034 · Measured: ×3 XP puts the party at level ~10 at the final boss.**
+`docs/reports/sim-campaign.md`: 100 campaigns per multiplier, seed 1. A
+sensible bot (potions, rests when hurt, buys potions, retries after a
+wipe):
+
+| XP × | Level at boss D1/D2/D3/D4 | Wipes/campaign D1..D4 | Beat D4 |
+|---|---|---|---|
+| 1 | 2.9 / 4.2 / 5.6 / 7.1 | 0.83 / 0.25 / 0.48 / 0.98 | 87% |
+| 2 | 3.7 / 5.4 / 6.9 / 8.7 | 0.29 / 0.02 / 0.02 / 0.23 | 100% |
+| 3 | 4.2 / 6.2 / 8.1 / 9.8 | 0.16 / 0 / 0 / 0.06 | 100% |
+| 4 | 4.6 / 6.9 / 9.0 / 10.0 | 0.10 / 0 / 0 / 0.01 | 100% |
+
+- Combat time is ~6–9 min per dungeon (walking and menus not counted),
+  against the 15–20 min target.
+- Fights are still short (2–3.4 rounds), and more XP makes them shorter
+  and wipes rarer.
+- Wipes cluster on F3, F4 and the boss, never F1.
+
+So faster XP (option A of D-031) also **lowers difficulty**: the
+encounter work (1.5) has to bring the challenge back, through longer and
+more tactical fights. The level-curve choice is still Roxton's.
+
+**D-035 · `tools/format.sh` before every push.** PR #68 failed CI's
+format check because the format hook didn't run in that session. The
+hook only formats files edited through Claude's tools, and only when
+Python resolves. Every role now runs `tools/format.sh` before pushing; CI
+remains the backstop.
+
 **D-036 · Level curve: option A at ×3 XP.**
 Roxton chose A (2026-10-11): the XP thresholds are divided by 3
 (`xp_for_next = (20/3)·L^1.5`), so the party reaches level ~10 at the
