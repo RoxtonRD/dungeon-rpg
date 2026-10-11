@@ -51,9 +51,10 @@ const ELITE_FIRST_FLOOR := 1
 
 ## Fight quota per floor (D-038): the fewest COMBAT rooms each floor has, and
 ## how many more than that it may have. The boss and elite rooms don't count.
-## Generation adjusts the rolled room kinds to land inside the range.
-const MIN_COMBAT_ROOMS := [2, 3, 4, 3]
-const MAX_EXTRA_COMBAT_ROOMS := 2
+## Generation adjusts the rolled room kinds to land inside the range. E5a cut
+## these from [2, 3, 4, 3] + 2 to aim at fewer, longer fights.
+const MIN_COMBAT_ROOMS := [2, 2, 3, 2]
+const MAX_EXTRA_COMBAT_ROOMS := 1
 ## The order in which the quota turns rooms into fights when a floor is short:
 ## empty rooms go first and rest rooms only as a last resort, because rests are
 ## the dungeon's pressure valve (D-038).
@@ -63,6 +64,8 @@ const QUOTA_CONVERT_ORDER := [
 	DungeonRoom.RoomType.TREASURE,
 	DungeonRoom.RoomType.REST,
 ]
+## Kinds a fight trimmed by the quota is never rerolled as.
+const QUOTA_TRIM_SKIPS := [DungeonRoom.RoomType.COMBAT, DungeonRoom.RoomType.REST]
 
 ## Rest rooms (D-038): each living hero regains these shares of max HP and MP;
 ## a downed hero gets up at REST_REVIVE_HP_SHARE and regains the same MP share.
@@ -76,11 +79,13 @@ const FOUNTAIN_HP_SHARE := 0.3
 
 ## Content weights per floor: COMBAT, TREASURE, EVENT, REST, EMPTY.
 ## Deeper floors lean harder into combat and events (docs/design-doc-v2.md).
+## E5a lowered COMBAT (fewer, longer fights) and spread the freed share over
+## TREASURE, EVENT and EMPTY in proportion; REST is unchanged.
 const KIND_WEIGHTS := [
-	[0.35, 0.20, 0.15, 0.10, 0.20],
-	[0.40, 0.18, 0.17, 0.10, 0.15],
-	[0.45, 0.15, 0.20, 0.10, 0.10],
-	[0.50, 0.12, 0.18, 0.10, 0.10],
+	[0.25, 0.24, 0.18, 0.10, 0.23],
+	[0.25, 0.23, 0.22, 0.10, 0.20],
+	[0.30, 0.20, 0.27, 0.10, 0.13],
+	[0.30, 0.18, 0.27, 0.10, 0.15],
 ]
 ## Kinds matching KIND_WEIGHTS columns.
 const KIND_ORDER := [
@@ -198,8 +203,9 @@ static func _ordinary_rooms(rooms: Dictionary) -> Array:
 ## Brings the floor's COMBAT room count inside MIN_COMBAT_ROOMS ..
 ## MIN_COMBAT_ROOMS + MAX_EXTRA_COMBAT_ROOMS by changing the kinds of random
 ## ordinary rooms. Missing fights turn non-combat rooms into COMBAT in
-## QUOTA_CONVERT_ORDER (random within a kind); extra ones are rerolled as a non-combat kind with the floor's weights. On a floor too
-## small for its minimum, the elite room (then the shrine) gives its room back
+## QUOTA_CONVERT_ORDER (random within a kind); extra ones are rerolled as
+## treasure, event or empty with the floor's weights (never rest, see
+## _roll_non_combat_kind). On a floor too small for its minimum, the elite room (then the shrine) gives its room back
 ## as a plain fight: the quota comes first.
 static func _apply_fight_quota(rooms: Dictionary, floor_index: int) -> void:
 	var min_fights: int = MIN_COMBAT_ROOMS[floor_index]
@@ -238,17 +244,19 @@ static func _next_to_convert(candidates: Array) -> DungeonRoom:
 	return candidates[randi() % candidates.size()]
 
 
-## Rolls a room kind from the floor's weights with COMBAT left out.
+## Rolls the kind for a fight the quota trims, from the floor's weights with
+## COMBAT and REST left out: a trimmed fight becomes treasure, an event or an
+## empty room, never an extra rest (E5a).
 static func _roll_non_combat_kind(floor_index: int) -> DungeonRoom.RoomType:
 	var weights: Array = KIND_WEIGHTS[floor_index]
 	var total := 0.0
 	for i in weights.size():
-		if KIND_ORDER[i] != DungeonRoom.RoomType.COMBAT:
+		if not QUOTA_TRIM_SKIPS.has(KIND_ORDER[i]):
 			total += weights[i]
 	var r := randf() * total
 	var acc := 0.0
 	for i in weights.size():
-		if KIND_ORDER[i] == DungeonRoom.RoomType.COMBAT:
+		if QUOTA_TRIM_SKIPS.has(KIND_ORDER[i]):
 			continue
 		acc += weights[i]
 		if r < acc:

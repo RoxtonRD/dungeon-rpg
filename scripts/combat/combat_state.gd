@@ -860,7 +860,9 @@ func _announce_wind_up(e: Battler, skill: SkillData, picked: Battler) -> void:
 
 ## The enemy's turn while Charging: keep winding up if the telegraph is longer
 ## than one turn, else the skill lands. A single-target skill hits the same
-## target if still standing, else a freshly picked one.
+## target if still standing, else a freshly picked one. Taunt still overrides
+## it: if a hero taunted during the wind-up, the hit goes to a taunter instead
+## (Provoke is one of the answers to a telegraph). Area skills are unaffected.
 func _continue_wind_up(e: Battler, st: CombatStatus) -> void:
 	var skill := st.charge_skill
 	if skill == null:
@@ -877,7 +879,20 @@ func _continue_wind_up(e: Battler, st: CombatStatus) -> void:
 		and (picked == null or not picked.is_alive())
 	):
 		picked = _pick_enemy_target(e, skill)
+	elif skill.target == SkillData.TargetType.ONE and _taunter_overrides(picked):
+		picked = _pick_enemy_target(e, skill)
 	_enemy_use(e, skill, picked)
+
+
+## True when some living hero taunts and `picked` isn't one of them, so a
+## single-target hit aimed at `picked` should go to a taunter instead.
+func _taunter_overrides(picked: Battler) -> bool:
+	if picked != null and picked.has_taunt():
+		return false
+	for b in _alive(party):
+		if b.has_taunt():
+			return true
+	return false
 
 
 # ── Small helpers ─────────────────────────────────────────────────────────────

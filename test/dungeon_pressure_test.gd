@@ -274,14 +274,15 @@ func test_elite_is_skipped_when_every_room_is_on_the_route() -> void:
 
 
 func test_quota_takes_back_the_elite_room_on_a_tiny_floor() -> void:
-	# Floor 2 needs 3 fights but has only 3 rooms to give, one of them elite.
+	# Floor 3 needs 3 fights but has only 3 rooms to give, one of them elite.
+	assert_int(DungeonRun.MIN_COMBAT_ROOMS[2]).is_equal(3)
 	var rooms := {}
 	_room(rooms, Vector2i(0, 0), DungeonRoom.RoomType.EMPTY)
 	_room(rooms, Vector2i(1, 0), DungeonRoom.RoomType.TREASURE)
 	_room(rooms, Vector2i(2, 0), DungeonRoom.RoomType.STAIRS)
 	_room(rooms, Vector2i(1, 1), DungeonRoom.RoomType.REST)
 	_room(rooms, Vector2i(1, -1), DungeonRoom.RoomType.ELITE)
-	DungeonRun._apply_fight_quota(rooms, 1)
+	DungeonRun._apply_fight_quota(rooms, 2)
 	assert_int(_count(rooms, DungeonRoom.RoomType.COMBAT)).is_equal(3)
 	assert_int(_count(rooms, DungeonRoom.RoomType.ELITE)).is_equal(0)
 	assert_int(_count(rooms, DungeonRoom.RoomType.STAIRS)).is_equal(1)
@@ -299,6 +300,42 @@ func test_quota_trims_extra_fights() -> void:
 	)
 	assert_int((rooms[Vector2i(0, 0)] as DungeonRoom).kind).is_equal(DungeonRoom.RoomType.EMPTY)
 	assert_int(_count(rooms, DungeonRoom.RoomType.STAIRS)).is_equal(1)
+
+
+## E5a: the quota per floor is [2, 2, 3, 2] fights with at most 1 more.
+func test_quota_values() -> void:
+	assert_array(DungeonRun.MIN_COMBAT_ROOMS).is_equal([2, 2, 3, 2])
+	assert_int(DungeonRun.MAX_EXTRA_COMBAT_ROOMS).is_equal(1)
+
+
+## A trimmed fight becomes treasure, an event or an empty room, never a rest.
+func test_trimmed_fights_never_become_rest_rooms() -> void:
+	var allowed := [
+		DungeonRoom.RoomType.COMBAT,
+		DungeonRoom.RoomType.TREASURE,
+		DungeonRoom.RoomType.EVENT,
+		DungeonRoom.RoomType.EMPTY,
+		DungeonRoom.RoomType.STAIRS,
+	]
+	for floor_index in DungeonRun.NUM_FLOORS:
+		for i in 25:
+			var rooms := {}
+			_room(rooms, Vector2i(0, 0), DungeonRoom.RoomType.EMPTY)
+			for x in range(1, 9):
+				_room(rooms, Vector2i(x, 0), DungeonRoom.RoomType.COMBAT)
+			_room(rooms, Vector2i(9, 0), DungeonRoom.RoomType.STAIRS)
+			DungeonRun._apply_fight_quota(rooms, floor_index)
+			for room in rooms.values():
+				assert_array(allowed).contains([room.kind])
+
+
+## Every floor's content weights add up to 1, so the last kind isn't padded.
+func test_kind_weights_sum_to_one() -> void:
+	for weights in DungeonRun.KIND_WEIGHTS:
+		var total := 0.0
+		for w in weights:
+			total += w
+		assert_float(total).is_equal_approx(1.0, 0.0001)
 
 
 # ── Walk-back ─────────────────────────────────────────────────────────────────
