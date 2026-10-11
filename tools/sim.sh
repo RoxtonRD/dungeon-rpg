@@ -10,7 +10,9 @@
 #
 # Options: --fights N (per cell, default 100), --seed N (default 1),
 # --level N (override LEVEL_BY_DUNGEON), --out PATH (also write the report).
-# Campaign bot options: --runs N (default 100), --seed N, --out PATH. The bot
+# Campaign bot options: --runs N (per XP multiplier, default 100), --seed N,
+# --xp-mult X (one multiplier only; default is the what-if over 1, 2, 3, 4),
+# --out PATH. The bot
 # awards real XP, so it runs against a scratch save folder and exits with 3
 # if the real save files changed (see scripts/dev/campaign_bot.gd).
 set -euo pipefail
