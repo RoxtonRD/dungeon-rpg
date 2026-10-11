@@ -51,4 +51,5 @@ Read `CLAUDE.md`, the **Now** block of `docs/PLAN.md`, and your task brief.
   since `gh` can't attach images to a PR. List what each one shows in the
   PR text.
 - No errors in the Godot log, and the `smoke-test` skill passes.
+- **Before every push: `tools/format.sh`** (formats and checks GDScript like CI does). The edit hook alone isn't enough: it only runs on Claude's Edit/Write tools, and only when Python is found.
 - CI is green.
