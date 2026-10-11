@@ -14,6 +14,13 @@
 ##     its loot ignored, events and shrines are left alone;
 ##   - rest rooms are remembered and used only when party HP is under
 ##     REST_BELOW (the bot walks back to the nearest unused one);
+##   - an elite room is taken when party HP is at least ELITE_HP_MIN and nobody
+##     is downed, else skipped for good (rooms only reachable through it are
+##     left too); see _take_elite (brief #80);
+##   - while an enemy is Charging a telegraph, the acting hero answers it before
+##     the shared policy: kill the charger if this turn's expected damage can,
+##     else the Warrior Provokes a single-target telegraph, else heal or shield
+##     the threatened heroes ahead (see _telegraph_choice, brief #80);
 ##   - in the city before each dungeon: full heal, the Warrior spends new SP by
 ##     a build order, the others upgrade their skills in class order, gear is
 ##     reset to BalanceSim's "one tier behind" model, and the bot shops for
@@ -60,6 +67,16 @@ const MANA_BUDGET := 0.25
 ## Potions in the order they are bought (cheapest first).
 const HEAL_SHOP: Array[String] = ["potion_heal", "elixir_full"]
 const MANA_SHOP: Array[String] = ["potion_mana"]
+## Take an elite room only when party HP is at least this share and nobody is
+## downed (brief #80).
+const ELITE_HP_MIN := 0.7
+## "Heal ahead" of a telegraph only on a threatened hero under this share of
+## max HP (a heal on a full-HP hero would do nothing).
+const GUARD_HEAL_BELOW := 0.8
+## The telegraph answers the report counts, in the policy's order.
+const ANSWERS: Array[String] = ["kill", "provoke", "guard"]
+## Rows in the "Deadliest encounters" table.
+const GROUP_ROWS := 15
 ## The third wipe in one dungeon ends the campaign as "stuck".
 const MAX_WIPES := 3
 ## XP multipliers the report compares (what-if, bot only).
@@ -201,10 +218,31 @@ static func _wipes(attempts: Array) -> int:
 ## the first attempt's, boss levels / HP come from the latest attempt that
 ## reached the boss, and rounds, potions and the *_all action counts cover
 ## every attempt. It adds {wipes, stuck, wipe_at: ["F2", ...], potions_used,
-## potions_bought, party_actions_all, enemy_actions_all}.
+## potions_bought, party_actions_all, enemy_actions_all}. The encounter stats
+## (by_kind, elites, tele, war) cover every attempt too; boss_first is the
+## first attempt that reached the boss (-1 if none did).
 static func _dungeon_record(attempts: Array, stuck: bool) -> Dictionary:
 	var rec: Dictionary = (attempts[-1] as Dictionary).duplicate()
 	rec["entry_levels"] = attempts[0]["entry_levels"]
+	rec["boss_first"] = -1
+	rec["by_kind"] = {"normal": [], "elite": [], "boss": []}
+	rec["elites"] = _new_elites()
+	rec["tele"] = _new_tele()
+	rec["war"] = _new_war()
+	rec["groups"] = {}
+	for a in attempts:
+		for key in a["groups"]:
+			_add_counts((rec["groups"] as Dictionary).get_or_add(key, {}), a["groups"][key])
+		if int(rec["boss_first"]) < 0:
+			rec["boss_first"] = int(a["boss_first"])
+		for kind in rec["by_kind"]:
+			(rec["by_kind"][kind] as Array).append_array(a["by_kind"][kind])
+		_add_counts(rec["elites"], a["elites"])
+		_add_counts(rec["tele"], a["tele"])
+		rec["war"]["fights"] += int(a["war"]["fights"])
+		rec["war"]["distinct"] += int(a["war"]["distinct"])
+		rec["war"]["top_share_sum"] += float(a["war"]["top_share_sum"])
+		_add_counts(rec["war"]["actions"], a["war"]["actions"])
 	rec["rounds"] = []
 	rec["wipes"] = _wipes(attempts)
 	rec["stuck"] = stuck
@@ -225,6 +263,34 @@ static func _dungeon_record(attempts: Array, stuck: bool) -> Dictionary:
 			rec["boss_levels"] = a["boss_levels"]
 			rec["boss_hp"] = a["boss_hp"]
 	return rec
+
+
+## Elite rooms: met, taken, skipped, won, and cut_off: other rooms left
+## unvisited because they were only reachable through a skipped elite.
+static func _new_elites() -> Dictionary:
+	return {"met": 0, "taken": 0, "skipped": 0, "won": 0, "cut_off": 0}
+
+
+## Telegraphs: wind-ups started, landed, interrupted (the charger died while
+## Charging), single-target ones landed and how many of those hit the Warrior,
+## plus one counter per answer in ANSWERS (actions the bot chose for it).
+static func _new_tele() -> Dictionary:
+	var t := {"wind_ups": 0, "landed": 0, "interrupted": 0, "single_landed": 0, "on_warrior": 0}
+	for a in ANSWERS:
+		t[a] = 0
+	return t
+
+
+## The Warrior's skill use: fights he acted in, the sum of distinct skills per
+## fight, the sum of each fight's top-skill share, and actions per skill id.
+static func _new_war() -> Dictionary:
+	return {"fights": 0, "distinct": 0, "top_share_sum": 0.0, "actions": {}}
+
+
+## Adds every numeric value of `from` into `into`, key by key.
+static func _add_counts(into: Dictionary, from: Dictionary) -> void:
+	for k in from:
+		into[k] = into.get(k, 0) + from[k]
 
 
 ## The city before dungeon `dl`: spend SP, set gear for the depth, full heal
@@ -276,7 +342,9 @@ static func _buy(ids: Array[String], budget: int) -> int:
 ## {dl, entry_levels, boss_levels ([] if the boss wasn't reached), sp,
 ##  fights, rounds (one entry per fight, 1-based), party_actions,
 ##  enemy_actions, rests, moves, unresolved, boss_hp (-1 if not reached),
-##  tpk ("" | "F1".."F4" | "boss")}.
+##  tpk ("" | "F1".."F4" | "boss"), boss_first (1 won / 0 not won on the first
+##  boss fight, -1 not reached), by_kind ({normal, elite, boss}: rounds per
+##  fight), elites, tele, war (see _new_elites, _new_tele, _new_war)}.
 static func _play_dungeon(heroes: Array[Hero], dl: int) -> Dictionary:
 	var d := {
 		"dl": dl,
@@ -293,25 +361,50 @@ static func _play_dungeon(heroes: Array[Hero], dl: int) -> Dictionary:
 		"potions_used": 0,
 		"boss_hp": -1.0,
 		"tpk": "",
+		"boss_first": -1,
+		"by_kind": {"normal": [], "elite": [], "boss": []},
+		"elites": _new_elites(),
+		"tele": _new_tele(),
+		"war": _new_war(),
+		"groups": {},
 	}
 	var run := DungeonRun.generate(dl)
 	for fl in DungeonRun.NUM_FLOORS:
 		var rooms: Dictionary = run.rooms_on_floor()
 		var visited: Dictionary = {Vector2i.ZERO: true}
 		var rest_rooms: Array[Vector2i] = []  # remembered, not yet used
-		for pos in _bfs_order(rooms):
-			var room: DungeonRoom = rooms[pos]
-			if room.kind == DungeonRoom.RoomType.BOSS:
-				continue  # the boss comes last
-			_walk_to(run, pos, visited, d)
-			if room.kind == DungeonRoom.RoomType.REST:
-				if BalanceSim._party_hp_pct(heroes) < REST_BELOW:
-					_rest(run, room, d)
-				else:
-					rest_rooms.append(pos)  # save it for when the party needs it
-			elif not _resolve_room(run, heroes, d, "F%d" % (fl + 1)):
-				return _finish(d, heroes)
-			_rest_if_needed(run, heroes, rest_rooms, visited, d)
+		# A room only reachable through a skipped elite waits in `later`; it is
+		# tried again after the pass in case another route opened up.
+		var queue := _bfs_order(rooms)
+		var progress := true
+		while progress and not queue.is_empty():
+			progress = false
+			var later: Array[Vector2i] = []
+			for pos in queue:
+				var room: DungeonRoom = rooms[pos]
+				if room.kind == DungeonRoom.RoomType.BOSS:
+					continue  # the boss comes last
+				if not _can_reach(run, pos, visited):
+					later.append(pos)
+					continue
+				progress = true
+				if room.kind == DungeonRoom.RoomType.ELITE and room.has_content():
+					d["elites"]["met"] += 1
+					if not _take_elite(heroes):
+						d["elites"]["skipped"] += 1
+						continue  # never entered, so never visited
+					d["elites"]["taken"] += 1
+				_walk_to(run, pos, visited, d)
+				if room.kind == DungeonRoom.RoomType.REST:
+					if BalanceSim._party_hp_pct(heroes) < REST_BELOW:
+						_rest(run, room, d)
+					else:
+						rest_rooms.append(pos)  # save it for when the party needs it
+				elif not _resolve_room(run, heroes, d, "F%d" % (fl + 1)):
+					return _finish(d, heroes)
+				_rest_if_needed(run, heroes, rest_rooms, visited, d)
+			queue = later
+		d["elites"]["cut_off"] += queue.size()  # rooms left behind a skipped elite
 		if not run.is_boss_floor():
 			_walk_to(run, _find_room(rooms, DungeonRoom.RoomType.STAIRS), visited, d)
 			run.descend()
@@ -340,15 +433,22 @@ static func _resolve_room(
 		DungeonRoom.RoomType.COMBAT, DungeonRoom.RoomType.ELITE, DungeonRoom.RoomType.BOSS:
 			var is_boss := room.kind == DungeonRoom.RoomType.BOSS
 			var is_elite := room.kind == DungeonRoom.RoomType.ELITE
+			var kind := "boss" if is_boss else ("elite" if is_elite else "normal")
 			for attempt in MAX_REENGAGE:
-				# No elite policy yet (E4): an elite room is fought like any
-				# other, from the elite groups, without the reward bonus.
+				# An elite room rolls from the elite groups and pays the elite
+				# reward bonus, as in the game (dungeon_map.gd).
 				var enemies: Array[EnemyData] = (
 					run.roll_boss() if is_boss else run.roll_encounter(run.current_floor, is_elite)
 				)
-				var res := _fight(heroes, enemies)
+				var hp_before := BalanceSim._party_hp_pct(heroes)
+				var res := _fight(heroes, enemies, is_elite, d)
+				var won := int(res["result"]) == CombatState.Result.VICTORY
+				_count_group(d, kind, enemies, res, hp_before - BalanceSim._party_hp_pct(heroes))
 				d["fights"] += 1
 				(d["rounds"] as Array).append(int(res["rounds"]) + 1)
+				(d["by_kind"][kind] as Array).append(int(res["rounds"]) + 1)
+				if is_boss and int(d["boss_first"]) < 0:
+					d["boss_first"] = 1 if won else 0
 				d["party_actions"] += int(res["party_actions"])
 				d["enemy_actions"] += int(res["enemy_actions"])
 				d["potions_used"] += int(res["potions"])
@@ -356,6 +456,8 @@ static func _resolve_room(
 					CombatState.Result.VICTORY:
 						_award_xp(int(res["xp"]))
 						room.cleared = true
+						if is_elite:
+							d["elites"]["won"] += 1
 						return true
 					CombatState.Result.DEFEAT:
 						d["tpk"] = where
@@ -375,6 +477,34 @@ static func _resolve_room(
 		DungeonRoom.RoomType.SHRINE:
 			room.cleared = true  # left alone: a shrine grants a skin
 	return true
+
+
+## Per-composition stats for the "Deadliest encounters" table, keyed
+## "D<n> <kind>: id+id+...": {fights, wipes, rounds, hp_lost} (sums).
+static func _count_group(
+	d: Dictionary, kind: String, enemies: Array[EnemyData], res: Dictionary, hp_lost: float
+) -> void:
+	var ids: PackedStringArray = []
+	for e in enemies:
+		ids.append(e.id)
+	var key := "D%d %s: %s" % [d["dl"], kind, "+".join(ids)]
+	var g: Dictionary = (d["groups"] as Dictionary).get_or_add(
+		key, {"fights": 0, "wipes": 0, "rounds": 0, "hp_lost": 0.0}
+	)
+	g["fights"] += 1
+	g["rounds"] += int(res["rounds"]) + 1
+	g["hp_lost"] += hp_lost
+	if int(res["result"]) == CombatState.Result.DEFEAT:
+		g["wipes"] += 1
+
+
+## The elite policy (brief #80): take an elite room only when party HP is at
+## least ELITE_HP_MIN and nobody is downed.
+static func _take_elite(heroes: Array[Hero]) -> bool:
+	for h in heroes:
+		if h.hp <= 0:
+			return false
+	return BalanceSim._party_hp_pct(heroes) >= ELITE_HP_MIN
 
 
 ## Rests the party in `room` (see DungeonRun.resolve_rest).
@@ -415,12 +545,18 @@ static func _award_xp(xp_total: int) -> void:
 # ── Fights and potions ────────────────────────────────────────────────────────
 
 
-## BalanceSim.fight's loop with the bot's potion rules in front of the shared
-## `_player_turn` (which stays untouched, so the #56 report is reproducible).
+## BalanceSim.fight's loop with the bot's potion rules and telegraph answers in
+## front of the shared `_player_turn` (which stays untouched, so the #56 report
+## is reproducible). `elite` builds an elite fight (reward bonus). Telegraph
+## and Warrior skill counts go into d["tele"] and d["war"].
 ## Returns {result, rounds, xp, party_actions, enemy_actions, potions}.
-static func _fight(heroes: Array[Hero], enemy_list: Array[EnemyData]) -> Dictionary:
-	var st := CombatState.build(heroes, enemy_list)
+static func _fight(
+	heroes: Array[Hero], enemy_list: Array[EnemyData], elite := false, d: Dictionary = {}
+) -> Dictionary:
+	var st := CombatState.build(heroes, enemy_list, elite)
 	st.start()
+	var tele: Dictionary = d.get("tele", _new_tele())
+	var used: Dictionary = {}  # class id -> {skill id: count}, this fight
 	var party_actions := 0
 	var enemy_actions := 0
 	var potions := 0
@@ -431,16 +567,30 @@ static func _fight(heroes: Array[Hero], enemy_list: Array[EnemyData]) -> Diction
 		if actor == null or st.round_number > BalanceSim.MAX_ROUNDS:
 			break
 		if actor.side == Battler.Side.ENEMY:
-			st.step()
+			_enemy_step(st, actor, tele)
 			enemy_actions += 1
 			continue
 		party_actions += 1
+		var chargers := _chargers(st)
 		var choice := _potion_choice(st, actor)
-		if choice.is_empty():
-			BalanceSim._player_turn(st, actor, {})
-		else:
+		if not choice.is_empty():
 			st.player_item(str(choice["id"]), choice["target"])
 			potions += 1
+		else:
+			var answer := _telegraph_choice(st, actor)
+			if answer.is_empty():
+				BalanceSim._player_turn(st, actor, {}, used)
+			else:
+				tele[answer["answer"]] += 1
+				var counts: Dictionary = used.get_or_add(actor.hero.class_data.id, {})
+				var sid: String = (answer["skill"] as SkillData).id
+				counts[sid] = int(counts.get(sid, 0)) + 1
+				st.player_action(answer["skill"], answer["target"])
+		for c in chargers:
+			if not c.is_alive():
+				tele["interrupted"] += 1
+	if d.has("war") and used.has("warrior"):
+		_add_warrior_fight(d["war"], used["warrior"])
 	return {
 		"result": int(st.result),
 		"rounds": st.round_number,
@@ -449,6 +599,221 @@ static func _fight(heroes: Array[Hero], enemy_list: Array[EnemyData]) -> Diction
 		"enemy_actions": enemy_actions,
 		"potions": potions,
 	}
+
+
+## One enemy turn, counting telegraphs: a wind-up started, or one that landed
+## (and for a single-target one, whether it hit the Warrior).
+static func _enemy_step(st: CombatState, actor: Battler, tele: Dictionary) -> void:
+	var charge := actor.charge_status()
+	var aimed_at: Battler = charge.charge_target if charge != null else null
+	var single := charge != null and charge.charge_skill != null
+	single = single and charge.charge_skill.target == SkillData.TargetType.ONE
+	st.step()
+	if charge == null:
+		if actor.charge_status() != null:
+			tele["wind_ups"] += 1
+		return
+	if actor.charge_status() != null:
+		return  # still winding up (a telegraph longer than one turn)
+	tele["landed"] += 1
+	if single:
+		tele["single_landed"] += 1
+		if aimed_at != null and aimed_at.is_alive() and aimed_at.hero.class_data.id == "warrior":
+			tele["on_warrior"] += 1
+
+
+## Living enemies that are Charging a telegraph.
+static func _chargers(st: CombatState) -> Array[Battler]:
+	var out: Array[Battler] = []
+	for e in st.enemies:
+		if e.is_alive() and e.charge_status() != null:
+			out.append(e)
+	return out
+
+
+## Folds one fight's Warrior skill counts ({skill id: count}) into `war`.
+static func _add_warrior_fight(war: Dictionary, counts: Dictionary) -> void:
+	var total := 0
+	var top := 0
+	for sid in counts:
+		total += int(counts[sid])
+		top = maxi(top, int(counts[sid]))
+	if total == 0:
+		return
+	war["fights"] += 1
+	war["distinct"] += counts.size()
+	war["top_share_sum"] += float(top) / float(total)
+	_add_counts(war["actions"], counts)
+
+
+## The telegraph answer for the acting hero (brief #80) as
+## {skill, target, answer} with answer in ANSWERS, or {} when no enemy is
+## Charging or this hero has no answer (the shared policy acts then):
+##   1. "kill": a skill whose expected damage this turn kills a charger;
+##   2. "provoke": the Warrior taunts when a charger aims at one hero (not him)
+##      and he isn't taunting yet;
+##   3. "guard": a barrier on the threatened heroes, or a heal on the most
+##      hurt one under GUARD_HEAL_BELOW HP.
+static func _telegraph_choice(st: CombatState, actor: Battler) -> Dictionary:
+	var chargers := _chargers(st)
+	if chargers.is_empty():
+		return {}
+	var hero := actor.hero
+	var usable: Array[SkillData] = []
+	for s in hero.class_data.skills:
+		if st.can_use(actor, s):
+			usable.append(s)
+	if usable.is_empty():
+		return {}
+	var kill := _kill_choice(st, actor, usable, chargers)
+	if not kill.is_empty():
+		return kill
+	# Who the charged attacks will hit.
+	var threatened: Array[Battler] = []
+	var single := false
+	for c in chargers:
+		var charge := c.charge_status()
+		if charge.charge_skill == null:
+			continue
+		if charge.charge_skill.target == SkillData.TargetType.ONE:
+			var t := charge.charge_target
+			if t != null and t.is_alive() and t.side == Battler.Side.PARTY:
+				if t != actor:
+					single = true  # aimed at someone the Warrior could pull it off
+				if not threatened.has(t):
+					threatened.append(t)
+		elif charge.charge_skill.target == SkillData.TargetType.ALL:
+			for b in st.party:
+				if b.is_alive() and not threatened.has(b):
+					threatened.append(b)
+	if threatened.is_empty():
+		return {}
+	if single and hero.class_data.id == "warrior" and not actor.has_taunt():
+		for s in usable:
+			if Party.get_effective_skill(hero, s).taunt:
+				return {"skill": s, "target": null, "answer": "provoke"}
+	return _guard_choice(st, actor, usable, threatened)
+
+
+## A skill that kills a charger this turn by expected damage, cheapest first,
+## as {skill, target, answer: "kill"}, or {}.
+static func _kill_choice(
+	st: CombatState, actor: Battler, usable: Array[SkillData], chargers: Array[Battler]
+) -> Dictionary:
+	var best: Dictionary = {}
+	var best_cost := 1 << 30
+	for s in usable:
+		var eff := Party.get_effective_skill(actor.hero, s)
+		var cost := Party.combat_cost(actor.hero, s)
+		if cost >= best_cost:
+			continue
+		for c in chargers:
+			var target: Battler = null
+			match eff.target:
+				SkillData.TargetType.ONE:
+					if not st.valid_targets_for(actor, s).has(c):
+						continue
+					target = c
+				SkillData.TargetType.ALL:
+					pass
+				_:
+					continue  # RANDOM multi-hits and friendly skills can't be aimed
+			if _expected_damage(actor, eff, c) >= c.get_hp():
+				best = {"skill": s, "target": target, "answer": "kill"}
+				best_cost = cost
+				break
+	return best
+
+
+## A barrier on threatened heroes that lack one, else a heal on the most hurt
+## threatened hero under GUARD_HEAL_BELOW, as {skill, target, answer: "guard"},
+## or {}.
+static func _guard_choice(
+	st: CombatState, actor: Battler, usable: Array[SkillData], threatened: Array[Battler]
+) -> Dictionary:
+	var unshielded: Array[Battler] = []
+	for b in threatened:
+		if not _has_barrier(b):
+			unshielded.append(b)
+	if not unshielded.is_empty():
+		for s in usable:
+			var eff := Party.get_effective_skill(actor.hero, s)
+			if eff.skill_type != SkillData.SkillType.BUFF or not eff.barrier:
+				continue
+			match eff.target:
+				SkillData.TargetType.ALLIES:
+					return {"skill": s, "target": null, "answer": "guard"}
+				SkillData.TargetType.ALLY:
+					return {"skill": s, "target": unshielded[0], "answer": "guard"}
+				SkillData.TargetType.SELF:
+					if unshielded.has(actor):
+						return {"skill": s, "target": null, "answer": "guard"}
+	var hurt: Battler = null
+	for b in threatened:
+		if (
+			b.hp_fraction() < GUARD_HEAL_BELOW
+			and (hurt == null or b.hp_fraction() < hurt.hp_fraction())
+		):
+			hurt = b
+	if hurt == null:
+		return {}
+	for s in usable:
+		var eff := Party.get_effective_skill(actor.hero, s)
+		if eff.skill_type != SkillData.SkillType.HEAL:
+			continue
+		match eff.target:
+			SkillData.TargetType.ALLY:
+				return {"skill": s, "target": hurt, "answer": "guard"}
+			SkillData.TargetType.ALLIES:
+				return {"skill": s, "target": null, "answer": "guard"}
+			SkillData.TargetType.SELF:
+				if hurt == actor:
+					return {"skill": s, "target": null, "answer": "guard"}
+	return {}
+
+
+static func _has_barrier(b: Battler) -> bool:
+	for s in b.statuses:
+		if s.kind == CombatStatus.Kind.BARRIER:
+			return true
+	return false
+
+
+## Expected damage of the effective skill `eff` on `target` this turn: the
+## mean roll of CombatState._apply_damage_hit without crits or parries, times
+## its hits. 0 for skills that deal no damage.
+static func _expected_damage(actor: Battler, eff: SkillData, target: Battler) -> float:
+	var kind := eff.skill_type
+	match kind:
+		SkillData.SkillType.MULTI:
+			kind = (
+				SkillData.SkillType.PHYS
+				if eff.multi_hit_type == SkillData.HitType.PHYS
+				else SkillData.SkillType.MAG
+			)
+		SkillData.SkillType.PHYS, SkillData.SkillType.MAG:
+			pass
+		_:
+			return 0.0
+	var is_mag := kind == SkillData.SkillType.MAG
+	var use_mag := is_mag
+	match eff.damage_stat:
+		SkillData.DamageStat.ATK:
+			use_mag = false
+		SkillData.DamageStat.MAG:
+			use_mag = true
+	var stats := actor.effective_stats()
+	var raw := float(stats["mag"] if use_mag else stats["atk"]) * eff.power + 1.5
+	if eff.finisher and target.get_hp() <= int(target.max_hp * 0.25):
+		raw *= 2.0
+	if eff.bonus_vs_def_debuff > 0.0 and target.has_def_debuff():
+		raw *= 1.0 + eff.bonus_vs_def_debuff
+	raw *= actor.passive_damage_mult()
+	var t_def := int(target.effective_stats()["def"])
+	if is_mag:
+		t_def = int(floor(float(t_def) * 0.4))
+	var hits := eff.hits if eff.skill_type == SkillData.SkillType.MULTI else 1
+	return maxf(1.0, floor(raw - float(t_def))) * float(hits)
 
 
 ## The potion the acting hero drinks this turn as {id, target}, or {}.
@@ -542,6 +907,24 @@ static func _walk_to(run: DungeonRun, target: Vector2i, visited: Dictionary, d: 
 ## (`target` itself last; empty when already there). Only rooms in `visited`
 ## are crossed.
 static func _path_to(run: DungeonRun, target: Vector2i, visited: Dictionary) -> Array[Vector2i]:
+	var came_from := _came_from(run, target, visited)
+	var path: Array[Vector2i] = []
+	var step := target
+	while step != run.player_pos:
+		path.push_front(step)
+		step = came_from[step]
+	return path
+
+
+## True when `target` can be reached through visited rooms (a room behind a
+## skipped elite can't).
+static func _can_reach(run: DungeonRun, target: Vector2i, visited: Dictionary) -> bool:
+	return _came_from(run, target, visited).has(target)
+
+
+## BFS from the player towards `target` through visited rooms: each reached
+## room mapped to the room it was entered from.
+static func _came_from(run: DungeonRun, target: Vector2i, visited: Dictionary) -> Dictionary:
 	var rooms: Dictionary = run.rooms_on_floor()
 	var came_from := {run.player_pos: run.player_pos}
 	var queue: Array[Vector2i] = [run.player_pos]
@@ -552,12 +935,7 @@ static func _path_to(run: DungeonRun, target: Vector2i, visited: Dictionary) -> 
 				continue
 			came_from[next] = pos
 			queue.append(next)
-	var path: Array[Vector2i] = []
-	var step := target
-	while step != run.player_pos:
-		path.push_front(step)
-		step = came_from[step]
-	return path
+	return came_from
 
 
 static func _find_room(rooms: Dictionary, kind: DungeonRoom.RoomType) -> Vector2i:
@@ -635,8 +1013,9 @@ static func report(batches: Array, seed_value: int, build_name: String, command:
 	lines.append(
 		(
 			"- **Policy:** every reachable room in BFS order, stairs last, boss last; "
-			+ "fights by balance_sim `_player_turn` with HP/MP carried over; events and "
-			+ "shrines left; full heal in the city"
+			+ "fights by balance_sim `_player_turn` with HP/MP carried over, after the "
+			+ "telegraph answers (see Telegraphs); elite rooms taken or skipped by party "
+			+ "HP (see Elite rooms); events and shrines left; full heal in the city"
 		)
 	)
 	lines.append(
@@ -682,6 +1061,11 @@ static func report(batches: Array, seed_value: int, build_name: String, command:
 	)
 	lines.append("")
 	lines.append_array(_headline_table(campaigns))
+	lines.append_array(_targets_table(campaigns))
+	lines.append_array(_elite_table(campaigns))
+	lines.append_array(_telegraph_table(campaigns))
+	lines.append_array(_warrior_table(campaigns))
+	lines.append_array(_group_table(campaigns))
 	lines.append_array(_level_table(campaigns))
 	lines.append_array(_length_table(campaigns))
 	lines.append_array(_wipe_table(campaigns))
@@ -769,6 +1153,295 @@ static func _headline_table(campaigns: Array) -> PackedStringArray:
 				+ "%d-%d minutes per dungeon (D-013)."
 			)
 			% TARGET_MINUTES
+		)
+	)
+	out.append("")
+	return out
+
+
+## The encounter targets (D-038, balance-loop skill), one row per dungeon.
+static func _targets_table(campaigns: Array) -> PackedStringArray:
+	var out: PackedStringArray = ["## Encounter targets", ""]
+	out.append(
+		(
+			"| Dungeon | Rounds: normal | elite | boss | Boss first-try win | Wipes | "
+			+ "Level at boss | Combat min | Warrior skills / fight | Warrior top skill |"
+		)
+	)
+	out.append("|---|---|---|---|---|---|---|---|---|---|")
+	(
+		out
+		. append(
+			"| **Target** | 3-5 | 5-7 | 8-10 | 70-85% | 0.3-1.5 / campaign | 4 / 6 / 8 / 10 | 8-12 | 3+ | <= 50% |"
+		)
+	)
+	var wipes := 0
+	for dl in range(1, 5):
+		var recs := _records(campaigns, dl)
+		if recs.is_empty():
+			continue
+		var by_kind := {"normal": [], "elite": [], "boss": []}
+		var war := _new_war()
+		var boss_tries := 0
+		var boss_wins := 0
+		for d in recs:
+			wipes += int(d["wipes"])
+			for kind in by_kind:
+				(by_kind[kind] as Array).append_array(d["by_kind"][kind])
+			if int(d["boss_first"]) >= 0:
+				boss_tries += 1
+				boss_wins += int(d["boss_first"])
+			war["fights"] += int(d["war"]["fights"])
+			war["distinct"] += int(d["war"]["distinct"])
+			_add_counts(war["actions"], d["war"]["actions"])
+		var row := [
+			dl,
+			_rounds_cell(by_kind["normal"]),
+			_rounds_cell(by_kind["elite"]),
+			_rounds_cell(by_kind["boss"]),
+			_share_cell(boss_wins, boss_tries),
+			_mean_wipes(recs),
+			_cell_boss_level(recs),
+			_cell_minutes(recs),
+			float(war["distinct"]) / float(maxi(1, int(war["fights"]))),
+			_top_skill_cell(war["actions"]),
+		]
+		out.append("| D%d | %s | %s | %s | %s | %.2f | %s | %s | %.1f | %s |" % row)
+	out.append("")
+	out.append(
+		(
+			(
+				"**Wipes per campaign: %.2f** (all dungeons, %d campaigns). Rounds: mean "
+				+ "[p10-p90] (fights), every attempt. Boss first-try win: share of the "
+				+ "campaigns that reached that boss whose first boss fight was a win. Combat "
+				+ "min: clearing run. Warrior: distinct skills per fight he acted in, and his "
+				+ "most used skill's share of his skill actions (potions not counted)."
+			)
+			% [float(wipes) / float(maxi(1, campaigns.size())), campaigns.size()]
+		)
+	)
+	out.append("")
+	return out
+
+
+static func _rounds_cell(rounds: Array) -> String:
+	if rounds.is_empty():
+		return "-"
+	return (
+		"%.1f [%d-%d] (%d)" % [_mean(rounds), _pct(rounds, 0.1), _pct(rounds, 0.9), rounds.size()]
+	)
+
+
+static func _share_cell(hits: int, total: int) -> String:
+	if total == 0:
+		return "-"
+	return "%d%% (%d/%d)" % [roundi(100.0 * float(hits) / float(total)), hits, total]
+
+
+## "skill id NN%": the most used skill in `actions` ({skill id: count}).
+static func _top_skill_cell(actions: Dictionary) -> String:
+	var total := 0
+	var top := ""
+	for sid in actions:
+		total += int(actions[sid])
+		if top == "" or int(actions[sid]) > int(actions[top]):
+			top = sid
+	if total == 0:
+		return "-"
+	return "%s %d%%" % [top, roundi(100.0 * float(actions[top]) / float(total))]
+
+
+## Elite rooms per dungeon: met, taken (policy: HP >= ELITE_HP_MIN, nobody
+## downed), skipped, won, and the rooms a skip cut off.
+static func _elite_table(campaigns: Array) -> PackedStringArray:
+	var out: PackedStringArray = ["## Elite rooms", ""]
+	out.append("| Dungeon | Met | Taken | Skipped | Won | Rooms cut off by a skip |")
+	out.append("|---|---|---|---|---|---|")
+	var total := _new_elites()
+	for dl in range(1, 5):
+		var e := _new_elites()
+		for d in _records(campaigns, dl):
+			_add_counts(e, d["elites"])
+		_add_counts(total, e)
+		out.append(_elite_row("D%d" % dl, e))
+	out.append(_elite_row("**All**", total))
+	out.append("")
+	out.append(
+		(
+			(
+				"Every attempt counted. Policy: take an elite room when party HP is at least "
+				+ "%d%% and nobody is downed, else skip it for good. Won is out of taken."
+			)
+			% roundi(ELITE_HP_MIN * 100.0)
+		)
+	)
+	out.append("")
+	return out
+
+
+static func _elite_row(label: String, e: Dictionary) -> String:
+	return (
+		"| %s | %d | %s | %s | %s | %d |"
+		% [
+			label,
+			e["met"],
+			_share_cell(e["taken"], e["met"]),
+			_share_cell(e["skipped"], e["met"]),
+			_share_cell(e["won"], e["taken"]),
+			e["cut_off"],
+		]
+	)
+
+
+## Telegraphs per dungeon: wind-ups, how they ended, and the bot's answers.
+static func _telegraph_table(campaigns: Array) -> PackedStringArray:
+	var out: PackedStringArray = ["## Telegraphs", ""]
+	out.append(
+		(
+			"| Dungeon | Wind-ups | Landed | Charger killed | Single-target landed | "
+			+ "...on the Warrior | Answer: kill | provoke | heal/shield |"
+		)
+	)
+	out.append("|---|---|---|---|---|---|---|---|---|")
+	var total := _new_tele()
+	for dl in range(1, 5):
+		var t := _new_tele()
+		for d in _records(campaigns, dl):
+			_add_counts(t, d["tele"])
+		_add_counts(total, t)
+		out.append(_tele_row("D%d" % dl, t))
+	out.append(_tele_row("**All**", total))
+	out.append("")
+	out.append(
+		(
+			"Every attempt counted. Answers are bot actions chosen by the telegraph rule "
+			+ "(kill the charger if this turn's expected damage can, else the Warrior "
+			+ "Provokes a single-target telegraph, else heal or shield the threatened heroes). "
+			+ "A wind-up that is neither landed nor killed ended with the fight."
+		)
+	)
+	out.append("")
+	return out
+
+
+static func _tele_row(label: String, t: Dictionary) -> String:
+	return (
+		"| %s | %d | %d | %d | %d | %d | %d | %d | %d |"
+		% [
+			label,
+			t["wind_ups"],
+			t["landed"],
+			t["interrupted"],
+			t["single_landed"],
+			t["on_warrior"],
+			t["kill"],
+			t["provoke"],
+			t["guard"],
+		]
+	)
+
+
+## The Warrior's skill mix per dungeon: each skill's share of his skill actions.
+static func _warrior_table(campaigns: Array) -> PackedStringArray:
+	var out: PackedStringArray = ["## Warrior skill use", ""]
+	out.append("| Dungeon | Fights | Skills / fight | Top-skill share / fight | Mix |")
+	out.append("|---|---|---|---|---|")
+	for dl in range(1, 5):
+		var war := _new_war()
+		for d in _records(campaigns, dl):
+			war["fights"] += int(d["war"]["fights"])
+			war["distinct"] += int(d["war"]["distinct"])
+			war["top_share_sum"] += float(d["war"]["top_share_sum"])
+			_add_counts(war["actions"], d["war"]["actions"])
+		var n := maxi(1, int(war["fights"]))
+		(
+			out
+			. append(
+				(
+					"| D%d | %d | %.1f | %d%% | %s |"
+					% [
+						dl,
+						war["fights"],
+						float(war["distinct"]) / float(n),
+						roundi(100.0 * float(war["top_share_sum"]) / float(n)),
+						_mix_cell(war["actions"]),
+					]
+				)
+			)
+		)
+	out.append("")
+	out.append(
+		(
+			"Fights he acted in, every attempt. Top-skill share / fight: the mean, over "
+			+ "fights, of his most used skill's share in that fight (a 2-action fight is "
+			+ "at least 50%). Mix: share of all his skill actions in that dungeon."
+		)
+	)
+	out.append("")
+	return out
+
+
+## "a 40%, b 35%, ..." over {skill id: count}, most used first.
+static func _mix_cell(actions: Dictionary) -> String:
+	var total := 0
+	for sid in actions:
+		total += int(actions[sid])
+	if total == 0:
+		return "-"
+	var ids: Array = actions.keys()
+	ids.sort_custom(func(a, b): return int(actions[a]) > int(actions[b]))
+	var parts: PackedStringArray = []
+	for sid in ids:
+		parts.append("%s %d%%" % [sid, roundi(100.0 * float(actions[sid]) / float(total))])
+	return ", ".join(parts)
+
+
+## The encounters (composition per dungeon and room kind) that wiped the party
+## most, with how long they ran and how much party HP they cost.
+static func _group_table(campaigns: Array) -> PackedStringArray:
+	var groups := {}
+	for c in campaigns:
+		for d in c["dungeons"]:
+			for key in d["groups"]:
+				_add_counts(groups.get_or_add(key, {}), d["groups"][key])
+	var keys: Array = groups.keys()
+	keys.sort_custom(
+		func(a, b):
+			var wa := int(groups[a]["wipes"])
+			var wb := int(groups[b]["wipes"])
+			return wa > wb or (wa == wb and str(a) < str(b))
+	)
+	var out: PackedStringArray = ["## Deadliest encounters", ""]
+	out.append("| Encounter | Fights | Wipes | Wipe % | Rounds | Party HP lost / fight |")
+	out.append("|---|---|---|---|---|---|")
+	for key in keys.slice(0, GROUP_ROWS):
+		var g: Dictionary = groups[key]
+		var n := maxi(1, int(g["fights"]))
+		(
+			out
+			. append(
+				(
+					"| %s | %d | %d | %.1f%% | %.1f | %d%% |"
+					% [
+						key,
+						g["fights"],
+						g["wipes"],
+						100.0 * float(g["wipes"]) / float(n),
+						float(g["rounds"]) / float(n),
+						roundi(100.0 * float(g["hp_lost"]) / float(n)),
+					]
+				)
+			)
+		)
+	out.append("")
+	out.append(
+		(
+			(
+				"The %d encounters with the most wipes, every attempt: enemy ids in battle "
+				+ "order, per dungeon and room kind. HP lost: party HP share before the fight "
+				+ "minus after it (a wipe loses everything left)."
+			)
+			% GROUP_ROWS
 		)
 	)
 	out.append("")

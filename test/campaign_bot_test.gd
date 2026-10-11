@@ -102,3 +102,63 @@ func test_more_xp_means_higher_levels() -> void:
 		assert_int(high.reduce(func(a, b): return a + b))
 		. is_greater(low.reduce(func(a, b): return a + b))
 	)
+
+
+# ── Bot policy: elites and telegraphs (#80) ───────────────────────────────────
+# These build throwaway heroes and a CombatState only: no XP, nothing saved.
+
+
+func test_elite_taken_only_when_healthy() -> void:
+	var heroes := BalanceSim.make_party(CampaignBot.PARTY, 5)
+	assert_bool(CampaignBot._take_elite(heroes)).is_true()
+	for h in heroes:
+		h.hp = floori(h.max_hp() * 0.6)
+	assert_bool(CampaignBot._take_elite(heroes)).is_false()
+	BalanceSim.heal_party(heroes)
+	heroes[3].hp = 0  # one hero downed, the rest at full: still skipped
+	assert_bool(CampaignBot._take_elite(heroes)).is_false()
+
+
+func test_telegraph_answer_kills_a_charger_it_can() -> void:
+	var st := _charging_fight("goblin", "e_crushing_blow", 1)
+	st.enemies[0].set_hp(1)
+	var answer := CampaignBot._telegraph_choice(st, st.party[0])
+	assert_str(str(answer.get("answer", ""))).is_equal("kill")
+	assert_object(answer["target"]).is_same(st.enemies[0])
+
+
+func test_telegraph_answer_warrior_provokes_single_target() -> void:
+	var st := _charging_fight("orc_warlord", "e_crushing_blow", 1)
+	st.party[0].rage = Battler.RAGE_MAX
+	var answer := CampaignBot._telegraph_choice(st, st.party[0])
+	assert_str(str(answer.get("answer", ""))).is_equal("provoke")
+	assert_bool(Party.get_effective_skill(st.party[0].hero, answer["skill"]).taunt).is_true()
+
+
+func test_telegraph_answer_cleric_shields_against_an_area_hit() -> void:
+	var st := _charging_fight("ogre", "e_smash", -1)
+	var answer := CampaignBot._telegraph_choice(st, st.party[1])
+	assert_str(str(answer.get("answer", ""))).is_equal("guard")
+	assert_bool(Party.get_effective_skill(st.party[1].hero, answer["skill"]).barrier).is_true()
+
+
+func test_no_telegraph_no_answer() -> void:
+	var heroes := BalanceSim.make_party(CampaignBot.PARTY, 5)
+	var enemies: Array[EnemyData] = [load("res://resources/enemies/ogre.tres")]
+	var st := CombatState.build(heroes, enemies)
+	assert_dict(CampaignBot._telegraph_choice(st, st.party[0])).is_empty()
+
+
+## A level-5 bot party against one `enemy_id` that is Charging the enemy skill
+## `skill_id`, aimed at party member `target_idx` (-1: no single target).
+func _charging_fight(enemy_id: String, skill_id: String, target_idx: int) -> CombatState:
+	var heroes := BalanceSim.make_party(CampaignBot.PARTY, 5)
+	var enemies: Array[EnemyData] = [load("res://resources/enemies/%s.tres" % enemy_id)]
+	var st := CombatState.build(heroes, enemies)
+	var charge := CombatStatus.new()
+	charge.kind = CombatStatus.Kind.CHARGING
+	charge.duration = 1
+	charge.charge_skill = load("res://resources/skills/enemy/%s.tres" % skill_id)
+	charge.charge_target = st.party[target_idx] if target_idx >= 0 else null
+	st.enemies[0].statuses.append(charge)
+	return st
