@@ -26,17 +26,21 @@ back after weeks away, this is the only thing you need to read.*
 - **Bot v2** (D-034): ×3 XP reaches level ~10 at the final boss; fights
   stay short, and the run is ~6–9 min of combat per dungeon.
 - **Level curve decided:** A at ×3 XP (D-036).
+- **Encounters v3** (D-038), briefed as E1–E4; art direction D-037.
 - **Next up:**
-  1. Roxton: after merging, run **`tools/after-merge.sh`** in the main
-     checkout (it replaces `git cleanup`; `--dry-run` previews)
-  2. gameplay-engineer: ×3 XP curve + XP split into Party, #71
-     (worktree, no editor)
-  3. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)
-  4. advisor: brief **encounters + dungeon pressure (1.5)**, sized for
-     the ×3 curve (fights longer and more tactical, the challenge restored)
-  5. ui-assets (later): the talent screen's new sections sit at the bottom
-     of a long scroll
-  6. Before the rollout (1.3): live numbers in skill descriptions
+  1. Roxton: merge PRs #75 (Loc Audit Lite + after-merge fix) and #76
+     (encounter skills), then run `tools/after-merge.sh`
+  2. gameplay-engineer: **E1** AI roles, telegraphs, encounter groups,
+     elite rooms, #77 (editor, Roxton's session)
+  3. after E1, launched by the advisor in the background, in parallel:
+     **E2** content #78 (content-data) and **E3** dungeon pressure #79
+     (gameplay-engineer, headless)
+  4. after E2 + E3: **E4** bot policy + balance loop #80 (qa-balance,
+     background)
+  5. Roxton: **feel gate 3** (Bloodlust vs Parry) whenever convenient;
+     then the encounters feel gate after E4
+  6. Later: the talent screen's long scroll (ui-assets); live numbers in
+     skill descriptions before the rollout (1.3)
   7. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
