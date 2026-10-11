@@ -59,9 +59,11 @@ decided. After the save freeze line, a swap also needs a save migration
 
 1. `resources/enemies/<id>.tres`.
 2. Name key following the existing `ENEMY_*` pattern.
-3. Register it in `ENCOUNTER_POOLS` in `scripts/dungeon/dungeon_run.gd`
-   (per floor). An enemy that isn't in a pool never spawns; `cultist` and
-   `ogre` are examples of that today.
+3. Give it an `ai_role` and put it in at least one **encounter group**
+   (`resources/encounters/*.tres`, `EncounterGroupData`; see the
+   `design-encounter` skill). An enemy in no group never spawns. When you
+   add or remove a group file, keep `FALLBACK_IDS` in
+   `scripts/data/encounter_group_data.gd` in sync.
 
 ## Verify
 
