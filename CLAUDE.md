@@ -98,7 +98,8 @@ Any system that does not directly serve this loop is out of scope.
   identical upstream, stops on real ones, pulls, prunes, and says when to
   restart Godot.
 - Skills in `.claude/skills/`: `write-brief`, `review-pr`, `add-content`,
-  `smoke-test`. Use them when the task matches.
+  `smoke-test`, `run-tests`, `design-encounter`, `balance-loop`,
+  `feel-gate`. Use them when the task matches.
 - A session-start hook prints the **Now** block and open briefs, and
   `.claude/settings.json` blocks merging and pushing to `main`.
 - The dev cheat panel (debug builds only) is English-only by design
