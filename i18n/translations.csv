@@ -27,7 +27,7 @@ All progress in this dungeon will be lost."
 "UI_KEEP_EXPLORING","Continuar explorando","Keep exploring"
 "UI_TREASURE_GOLD","Você ganhou %d ouro!","You found %d gold!"
 "UI_TREASURE_ITEM","Item encontrado: %s","Item found: %s"
-"UI_REST_DESC","O grupo descansou e recuperou todas as forças.","The party rests and recovers its strength."
+"UI_REST_DESC","O grupo descansa e recupera parte das forças. Os caídos se levantam, e venenos e maldições se dissipam.","The party rests and recovers some of its strength. The fallen get back up, and poisons and curses fade."
 "UI_RUN_COMPLETE","Masmorra concluída!
 O grupo retorna à cidade.","Dungeon cleared!
 The party returns to the city."
@@ -88,7 +88,7 @@ Revived with 25% HP.
 "EVT_FOUNTAIN_DESC","Uma fonte cristalina brilha com luz suave. Beber dela?","A crystal fountain glows with soft light. Drink from it?"
 "EVT_FOUNTAIN_OPT1","Beber","Drink"
 "EVT_FOUNTAIN_OPT2","Ignorar","Ignore"
-"EVT_FOUNTAIN_R","O grupo é completamente curado!","The party is fully healed!"
+"EVT_FOUNTAIN_R","A água fresca alivia os ferimentos e lava o veneno do sangue.","The cool water soothes the party's wounds and washes the poison away."
 "EVT_MERCHANT_TITLE","Mercador Errante","Wandering Merchant"
 "EVT_MERCHANT_DESC","Um velho mercador oferece uma poção de cura por 30 ouro.","An old merchant offers a healing potion for 30 gold."
 "EVT_MERCHANT_OPT1","Comprar (30 ouro)","Buy (30 gold)"
