@@ -421,3 +421,27 @@ over; the docs and the session-start hook make that cheap. Roxton chose to
 skip generic Godot skill packs for now; project-specific skills are
 preferred.
 
+---
+
+## 2026-10-11 — Feel gate 3, E1 review (PR #81)
+
+**D-040 · Feel gate 3 passed: the Warrior prototype is done.**
+Roxton played Bloodlust and Parry. Holding Rage versus spending it "felt a
+decision"; both effects were noticeable; the talent screen "was okay",
+with nothing to change now. The Warrior slice (1/3, 2a, 2b, 3/3) is
+complete. Rolling talents out to other classes (1.3) waits until
+encounters (E1–E4) give fights room for skills to matter (D-028).
+
+**D-041 · E1 calls (accepted).**
+- Elite groups exist for F2–F4 only, matching where elite rooms appear.
+- Encounter groups load by scanning `resources/encounters/` (handling the
+  `.tres.remap` names in exports), with a hardcoded `FALLBACK_IDS` list
+  behind it. E2 keeps that list in sync, and a test enforces it.
+- Elite placement could fall back to the required path to the stairs on
+  cramped floors; E3 makes elites strictly optional.
+- The bot needed a two-line change to enter elite rooms; E4 gives it a
+  real elite policy.
+- The bot's first numbers after E1 (20 campaigns): 85% beat D4; D4 stuck
+  15%; 7.4–8.8 combat minutes per dungeon. Difficulty is up (Smash hit
+  22 per hero on F3); E4 tunes it.
+

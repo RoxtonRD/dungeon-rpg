@@ -27,21 +27,17 @@ back after weeks away, this is the only thing you need to read.*
   stay short, and the run is ~6–9 min of combat per dungeon.
 - **Level curve decided:** A at ×3 XP (D-036).
 - **Encounters v3** (D-038), briefed as E1–E4; art direction D-037.
+- **Feel gate 3 passed** (D-040): the Warrior prototype is complete.
 - **Next up:**
-  1. Roxton: merge PRs #75 (Loc Audit Lite + after-merge fix) and #76
-     (encounter skills), then run `tools/after-merge.sh`
-  2. gameplay-engineer: **E1** AI roles, telegraphs, encounter groups,
-     elite rooms, #77 (editor, Roxton's session)
-  3. after E1, launched by the advisor in the background, in parallel:
-     **E2** content #78 (content-data) and **E3** dungeon pressure #79
-     (gameplay-engineer, headless)
-  4. after E2 + E3: **E4** bot policy + balance loop #80 (qa-balance,
-     background)
-  5. Roxton: **feel gate 3** (Bloodlust vs Parry) whenever convenient;
-     then the encounters feel gate after E4
-  6. Later: the talent screen's long scroll (ui-assets); live numbers in
-     skill descriptions before the rollout (1.3)
-  7. Roxton: branch protection on `main` (require PR + both CI checks)
+  1. Roxton: merge PR #81 (E1, approved) and this docs PR; run
+     `tools/after-merge.sh`
+  2. advisor: launch **E2** content #78 and **E3** dungeon pressure #79 as
+     background agents (in parallel)
+  3. advisor: after E2 + E3, launch **E4** bot policy + balance loop #80
+  4. Roxton: **encounters feel gate** after E4
+  5. Later: the talent screen's long scroll (ui-assets); live numbers in
+     skill descriptions; then the **talent rollout to other classes (1.3)**
+  6. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---
@@ -114,7 +110,7 @@ unknown.
 | Step | What | Owner |
 |---|---|---|
 | 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
-| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); ✅ **2a** talents logic + data (#47 → PR #51); ✅ **2b** talent screen (#52 → PR #54); ✅ **3/3** Backstab synergy + Bloodlust + Parry + `swap_skill` (#62 → PR #65). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
+| 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); ✅ **2a** talents logic + data (#47 → PR #51); ✅ **2b** talent screen (#52 → PR #54); ✅ **3/3** (feel gate 3 passed, D-040) Backstab synergy + Bloodlust + Parry + `swap_skill` (#62 → PR #65). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
 | 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
