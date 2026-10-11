@@ -351,7 +351,7 @@ static func _resolve_room(
 				d["potions_used"] += int(res["potions"])
 				match int(res["result"]):
 					CombatState.Result.VICTORY:
-						_award_xp(heroes, int(res["xp"]))
+						_award_xp(int(res["xp"]))
 						room.cleared = true
 						return true
 					CombatState.Result.DEFEAT:
@@ -402,22 +402,11 @@ static func _rest_if_needed(
 	rest_rooms.erase(nearest)
 
 
-## Splits a victory's XP across the party the way the game does. The rule
-## lives only in UI code, so it is mirrored here (tech debt): source is
-## scripts/combat/combat_screen.gd, _show_end_panel(), lines 721-737. Each hero
-## gets total / party size (integer division); a downed hero gets half of that
-## and stays downed. `xp_total` is scaled by `xp_mult` first (what-if only).
-static func _award_xp(heroes: Array[Hero], xp_total: int) -> void:
-	xp_total = roundi(float(xp_total) * xp_mult)
-	var xp_share := xp_total / maxi(1, heroes.size())
-	for h in heroes:
-		var was_down := not h.is_alive()
-		var xp_award := xp_share
-		if was_down:
-			xp_award /= 2
-		Party.award_xp(h, xp_award)
-		if was_down:
-			h.hp = 0
+## Awards a victory's XP through the game's own split rule
+## (Party.distribute_combat_xp). `xp_total` is scaled by `xp_mult` first
+## (what-if only).
+static func _award_xp(xp_total: int) -> void:
+	Party.distribute_combat_xp(roundi(float(xp_total) * xp_mult))
 
 
 # ── Fights and potions ────────────────────────────────────────────────────────
@@ -611,15 +600,18 @@ static func report(batches: Array, seed_value: int, build_name: String, command:
 		"- **Sample:** %d campaigns per XP multiplier, each dungeons 1-4 with one party" % n
 	)
 	lines.append("- **Party:** %s, level 1, starter items" % ", ".join(PARTY))
-	lines.append(
-		(
+	(
+		lines
+		. append(
 			(
-				"- **XP:** real, split as the game does (share = total / 4, half for downed "
-				+ "heroes; mirrored from `combat_screen.gd`). The tables below are for "
-				+ "**x%s XP**; the what-if section compares the multipliers (bot only, the "
-				+ "game is untouched)"
+				(
+					"- **XP:** real, split by `Party.distribute_combat_xp` (share = total / 4, half for downed "
+					+ "heroes). The tables below are for "
+					+ "**x%s XP**; the what-if section compares the multipliers (bot only, the "
+					+ "game is untouched)"
+				)
+				% _mult_label(main_mult)
 			)
-			% _mult_label(main_mult)
 		)
 	)
 	lines.append(

@@ -125,10 +125,14 @@ func clear_statuses() -> void:
 
 # ── XP & leveling ─────────────────────────────────────────────────────────────
 
+## Level curve A at x3 XP (D-036): the old base of 20 divided by 3, so the party
+## reaches level ~10 at the final boss. Enemy xp_reward values are unchanged.
+const XP_CURVE_BASE: float = 20.0 / 3.0
 
-## Verbatim from prototype party.js: floor(20 * level^1.5).
+
+## floor(XP_CURVE_BASE * level^1.5): XP needed to go from `level` to the next.
 func xp_for_next(level: int) -> int:
-	return floori(20.0 * pow(level, 1.5))
+	return floori(XP_CURVE_BASE * pow(level, 1.5))
 
 
 ## Adds XP and triggers level-ups while the threshold is met. Returns every
@@ -146,6 +150,34 @@ func award_xp(hero: Hero, amount: int) -> Array[SkillData]:
 		# Discard any leftover XP so the UI never shows "ready to level" at cap.
 		hero.xp = 0
 	return unlocked
+
+
+## Splits a victory's XP across the party and awards it. Each hero gets
+## total / party size (integer division); a downed hero gets half of that and
+## stays downed (XP must not revive anyone). XP is split rather than paid in
+## full to every hero: full pay made a 4-hero party level ~4x too fast.
+## Returns {Hero: {"xp": int, "levels_gained": int, "unlocked": Array[SkillData],
+## "mp_gained": int}} in party order, for the end panel's messages.
+func distribute_combat_xp(total_xp: int) -> Dictionary:
+	var results := {}
+	var xp_share := total_xp / maxi(1, heroes.size())
+	for h in heroes:
+		var was_down := not h.is_alive()
+		var xp_award := xp_share
+		if was_down:
+			xp_award /= 2
+		var prev_level := h.level
+		var prev_bonus_mp := h.bonus_mp
+		var unlocked: Array[SkillData] = award_xp(h, xp_award)
+		if was_down:
+			h.hp = 0
+		results[h] = {
+			"xp": xp_award,
+			"levels_gained": h.level - prev_level,
+			"unlocked": unlocked,
+			"mp_gained": h.bonus_mp - prev_bonus_mp,
+		}
+	return results
 
 
 ## Performs a single level-up: +1 level, +1 SP (or converted to MP; talent
