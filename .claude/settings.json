@@ -20,6 +20,7 @@
       "Bash(tools/format.sh *)",
       "Bash(tools/test.sh *)",
       "Bash(tools/sim.sh *)",
+      "Bash(tools/after-merge.sh *)",
       "Bash(python .claude/hooks/*)",
       "mcp__godot-ai__editor_state",
       "mcp__godot-ai__logs_read",

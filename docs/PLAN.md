@@ -27,9 +27,8 @@ back after weeks away, this is the only thing you need to read.*
   stay short, and the run is ~6–9 min of combat per dungeon.
 - **Level curve decided:** A at ×3 XP (D-036).
 - **Next up:**
-  1. Roxton: merge PR #70 (plugin 4.3.0). Before `git cleanup`, run
-     `git restore addons/godot_ai project.godot` (the same changes are in
-     the PR)
+  1. Roxton: after merging, run **`tools/after-merge.sh`** in the main
+     checkout (it replaces `git cleanup`; `--dry-run` previews)
   2. gameplay-engineer: ×3 XP curve + XP split into Party, #71
      (worktree, no editor)
   3. Roxton: **feel gate 3**: Bloodlust vs Parry (hold Rage or spend it?)

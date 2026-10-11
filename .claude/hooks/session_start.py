@@ -41,7 +41,7 @@ def open_briefs() -> str:
              "--json", "number,title,labels",
              "--template",
              '{{range .}}#{{.number}} {{.title}} [{{range .labels}}{{.name}} {{end}}]\n{{end}}'],
-            cwd=root, capture_output=True, text=True, timeout=8,
+            cwd=root, capture_output=True, text=True, encoding="utf-8", timeout=8,
         )
     except (OSError, subprocess.TimeoutExpired):
         return "(could not reach GitHub — run `gh issue list` manually)"
