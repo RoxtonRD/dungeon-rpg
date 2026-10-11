@@ -429,6 +429,15 @@ static func format_statuses(statuses: Array) -> String:
 			s += ", "
 		if st.kind == CombatStatus.Kind.BARRIER:
 			s += TranslationServer.translate("UI_STATUS_BARRIER")
+		elif st.kind == CombatStatus.Kind.CHARGING:
+			# Names the threat; the wind-up has no countdown worth showing.
+			s += (
+				"%s: %s"
+				% [
+					TranslationServer.translate("UI_POPUP_CHARGING"),
+					TranslationServer.translate(st.source_name),
+				]
+			)
 		else:
 			# source_name is a skill display_name, i.e. a translation key.
 			s += "%s (%d)" % [TranslationServer.translate(st.source_name), st.duration]

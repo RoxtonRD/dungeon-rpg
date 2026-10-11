@@ -20,5 +20,6 @@ xp_reward = 40
 gold_min = 25
 gold_max = 40
 is_boss = true
+ai_role = 2
 skills = Array[ExtResource("3_e1wln")]([ExtResource("2"), ExtResource("3")])
 portrait = ExtResource("1_p7qnx")

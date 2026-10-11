@@ -6,6 +6,10 @@ extends Resource
 
 ## Which combat row the enemy occupies (front is targeted first).
 enum Role { FRONT, BACK }
+## How the enemy AI picks skills and targets (encounters v3, D-038): BRUTE hits
+## the front row, SKIRMISHER the weakest hero, CASTER prefers area damage and
+## debuffs, SUPPORT heals and buffs its allies before attacking.
+enum AiRole { BRUTE, SKIRMISHER, CASTER, SUPPORT }
 
 ## Stable internal key, e.g. "goblin". Used in save files — never translate.
 @export var id: String = ""
@@ -27,6 +31,8 @@ enum Role { FRONT, BACK }
 
 @export_group("Behaviour & Art")
 @export var is_boss: bool = false
+## Drives targeting and skill preference in CombatState (see AiRole).
+@export var ai_role: AiRole = AiRole.BRUTE
 ## Skills the enemy AI may choose from.
 @export var skills: Array[SkillData] = []
 ## Hand-drawn portrait. Left empty in v1 — the UI shows a placeholder.

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://b3ro7s5nrmu85" path="res://assets/portraits/enemies/Ogre.png" id="1_p7f16"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_crush.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/skills/enemy/e_rage.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/skills/enemy/e_smash.tres" id="4"]
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_o10hs"]
 
 [resource]
@@ -17,5 +18,6 @@ spd = 3
 xp_reward = 18
 gold_min = 8
 gold_max = 15
-skills = Array[ExtResource("3_o10hs")]([ExtResource("2"), ExtResource("3")])
+ai_role = 0
+skills = Array[ExtResource("3_o10hs")]([ExtResource("2"), ExtResource("3"), ExtResource("4")])
 portrait = ExtResource("1_p7f16")

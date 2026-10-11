@@ -73,13 +73,16 @@ static func _boss_weights(dungeon_level: int) -> Array:
 	return [0.0, maxf(0.10, 0.55 - 0.08 * d), 0.35 + 0.03 * d, 0.10 + 0.05 * d]
 
 
-## Rolls a finished fight's drops. Boss → 1 guaranteed from the boss pool; a
-## common fight → DROP_CHANCE for 1. Returns item ids (may be empty).
-static func roll_drops(dungeon_level: int, is_boss: bool) -> Array[String]:
+## Rolls a finished fight's drops. Boss → 1 guaranteed from the boss pool; an
+## elite fight → 1 guaranteed at the depth's normal tier odds; a common fight →
+## DROP_CHANCE for 1. Returns item ids (may be empty).
+static func roll_drops(dungeon_level: int, is_boss: bool, is_elite: bool = false) -> Array[String]:
 	var out: Array[String] = []
 	var id := ""
 	if is_boss:
 		id = _roll_one(_boss_weights(dungeon_level))
+	elif is_elite:
+		id = _roll_one(_tier_weights(dungeon_level))
 	elif randf() < DROP_CHANCE:
 		id = _roll_one(_tier_weights(dungeon_level))
 	if id != "":

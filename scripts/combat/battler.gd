@@ -67,6 +67,9 @@ func set_hp(value: int) -> void:
 		hero.hp = clamped
 	else:
 		enemy_hp = clamped
+		# A dead enemy's wind-up is lost with it.
+		if clamped == 0:
+			clear_charge()
 
 
 func is_alive() -> bool:
@@ -130,6 +133,26 @@ func has_taunt() -> bool:
 		if st.taunt:
 			return true
 	return false
+
+
+## The wind-up this enemy is in the middle of, or null.
+func charge_status() -> CombatStatus:
+	for st in statuses:
+		if st.kind == CombatStatus.Kind.CHARGING:
+			return st
+	return null
+
+
+## Cancels any wind-up (the enemy died).
+func clear_charge() -> void:
+	for i in range(statuses.size() - 1, -1, -1):
+		if statuses[i].kind == CombatStatus.Kind.CHARGING:
+			statuses.remove_at(i)
+
+
+## Current HP as a fraction of max HP (0..1).
+func hp_fraction() -> float:
+	return float(get_hp()) / float(maxi(1, max_hp))
 
 
 ## Pops the first barrier status off, returning true if one was consumed.

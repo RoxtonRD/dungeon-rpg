@@ -46,6 +46,7 @@ const STATUS_COLORS := {
 	CombatStatus.Kind.DOT: Color(0.6, 0.92, 0.25),
 	CombatStatus.Kind.BARRIER: Color(0.62, 0.7, 1.0),
 	CombatStatus.Kind.REGEN: Color(0.5, 1.0, 0.55),
+	CombatStatus.Kind.CHARGING: Color(1.0, 0.45, 0.3),
 }
 const TAUNT_COLOR := Color(1.0, 0.62, 0.25)
 
@@ -132,11 +133,13 @@ func _bootstrap_if_needed() -> void:
 
 ## External entry point. Call after add_child(combat_scene) and before
 ## _ready's deferred bootstrap fires.
-func setup(heroes: Array[Hero], enemies: Array[EnemyData], loot_level: int = 1) -> void:
+func setup(
+	heroes: Array[Hero], enemies: Array[EnemyData], loot_level: int = 1, elite: bool = false
+) -> void:
 	if state != null:
 		return
 	_loot_level = loot_level
-	state = CombatState.build(heroes, enemies)
+	state = CombatState.build(heroes, enemies, elite)
 	# Swap to the boss background when the encounter contains a boss.
 	if _encounter_has_boss():
 		background.texture = BG_BOSS
@@ -291,7 +294,12 @@ func _show_banner(caster: Battler, skill: SkillData) -> void:
 	if _banner_tween != null and _banner_tween.is_valid():
 		_banner_tween.kill()
 	var is_enemy := caster.side == Battler.Side.ENEMY
-	action_banner_label.text = "%s — %s" % [caster.display_name(), tr(skill.display_name)]
+	if CombatState.is_wind_up(skill):
+		action_banner_label.text = (
+			tr("UI_TELEGRAPH") % [caster.display_name(), tr(skill.display_name)]
+		)
+	else:
+		action_banner_label.text = "%s — %s" % [caster.display_name(), tr(skill.display_name)]
 	action_banner_label.add_theme_color_override(
 		"font_color", BANNER_ENEMY_TEXT if is_enemy else BANNER_HERO_TEXT
 	)
@@ -334,6 +342,8 @@ func _status_popup_text(st: CombatStatus) -> String:
 			return tr(st.dot_popup_key) % st.dot_damage
 		CombatStatus.Kind.REGEN:
 			return tr("UI_POPUP_REGEN") % st.heal_per_turn
+		CombatStatus.Kind.CHARGING:
+			return tr("UI_POPUP_CHARGING")
 	var lines: PackedStringArray = []
 	if st.taunt:
 		lines.append(tr("UI_POPUP_TAUNT"))
@@ -733,8 +743,9 @@ func _show_end_panel() -> void:
 		if _encounter_has_boss() and randf() < BOSS_TOME_DROP_CHANCE:
 			GameState.add_item("tome_sp")
 			lines.append(tr("UI_TOME_DROP") % _tome_display_name())
-		# Depth-scaled loot: a chance on common fights, guaranteed from bosses.
-		for drop_id in Loot.roll_drops(_loot_level, _encounter_has_boss()):
+		# Depth-scaled loot: a chance on common fights, guaranteed from bosses
+		# and elites.
+		for drop_id in Loot.roll_drops(_loot_level, _encounter_has_boss(), state.elite):
 			GameState.add_item(drop_id)
 			var di := load(ITEM_DIR + drop_id + ".tres") as ItemData
 			lines.append(tr("UI_DROP_ITEM") % (tr(di.display_name) if di != null else drop_id))

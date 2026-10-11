@@ -396,7 +396,50 @@ func start_fight(enemy_ids: Array) -> String:
 	return "Fight started on floor %d: %s." % [run.current_floor + 1, ", ".join(enemy_ids)]
 
 
+## Starts combat against the authored encounter group `group_id` (e.g.
+## "f2_ogre_bruiser"), scaled for the current dungeon and floor. An elite group
+## fights as an elite room does: bonus XP and gold, a guaranteed drop.
+func start_encounter(group_id: String) -> String:
+	if not enabled:
+		return _disabled()
+	var map := _dungeon_map()
+	if map == null or map.run == null:
+		return "Error: not on the dungeon map. Call start_run() and wait for the map to load."
+	if _in_combat():
+		return "Error: a fight is already running."
+	var wanted := group_id.strip_edges()
+	var group: EncounterGroupData = null
+	for candidate in EncounterGroupData.all():
+		if candidate.id == wanted:
+			group = candidate
+	if group == null:
+		return "Error: unknown encounter group '%s'. Valid: %s." % [wanted, list_encounters()]
+	var run: DungeonRun = map.run
+	var encounter: Array[EnemyData] = []
+	for id in group.members:
+		encounter.append(run._scale_enemy(run._load_enemy(id), run.current_floor + 1))
+	map._start_combat(encounter, group.elite)
+	return (
+		"Encounter %s started on floor %d: %s%s."
+		% [
+			group.id,
+			run.current_floor + 1,
+			", ".join(group.members),
+			" (elite)" if group.elite else ""
+		]
+	)
+
+
 # ── Lists (for the panel's pickers) ───────────────────────────────────────────
+
+
+## Every encounter group id, sorted.
+func list_encounters() -> Array[String]:
+	var ids: Array[String] = []
+	for group in EncounterGroupData.all():
+		ids.append(group.id)
+	ids.sort()
+	return ids
 
 
 ## Every enemy id in resources/enemies/, sorted.
