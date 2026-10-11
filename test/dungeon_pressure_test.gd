@@ -96,15 +96,18 @@ func test_rest_caps_at_max() -> void:
 	assert_int(cleric.mp).is_equal(cleric.max_mp())
 
 
-func test_rest_revives_downed_heroes_at_a_quarter_hp() -> void:
+func test_rest_revives_downed_heroes_at_a_quarter_hp_and_mp() -> void:
 	var warrior := _hero(WARRIOR)
 	var mage := _hero(MAGE)
 	warrior.hp = 0
 	mage.hp = 0
+	mage.mp = 0
 	_use_party([warrior, mage])
 	DungeonRun.new().resolve_rest()
 	assert_int(warrior.hp).is_equal(roundi(warrior.max_hp() * 0.25))
 	assert_int(mage.hp).is_equal(roundi(mage.max_hp() * 0.25))
+	assert_int(mage.mp).is_equal(roundi(mage.max_mp() * 0.25))
+	assert_int(mage.mp).is_greater(0)
 	assert_bool(warrior.is_alive()).is_true()
 
 
@@ -192,6 +195,39 @@ func test_every_floor_meets_its_fight_quota() -> void:
 				else DungeonRoom.RoomType.STAIRS
 			)
 			assert_int(_count(rooms, goal)).is_equal(1)
+
+
+## The quota turns rooms into fights EMPTY first, then EVENT, then TREASURE,
+## and REST only when none of those is left: if it converted a room of one kind,
+## no room of an earlier kind may be left unconverted.
+func test_quota_converts_rest_rooms_last() -> void:
+	var order: Array = DungeonRun.QUOTA_CONVERT_ORDER
+	for floor_index in DungeonRun.NUM_FLOORS:
+		for i in GENERATED_FLOORS:
+			var rooms := DungeonRun._rolled_floor(floor_index)
+			var before := {}
+			for room in rooms.values():
+				before[room.pos] = room.kind
+			DungeonRun._apply_fight_quota(rooms, floor_index)
+			# Index in `order` of the latest kind converted, and of the earliest
+			# kind left as it was. The start room is never converted.
+			var latest_converted := -1
+			var earliest_left := order.size()
+			for room in rooms.values():
+				var idx := order.find(before[room.pos])
+				if idx == -1 or room.pos == Vector2i.ZERO:
+					continue
+				if room.kind == DungeonRoom.RoomType.COMBAT:
+					latest_converted = maxi(latest_converted, idx)
+				elif room.kind == before[room.pos]:
+					earliest_left = mini(earliest_left, idx)
+			var message := (
+				"floor %d: converted kind #%d of %s while kind #%d was left"
+				% [floor_index + 1, latest_converted, order, earliest_left]
+			)
+			assert_int(latest_converted).override_failure_message(message).is_less_equal(
+				earliest_left
+			)
 
 
 func test_generated_elites_are_never_on_the_only_route() -> void:
