@@ -32,7 +32,7 @@ const BOSS_ENCOUNTERS := [
 ## s=0.35), so deeper dungeons kept getting *easier*. A constant growth factor
 ## keeps each dungeon a fixed step harder than the last.
 const FLOOR_SCALE := 0.15
-const DUNGEON_GROWTH := 1.5
+const DUNGEON_GROWTH := 1.4
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.

@@ -1,201 +1,138 @@
-# Sim: campaign bot
+# Balance: encounters E4 (#80)
 
-Generated output: `tools/sim.sh campaign --runs 100 --seed 1 --xp-mult 1 --out docs/reports/balance-encounters.md`. Don't edit by hand.
+The bot learned the elite and telegraph choices, then the balance loop ran
+its 6 iterations against the encounter targets (D-034, D-036, D-038).
 
-- **Seed:** 1 (every XP multiplier is reseeded with it)
-- **Sample:** 100 campaigns per XP multiplier, each dungeons 1-4 with one party
-- **Party:** warrior, cleric, rogue, mage, level 1, starter items
-- **XP:** real, split by `Party.distribute_combat_xp` (share = total / 4, half for downed heroes). The tables below are for **x1.0 XP**; the what-if section compares the multipliers (bot only, the game is untouched)
-- **Skill points:** spent in the city. The Warrior by the `executioner` build order (#56); the others upgrade their skills in class order, one skill at a time
-- **Gear:** best droppable item one tier behind the depth, reset in the city (D1 none, D2 common, D3 uncommon, D4 rare)
-- **Policy:** every reachable room in BFS order, stairs last, boss last; fights by balance_sim `_player_turn` with HP/MP carried over, after the telegraph answers (see Telegraphs); elite rooms taken or skipped by party HP (see Elite rooms); events and shrines left; full heal in the city
-- **Potions:** a hero under 35% HP drinks the best heal potion when no living healer can afford a heal skill; a Mage, Cleric or Alchemist under 20% MP drinks a mana potion. Bought in the city with up to 50% of the gold on heal potions, then 25% on mana potions, from the market's limited stock
-- **Rest rooms:** remembered, and used only when party HP is under 60% (the bot walks back to the nearest unused one; the moves are counted)
-- **Wipes:** the game's TPK rule (revive at 25% HP, -20% gold, market restocked), then the same dungeon again on a new layout. Wipe number 3 in one dungeon ends the campaign as **stuck**
-- **Rounds** count from 1 here (a fight won in its first round is 1). The talent-build report (#56) counts from 0: add 1 to compare.
+**Conditions for every number below:**
+- Command: `tools/sim.sh campaign --runs 100 --seed 1 --xp-mult 1`.
+- Party: warrior, cleric, rogue, mage. They start at level 1 with the starter
+  items, the Warrior uses the `tank` build order, and the game's own XP
+  applies (×1 in the bot, D-036 thresholds).
+- Gear: one tier behind the depth (D1 none, D2 common, D3 uncommon, D4 rare).
+- Sample: 100 campaigns of dungeons 1–4, wipes retried. Each iteration
+  replays the same seed.
+- The full generated output for the final state is in
+  [`sim-campaign.md`](sim-campaign.md).
 
-## Headline
+## Final targets table
 
-| Dungeon | Level at boss | Fights | Rounds / fight | Est. minutes | Wipes | Stuck % |
+| Metric | Target | D1 | D2 | D3 | D4 | Met? |
 |---|---|---|---|---|---|---|
-| D1 | 6.0 (4-8) | 14.6 (10-18) | 2.3 (p10 1, p90 3) | 8.4 (5.7-13.0) | 0.77 | 0% |
-| D2 | 8.1 (7-10) | 14.8 (13-19) | 1.9 (p10 1, p90 3) | 8.1 (5.9-10.9) | 0.04 | 0% |
-| D3 | 9.9 (9-10) | 14.5 (12-17) | 2.2 (p10 1, p90 3) | 9.4 (7.5-11.9) | 0.12 | 0% |
-| D4 | 10.0 (10-10) | 13.8 (11-16) | 2.5 (p10 1, p90 4) | 10.2 (7.5-13.5) | 2.12 | 60% |
+| Rounds, normal fight | 3–5 | 2.7 | 2.0 | 2.3 | 2.5 | no |
+| Rounds, elite fight | 5–7 | 3.7 | 3.2 | 3.6 | 3.9 | no |
+| Rounds, boss fight | 8–10 | 6.1 | 6.3 | 7.2 | 8.8 | D4 only |
+| Boss first-try win | 70–85% | 80% | 98% | 99% | 78% | D1, D4 |
+| Wipes per campaign | 0.3–1.5 | 0.90 | 0.02 | 0.01 | 0.33 | **1.26 total: yes** |
+| Stuck (campaign ends) | never | 0% | 0% | 0% | 3% | no (3 of 100) |
+| Level at boss | ≈4 / 6 / 8 / 10 | 6.1 | 8.2 | 9.9 | 10.0 | no (XP, out of scope) |
+| Combat minutes | 8–12 | 11.4 | 11.1 | 12.8 | 14.8 | D1, D2 |
+| Warrior skills per fight | 3+ | 1.6 | 1.6 | 1.7 | 2.0 | no |
+| Warrior top skill | ≤ 50% | slash 70% | slash 62% | slash 63% | slash 46% | D4 only |
 
-Level: mean hero level (lowest-highest single hero) at the boss, from the latest attempt that reached it. Fights and minutes: mean over the campaigns that beat that dungeon (the clearing run only). Wipes: mean per campaign that entered it. Stuck: % of those that wiped out of the dungeon for good. Rounds / fight covers every fight, wiped runs included. Target: 15-20 minutes per dungeon (D-013).
+Rounds count from 1. Elites taken: 690 of 912 met (76%); skipped 222 (24%).
+690 of the 690 taken were won.
 
-## Encounter targets
+## Bot policy (new in `scripts/dev/campaign_bot.gd`)
 
-| Dungeon | Rounds: normal | elite | boss | Boss first-try win | Wipes | Level at boss | Combat min | Warrior skills / fight | Warrior top skill |
-|---|---|---|---|---|---|---|---|---|---|
-| **Target** | 3-5 | 5-7 | 8-10 | 70-85% | 0.3-1.5 / campaign | 4 / 6 / 8 / 10 | 8-12 | 3+ | <= 50% |
-| D1 | 2.2 [1-3] (2079) | 2.9 [2-5] (143) | 2.2 [2-3] (110) | 90% (90/100) | 0.77 | 6.0 | 8.4 | 1.3 | slash 76% |
-| D2 | 1.8 [1-3] (1294) | 2.7 [2-4] (145) | 2.2 [2-3] (102) | 98% (98/100) | 0.04 | 8.1 | 8.1 | 1.3 | slash 63% |
-| D3 | 2.1 [1-3] (1365) | 3.0 [2-5] (153) | 2.7 [2-3] (110) | 90% (90/100) | 0.12 | 9.9 | 9.4 | 1.6 | slash 52% |
-| D4 | 2.3 [1-4] (2855) | 3.3 [2-5] (283) | 4.3 [2-8] (62) | 66% (37/56) | 2.12 | 10.0 | 10.2 | 1.8 | slash 36% |
+- **Elites:** the bot takes an elite room when party HP is at least 70% and
+  nobody is downed. Otherwise it skips the room for good, along with any
+  rooms only reachable through it (44 rooms in total).
+- **Telegraphs:** while an enemy is Charging, the acting hero answers in this
+  order: (1) **kill** the charger if this turn's expected damage can do it;
+  (2) the Warrior uses **Provoke** if the telegraph is single-target; (3)
+  **heal or shield** the threatened heroes (a barrier first, or a heal on
+  a hero under 80% HP). If the hero has no answer, the shared
+  `_player_turn` acts.
 
-**Wipes per campaign: 3.05** (all dungeons, 100 campaigns). Rounds: mean [p10-p90] (fights), every attempt. Boss first-try win: share of the campaigns that reached that boss whose first boss fight was a win. Combat min: clearing run. Warrior: distinct skills per fight he acted in, and his most used skill's share of his skill actions (potions not counted).
+Telegraph answers in the final state (every attempt):
 
-## Elite rooms
-
-| Dungeon | Met | Taken | Skipped | Won | Rooms cut off by a skip |
+| Wind-ups | Landed | Charger killed first | Answer: kill | Provoke | Heal/shield |
 |---|---|---|---|---|---|
-| D1 | 282 | 51% (143/282) | 49% (139/282) | 99% (141/143) | 41 |
-| D2 | 175 | 83% (145/175) | 17% (30/175) | 100% (145/145) | 3 |
-| D3 | 194 | 79% (153/194) | 21% (41/194) | 100% (153/153) | 9 |
-| D4 | 397 | 71% (283/397) | 29% (114/397) | 94% (266/283) | 33 |
-| **All** | 1048 | 69% (724/1048) | 31% (324/1048) | 97% (705/724) | 86 |
+| 679 | 373 | 304 | 299 | 28 | 309 |
 
-Every attempt counted. Policy: take an elite room when party HP is at least 70% and nobody is downed, else skip it for good. Won is out of taken.
+## Changes, one per iteration
 
-## Telegraphs
+Iteration 0 is the baseline with the new bot policy and no data changes.
+Before the policy (elites always fought) the baseline was 3.75 wipes per
+campaign.
 
-| Dungeon | Wind-ups | Landed | Charger killed | Single-target landed | ...on the Warrior | Answer: kill | provoke | heal/shield |
-|---|---|---|---|---|---|---|---|---|
-| D1 | 93 | 35 | 57 | 13 | 8 | 59 | 2 | 14 |
-| D2 | 81 | 22 | 59 | 15 | 10 | 56 | 4 | 23 |
-| D3 | 123 | 47 | 76 | 22 | 21 | 72 | 1 | 46 |
-| D4 | 319 | 228 | 87 | 75 | 37 | 85 | 12 | 185 |
-| **All** | 616 | 332 | 279 | 125 | 76 | 272 | 19 | 268 |
-
-Every attempt counted. Answers are bot actions chosen by the telegraph rule (kill the charger if this turn's expected damage can, else the Warrior Provokes a single-target telegraph, else heal or shield the threatened heroes). A wind-up that is neither landed nor killed ended with the fight.
-
-## Warrior skill use
-
-| Dungeon | Fights | Skills / fight | Top-skill share / fight | Mix |
+| # | Lever | Change | Why | Before → after |
 |---|---|---|---|---|
-| D1 | 2100 | 1.3 | 86% | slash 76%, provoke 18%, execute 3%, cleave 3% |
-| D2 | 1299 | 1.3 | 85% | slash 63%, provoke 24%, execute 11%, cleave 2% |
-| D3 | 1348 | 1.6 | 74% | slash 52%, provoke 26%, execute 19%, cleave 4% |
-| D4 | 2420 | 1.8 | 69% | slash 36%, provoke 32%, execute 25%, cleave 7% |
+| 1 | Boss HP | necromancer 60→150, vampire 48→120, dragon 90→225 (×2.5) | boss fights lasted 2.2–4.3 rounds against 8–10 | boss rounds D1 2.2→3.7, D4 4.3→6.3; wipes 3.05→3.68; D4 boss first-try 66%→31% |
+| 2 | Ogre ATK | 12→9 | the deadliest F4 groups had an ogre in them (D4 `ogre+orc+skeleton_archer` wiped 58% of the time) | wipes 3.68→3.34; that group 58%→36% |
+| 3 | `DUNGEON_GROWTH` | 1.5→1.4 | D4 F4 at ×4.9 against a level-capped party left 72% of campaigns stuck | wipes 3.34→1.03; D4 stuck 72%→0%; D4 boss first-try 37%→81% |
+| 4 | Enemy HP, all | every `max_hp` ×1.5 | normal fights at 1.7–2.3 rounds | normal rounds D1 2.3→2.7, D4 2.0→2.5; wipes 1.03→2.60 |
+| 5 | Enemy ATK/MAG, all | every `atk` and `mag` ×0.75 (rounded) | step 4 pushed wipes out of range | wipes 2.60→0.94; rounds unchanged (D1 2.7→2.8) |
+| 6 | Boss HP | ×1.5 again: dragon 338→507, necromancer 225→338, vampire 180→270 | boss rounds 4.5–6.5; D2–D4 bosses won 89–100% first try | boss rounds D1 4.8→6.1, D4 6.5→8.8; D4 first-try 89%→78%; wipes 0.94→1.26 |
 
-Fights he acted in, every attempt. Top-skill share / fight: the mean, over fights, of his most used skill's share in that fight (a 2-action fight is at least 50%). Mix: share of all his skill actions in that dungeon.
+All enemy numbers are in `resources/enemies/*.tres`, and `DUNGEON_GROWTH`
+is in `scripts/dungeon/dungeon_run.gd`. No hero-side, XP or talent numbers
+changed. The encounter groups are unchanged too, so `FALLBACK_IDS` is
+still in step.
 
-## Deadliest encounters
+## Targets missed, and why
 
-| Encounter | Fights | Wipes | Wipe % | Rounds | Party HP lost / fight |
-|---|---|---|---|---|---|
-| D4 normal: ogre+orc+skeleton_archer | 110 | 60 | 54.5% | 4.4 | 38% |
-| D4 normal: ogre+cultist | 101 | 42 | 41.6% | 3.7 | 32% |
-| D4 normal: orc+cultist+cultist | 112 | 30 | 26.8% | 4.4 | 28% |
-| D4 normal: orc+orc+cultist | 116 | 23 | 19.8% | 4.3 | 20% |
-| D4 normal: orc+orc+skeleton_archer | 108 | 16 | 14.8% | 3.9 | 7% |
-| D4 boss: dragon_hatchling | 23 | 14 | 60.9% | 5.0 | 27% |
-| D1 normal: ogre+cultist | 91 | 13 | 14.3% | 2.2 | 8% |
-| D4 elite: ogre+orc+orc+cultist | 14 | 13 | 92.9% | 4.7 | 76% |
-| D1 normal: orc+cultist+cultist | 90 | 12 | 13.3% | 2.6 | 12% |
-| D1 normal: ogre+orc+skeleton_archer | 82 | 10 | 12.2% | 2.9 | 4% |
-| D1 normal: orc+orc+cultist | 84 | 10 | 11.9% | 2.6 | 9% |
-| D1 normal: orc+orc+skeleton_archer | 99 | 8 | 8.1% | 2.8 | 1% |
-| D4 boss: necromancer+skeleton | 23 | 7 | 30.4% | 3.3 | 17% |
-| D1 boss: dragon_hatchling | 31 | 6 | 19.4% | 2.5 | 12% |
-| D1 normal: bandit+bandit+cultist | 137 | 4 | 2.9% | 2.9 | 9% |
+- **Normal and elite fights are still short (2.0–2.7 and 3.2–3.9 rounds).**
+  Rounds respond weakly to HP: ×1.5 HP gave only ×1.2 rounds, because many
+  fights end on overkill in round 1–2. Reaching 3+ rounds needs about ×1.7
+  more HP, but two other targets push back:
+  - **Combat minutes.** At ~15 fights per dungeon (E3's quota), every
+    0.5 rounds per fight adds about 2.5 combat minutes. D3 and D4 are
+    already at 12.8 and 14.8. **Rounds 3–5 and 8–12 minutes are
+    incompatible at 15 fights per dungeon**: 3 rounds means about 15
+    minutes. One of them has to give: fewer fights per floor (the E3
+    minimums), or a longer minutes target.
+  - **Wipes.** Longer fights mean more damage taken. In step 4, wipes went
+    from 1.03 to 2.60 for +0.4 rounds.
+- **Level curve 6.1 / 8.2 / 9.9 / 10 (target ≈4/6/8/10).** E3 raised fights
+  from ~10 to ~15 per dungeon, and elites pay ×1.5 XP, so ×3 XP now
+  over-levels by about two levels. XP is out of scope for this brief.
+  Step 3 lowered D2–D4 XP slightly, and levels barely moved.
+- **D2 and D3 bosses are won 98–99% of the time, with ~0 wipes.** The party
+  arrives two levels above the design level. Tuning D2–D3 up now would be
+  double-counted once XP is fixed, so I left them alone.
+- **D4: 3 of 100 campaigns stuck,** all at the D4 boss (the dragon wins 49%
+  of its fights).
+- **Warrior 1.6–2.0 skills per fight, Slash 62–70% in D1–D3.** This follows
+  from fight length (2–3 Warrior turns per fight) and from the shared
+  policy, which picks the highest damage score.
 
-The 15 encounters with the most wipes, every attempt: enemy ids in battle order, per dungeon and room kind. HP lost: party HP share before the fight minus after it (a wipe loses everything left).
+## Mechanically fine but boring
 
-## Level curve
+- **Elites are never lost: 690 of 690 won.** With the 70% HP gate, taking
+  an elite is free XP and loot, so the choice is trivial: always take it
+  when healthy. Elite fights are also only 3.2–3.9 rounds. They need more
+  bite (an extra member, or a stronger leader) before skipping one means
+  anything.
+- **D2 and D3 have almost no tension:** 0.02 and 0.01 wipes, and the boss is
+  won 98–99% of the time.
+- **D1 wipes once in 90% of campaigns,** at F3, F4 or the boss. The party
+  enters at level 1, and attrition across 4 floors does the work (the
+  fights that wipe it cost only 2–14% HP). After the wipe the run is
+  retried with the XP kept. For a new player this reads as "the first
+  dungeon always kills you once", which is a feel-gate question.
+- **The Warrior spams Slash.** He averages 1.6 distinct skills per fight in
+  D1–D3, and Cleave is 2–7% of his actions.
+- **A Provoke answer to a telegraph does nothing in the current game.**
+  `CombatState._continue_wind_up` keeps the target chosen at wind-up, so a
+  Provoke cast during the wind-up doesn't pull the hit. In the bot, 142 of
+  186 single-target telegraphs that landed hit the Warrior, but only
+  because he was already taunting at wind-up. The design-encounter skill
+  lists "Provoke it onto the tank" as an answer, so this is a gameplay gap
+  for the advisor to route (combat_state.gd is outside qa-balance's
+  files).
+- **Only two telegraphs exist** (ogre Smash, area; orc warlord Crushing
+  Blow, single-target, elites only). Single-target telegraphs are rare, so
+  the Provoke answer came up only 28 times in 100 campaigns.
 
-| Dungeon | Campaigns in | Level at entry | Level at boss | Warrior SP earned |
-|---|---|---|---|---|
-| D1 | 100 | 1.0 (1-1) | 6.0 (4-8) | 2.8 (2-4) |
-| D2 | 100 | 6.1 (4-8) | 8.1 (7-10) | 3.9 (3-5) |
-| D3 | 100 | 8.3 (7-10) | 9.9 (9-10) | 5.0 (4-5) |
-| D4 | 100 | 9.9 (9-10) | 10.0 (10-10) | 5.0 (5-5) |
+## Suggestions for the advisor
 
-Warrior SP earned: total by the end of that dungeon (talent SP comes at even levels), mean (min-max); it is spent in the city before the next one.
-
-## Run length and attrition
-
-| Dungeon | Fights | Party actions | Enemy actions | Est. minutes | Est. min incl. wiped runs | Room moves | Rests | Potions used | Potions bought | HP % entering boss |
-|---|---|---|---|---|---|---|---|---|---|---|
-| D1 | 14.6 (10-18) | 90.8 (60-136) | 33.4 (10-73) | 8.4 (5.7-13.0) | 15.5 | 54.7 (24-77) | 0.5 (0-3) | 4.6 (2-8) | 1.2 (1-2) | 64% |
-| D2 | 14.8 (13-19) | 86.2 (63-115) | 36.2 (23-53) | 8.1 (5.9-10.9) | 8.5 | 54.7 (37-81) | 0.2 (0-2) | 0.5 (0-3) | 0.6 (0-2) | 68% |
-| D3 | 14.5 (12-17) | 99.8 (79-126) | 44.8 (31-59) | 9.4 (7.5-11.9) | 10.6 | 55.1 (34-83) | 0.4 (0-2) | 1.4 (0-6) | 1.5 (0-4) | 67% |
-| D4 | 13.8 (11-16) | 102.3 (77-135) | 65.8 (42-91) | 10.2 (7.5-13.5) | 17.5 | 51.6 (32-77) | 1.1 (0-3) | 2.9 (0-9) | 3.3 (1-8) | 47% |
-
-Mean (min-max) over the campaigns that beat that dungeon. Actions, moves, rests and potions used are the clearing run's; potions bought are for that run's city visit. Est. minutes = 5 s per party action + 1.5 s per enemy action, combat only: walking, menus, the city and reading events are not counted, so real play is longer. "Incl. wiped runs" adds the combat time of the wiped attempts. HP % entering the boss: party HP / party max HP (downed heroes count 0), over every campaign that reached the boss.
-
-## Wipes
-
-| Dungeon | Campaigns in | Wipes / campaign | 0 wipes | 1 | 2 | 3 (stuck) | At F1 | F2 | F3 | F4 | Boss |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| D1 | 100 | 0.77 | 24 | 75 | 1 | 0 | 0 | 0 | 12 | 55 | 10 |
-| D2 | 100 | 0.04 | 96 | 4 | 0 | 0 | 0 | 0 | 0 | 2 | 2 |
-| D3 | 100 | 0.12 | 88 | 12 | 0 | 0 | 0 | 0 | 0 | 2 | 10 |
-| D4 | 100 | 2.12 | 17 | 14 | 9 | 60 | 0 | 0 | 2 | 188 | 22 |
-
-Wipes counted over every attempt at that dungeon; the "At" columns say where the party died. Campaigns finished (dungeon 4 beaten): 40 of 100; stuck: 60. Rooms left after 10 fled or stalled fights in a row: 0.
-
-## Warrior talents after dungeon 4
-
-| Talents | Campaigns |
-|---|---|
-| slash_rending, cleave_heavy, provoke_iron_wall, execute_sunder+ | 40 |
-
-`+` = boosted. Bought in the city, so the dungeon 4 boss is fought without
-the SP earned inside dungeon 4.
-
-## XP what-if
-
-`--xp-mult` multiplies the XP awarded after each victory, in the bot only: the game's numbers are untouched. Each row replays 100 campaigns from the same seed with the same policy, so the rows differ only by XP.
-
-**Level 9-10 at the dungeon 4 boss: x1.0 XP** (mean hero level 10.0, over 56 campaigns that reached it).
-
-### Level at each boss
-
-| XP x | D1 | D2 | D3 | D4 |
-|---|---|---|---|---|
-| x1.0 | 6.0 | 8.1 | 9.9 | 10.0 |
-
-### Warrior SP earned by the end of each dungeon
-
-| XP x | D1 | D2 | D3 | D4 |
-|---|---|---|---|---|
-| x1.0 | 2.8 | 3.9 | 5.0 | 5.0 |
-
-### Wipes per campaign that entered the dungeon
-
-| XP x | D1 | D2 | D3 | D4 |
-|---|---|---|---|---|
-| x1.0 | 0.77 | 0.04 | 0.12 | 2.12 |
-
-### Stuck (campaign ended in that dungeon)
-
-| XP x | D1 | D2 | D3 | D4 |
-|---|---|---|---|---|
-| x1.0 | 0% | 0% | 0% | 60% |
-
-### Est. minutes per dungeon (clearing run)
-
-| XP x | D1 | D2 | D3 | D4 |
-|---|---|---|---|---|
-| x1.0 | 8.4 | 8.1 | 9.4 | 10.2 |
-
-### Rounds per fight
-
-| XP x | D1 | D2 | D3 | D4 |
-|---|---|---|---|---|
-| x1.0 | 2.3 | 1.9 | 2.2 | 2.5 |
-
-### Campaigns finished
-
-| XP x | Beat dungeon 4 |
-|---|---|
-| x1.0 | 40 of 100 |
-
-## Limitations
-
-- Loot is out: gear is the model above, and treasure gold and items are taken
-  but never equipped or sold. Only the market's potions are bought.
-- Potions: only heal and mana potions are used. Revive items and shrines are
-  left unused, and no potion is bought for dungeons the party never reaches.
-- The market shelf is the game's own limited random stock, restocked when a
-  run ends, so the potion supply varies by campaign.
-- Skill points are spent only in the city, so the SP earned inside a
-  dungeon waits for the next visit.
-- Events and shrines are always left, so their risks and rewards are out.
-- A wipe retries on a fresh layout, as the game starts a new run after a TPK.
-- Levels at the dungeon 4 boss only count campaigns that got there, so a
-  multiplier that sticks fewer campaigns earlier is not directly comparable.
-
+1. Decide between rounds 3–5 and 8–12 combat minutes at 15 fights per
+   dungeon. Either lower the E3 fight minimums (about 10 fights fit both)
+   or raise the minutes target. Then a further enemy HP ×1.5 with ATK
+   ×0.85 should land normal fights at about 3 rounds.
+2. Revisit the XP divisor (×3 → about ×2) now that E3 added fights. It
+   would also make D2–D3 tense again without enemy changes.
+3. Make Provoke retarget a Charging single-target telegraph (a
+   gameplay-engineer task), or drop it from the list of answers.
+4. Give elite groups more bite so skipping one is a real choice.

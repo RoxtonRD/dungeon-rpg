@@ -11,10 +11,10 @@
 script = ExtResource("1")
 id = "dragon_hatchling"
 display_name = "ENEMY_DRAGON_HATCHLING"
-max_hp = 90
-atk = 12
+max_hp = 507
+atk = 9
 def = 6
-mag = 10
+mag = 8
 spd = 6
 xp_reward = 55
 gold_min = 30

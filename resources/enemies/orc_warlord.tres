@@ -9,8 +9,8 @@
 script = ExtResource("1")
 id = "orc_warlord"
 display_name = "ENEMY_ORC_WARLORD"
-max_hp = 65
-atk = 11
+max_hp = 98
+atk = 8
 def = 5
 spd = 4
 xp_reward = 32
