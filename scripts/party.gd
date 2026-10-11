@@ -117,10 +117,20 @@ func tick_statuses() -> Array[String]:
 	return lines
 
 
-## Drops every hero's statuses — used by rest rooms, run end and TPK.
+## Drops every hero's statuses — used by run end and TPK.
 func clear_statuses() -> void:
 	for h in heroes:
 		h.statuses.clear()
+
+
+## Drops every hero's statuses whose kind is in `kinds` (CombatStatus.Kind
+## values) and keeps the rest — rest rooms clear debuffs and DoTs, the Fountain
+## only DoTs.
+func clear_status_kinds(kinds: Array) -> void:
+	for h in heroes:
+		for i in range(h.statuses.size() - 1, -1, -1):
+			if (h.statuses[i] as CombatStatus).kind in kinds:
+				h.statuses.remove_at(i)
 
 
 # ── XP & leveling ─────────────────────────────────────────────────────────────

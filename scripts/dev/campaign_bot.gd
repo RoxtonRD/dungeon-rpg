@@ -377,7 +377,7 @@ static func _resolve_room(
 	return true
 
 
-## Rests the party in `room` (full HP/MP, statuses cleared).
+## Rests the party in `room` (see DungeonRun.resolve_rest).
 static func _rest(run: DungeonRun, room: DungeonRoom, d: Dictionary) -> void:
 	run.resolve_rest()
 	d["rests"] += 1
