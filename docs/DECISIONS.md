@@ -491,3 +491,34 @@ Next round:
   wins only 80–90% (E4: 690/690), D1 wipes ≤ 0.3, and all bosses at
   70–85%.
 
+---
+
+## 2026-10-12 — E5 results, dungeon length, the next priority
+
+**D-044 · A dungeon runs ~23 minutes, and that's accepted (revises
+D-013's 15–20 target).**
+After E5a (#92) and E5b (#94):
+- normal fights last ~4.3 rounds and elites 5–7;
+- the Warrior uses 2.4–2.9 skills per fight from D2 on, with no skill
+  above 50%;
+- the level curve is within ±1 of plan (4.6 / 6.6 / 8.7 / 10).
+
+Roxton timed a full dungeon at about **23 minutes**, said fight length
+"feels right", and that stopping anytime "feels good" (the game saves
+after every room). So the per-dungeon target becomes **~20–25 minutes**,
+and combat minutes stop being a balance target.
+
+What remains is structural. One growth rate can't make D1 gentle, D2/D3
+tense and D4 beatable at once, and elites can't get harder without
+hurting D1. Hence **E6a (#95)**, per-dungeon and elite multiplier tables,
+then **E6b (#96)** to tune them (also the orc's brute identity).
+
+**D-045 · Next big lever: the talent rollout to the other five classes
+(1.3).**
+Roxton: "combat for characters other than the warrior feels a little
+repetitive". The Warrior has a resource, forks, a passive, a reaction and
+a synergy; the others still play like v2. The order is **Rogue (Energy)**,
+then Mage, Cleric, Conjurer, Alchemist. Each class gets a design pass with
+Roxton (forks, passive, reaction), then one build brief. Live numbers in
+descriptions (#97) go first, so the new content is written as templates.
+

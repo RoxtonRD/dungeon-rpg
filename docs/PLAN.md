@@ -30,14 +30,15 @@ back after weeks away, this is the only thing you need to read.*
 - **Feel gate 3 passed** (D-040): the Warrior prototype is complete.
 - **Encounters E1–E3 merged** (D-041, D-042); E4 (tuning) is running.
 - **Feel gate 4 (encounters) passed** (D-043): fewer, longer fights.
+- **E5 merged** (#92, #94); a dungeon runs ~23 min, accepted (D-044).
 - **Next up:**
-  1. gameplay-engineer: **E5a** fight quota ~9–10 + Provoke vs telegraph
-     fix #89 (background, running)
-  2. qa-balance: **E5b** balance loop for longer fights #90 (background,
-     after E5a)
-  3. Roxton: a quick re-check of fight length after E5b
-  4. Then: the talent screen's long scroll (ui-assets); live numbers in
-     skill descriptions; the **talent rollout to the other classes (1.3)**
+  1. Background (advisor): **E6a** difficulty tables #95 → **E6b**
+     tuning #96; **live skill descriptions** #97 (in parallel)
+  2. Roxton + advisor: **design the Rogue's talents** (Energy, forks,
+     passive, reaction), the first class of the rollout (D-045)
+  3. Then the Rogue build brief, and the other classes in order: Mage,
+     Cleric, Conjurer, Alchemist
+  4. ui-assets (when convenient): the talent screen's long scroll
   5. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
@@ -112,7 +113,7 @@ unknown.
 |---|---|---|
 | 1.1 | ✅ **Combat v3 design**: `docs/design/combat-v3.md`; direction agreed (D-013) | advisor + Roxton |
 | 1.2 | **Vertical slice**: the Warrior rebuilt under v3, in parts, each ending with Roxton playing it: ✅ **1/3** Rage + cooldowns (#43); ✅ **2a** talents logic + data (#47 → PR #51); ✅ **2b** talent screen (#52 → PR #54); ✅ **3/3** (feel gate 3 passed, D-040) Backstab synergy + Bloodlust + Parry + `swap_skill` (#62 → PR #65). **Go/no-go gate**: if it isn't more fun, we revise the design, not roll it out | gameplay-engineer |
-| 1.3 | Roll v3 out to the other five classes | gameplay-engineer + content-data |
+| 1.3 | **(Next, D-045)** Roll v3 out to the other five classes: Rogue → Mage → Cleric → Conjurer → Alchemist, a design pass with Roxton then one build brief each | gameplay-engineer + content-data |
 | 1.0 | **Dev cheat panel** (debug builds only, D-015): jump floors, set levels, add gold/items, start a chosen fight, reveal the map. Also a scriptable `DevTools` API that agents call via `game_eval` | gameplay-engineer |
 | 1.4 | **Autoplay bot** (note: `balance_sim` needs the autoloads, so it can't run as a bare `-s` script; run it through gdUnit4 or a scene): extend `scripts/dev/balance_sim.gd` from single fights to whole runs, with **seeded randomness** so any run can be replayed exactly. Report: fights per floor, run length, HP/resource curve, deaths. It replaces the boring manual test runs | qa-balance |
 | 1.5 | **(Priority after 3/3, D-028) Dungeon pressure + encounters**: fights last longer and ask for more than one move (enemy groups, roles, abilities), guided by the campaign bot (#61); plus combat quota per floor, rests restore partially, the Fountain stops being a free full heal, close the walk-back regen loop (P1–P4 in `archive/roadmap-v3.md`). Per-floor enemy pools (`cultist` and `ogre` exist but never spawn) | gameplay-engineer + content-data |
