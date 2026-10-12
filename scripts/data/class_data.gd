@@ -7,8 +7,9 @@ extends Resource
 ## Which combat row the class occupies by default.
 enum Role { FRONT, BACK }
 ## What the class spends on skills. MANA is the persistent MP pool; RAGE is
-## built in combat and resets every fight (see Battler.rage).
-enum ResourceType { MANA, RAGE }
+## built in combat from 0 and resets every fight (see Battler.rage); ENERGY
+## starts full every fight and refills each turn (see Battler.energy).
+enum ResourceType { MANA, RAGE, ENERGY }
 
 ## Stable internal key, e.g. "warrior". Used in save files — never translate.
 @export var id: String = ""
@@ -18,8 +19,8 @@ enum ResourceType { MANA, RAGE }
 ## What SkillData.mp_cost is paid from for this class's skills.
 @export var resource_type: ResourceType = ResourceType.MANA
 ## True for classes that spend Skill Points on talents (a fork and a boost per
-## skill, see Party.get_effective_skill) instead of upgrade tiers. Only the
-## Warrior, for now.
+## skill, see Party.get_effective_skill) instead of upgrade tiers. The Warrior
+## and the Rogue, for now.
 @export var uses_talents: bool = false
 
 @export_group("Base Stats (level 1)")
@@ -50,6 +51,17 @@ enum ResourceType { MANA, RAGE }
 ## Hand-drawn portrait (skin 1's head-crop). Used as a last-ditch fallback by
 ## HeroArt; skins normally resolve straight from the class folder.
 @export var portrait: Texture2D
+
+
+## Translation key of the name of what this class spends ("MP", "Rage", "Energy").
+func resource_key() -> String:
+	match resource_type:
+		ResourceType.RAGE:
+			return "RES_RAGE"
+		ResourceType.ENERGY:
+			return "RES_ENERGY"
+	return "RES_MP"
+
 
 ## Highest skin number probed for. Skins are drop-in: no registration needed.
 const MAX_SKINS := 12

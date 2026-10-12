@@ -8,7 +8,7 @@ const TestUtil := preload("res://test/support/test_util.gd")
 const WARRIOR := "res://resources/classes/warrior.tres"
 const EXECUTE := "res://resources/skills/warrior_execute.tres"
 const PROVOKE := "res://resources/skills/warrior_provoke.tres"
-const RELENTLESS := "res://resources/skills/rogue_relentless.tres"
+const VOLLEY := "res://resources/skills/conjurer_volley.tres"
 const CLERIC := "res://resources/classes/cleric.tres"
 const CLERIC_HEAL := "res://resources/skills/cleric_heal.tres"
 const LOCALES := ["pt_BR", "en"]
@@ -92,7 +92,7 @@ func test_every_passive_placeholder_renders() -> void:
 func test_every_reaction_placeholder_renders() -> void:
 	var r := ReactionData.new()
 	r.chance = 0.2
-	r.rage_cost = 10
+	r.cost = 10
 	r.damage_mult = 0.5
 	assert_str(SkillText.fill_reaction("{chance}|{cost}|{mult}", r)).is_equal("20%|10|50%")
 
@@ -118,12 +118,12 @@ func test_boosted_variant_shows_boosted_numbers() -> void:
 
 func test_upgraded_tier_shows_upgraded_numbers() -> void:
 	TranslationServer.set_locale("pt_BR")
-	var relentless: SkillData = load(RELENTLESS)
-	assert_str(SkillText.describe(relentless)).is_equal("3 golpes rápidos em inimigos aleatórios.")
-	var rogue := Hero.create(load("res://resources/classes/rogue.tres"))
-	rogue.sp_spent[relentless.resource_path.get_file().get_basename()] = 1
-	assert_str(SkillText.describe(Party.get_effective_skill(rogue, relentless))).is_equal(
-		"4 golpes rápidos em inimigos aleatórios."
+	var volley: SkillData = load(VOLLEY)
+	assert_str(SkillText.describe(volley)).is_equal("3 lâminas atingem inimigos aleatórios.")
+	var conjurer := Hero.create(load("res://resources/classes/conjurer.tres"))
+	conjurer.sp_spent[volley.resource_path.get_file().get_basename()] = 1
+	assert_str(SkillText.describe(Party.get_effective_skill(conjurer, volley))).is_equal(
+		"4 lâminas atingem inimigos aleatórios."
 	)
 
 

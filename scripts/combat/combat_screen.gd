@@ -244,10 +244,14 @@ func _on_damage_popup(
 			text = str(amount)
 			tint = Color(0.95, 0.1, 0.1, 0.7)  # red wash
 	var panel := _panel_for(b)
-	panel.flash_hit(tint)
+	# A dodged hit does no damage: no red wash, no shake.
+	var dodged := tags.has("dodged")
+	if not dodged:
+		panel.flash_hit(tint)
 	panel.show_popup(text, color, tags)
 	if kind != CombatState.PopupKind.HEAL:
-		panel.shake()
+		if not dodged:
+			panel.shake()
 		_mark_random_hit(b)
 
 
@@ -347,6 +351,10 @@ func _status_popup_text(st: CombatStatus) -> String:
 	var lines: PackedStringArray = []
 	if st.taunt:
 		lines.append(tr("UI_POPUP_TAUNT"))
+	if st.damage_taken_mult != 1.0:
+		lines.append(tr("UI_POPUP_MARKED"))
+	if st.untargetable:
+		lines.append(tr("UI_POPUP_SHADOWSTEP"))
 	var mods := [
 		["STAT_ATK", st.mod_atk],
 		["STAT_DEF", st.mod_def],
@@ -469,7 +477,7 @@ func _label_for_skill(actor: Battler, skill: SkillData) -> String:
 	var tier := Party.get_skill_tier(hero, skill)
 	if tier > 1:
 		name_part += " (T%d)" % tier
-	var resource_name := tr("RES_RAGE") if actor.uses_rage() else tr("RES_MP")
+	var resource_name := tr(hero.class_data.resource_key())
 	var cost := Party.combat_cost(hero, skill)
 	var label := "%s · %d %s" % [name_part, cost, resource_name]
 	var turns_left := actor.cooldown_left(skill)

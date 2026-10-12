@@ -13,6 +13,11 @@ const RAGE_MAX := 100
 const RAGE_PER_DAMAGING_ACTION := 10
 ## Rage gained each time a rage class takes a hit that deals at least 1 damage.
 const RAGE_PER_HIT_TAKEN := 20
+## Energy cap for energy classes (see ClassData.ResourceType.ENERGY). It starts
+## full every fight.
+const ENERGY_MAX := 100
+## Energy gained at the start of each of an energy hero's turns.
+const ENERGY_REGEN := 25
 
 var side: Battler.Side = Battler.Side.PARTY
 ## Set when side == PARTY; null otherwise.
@@ -29,6 +34,8 @@ var statuses: Array[CombatStatus] = []
 var index: int = 0
 ## Rage for rage classes. Starts at 0 every fight and is never saved.
 var rage: int = 0
+## Energy for energy classes. Starts at ENERGY_MAX every fight and is never saved.
+var energy: int = 0
 ## Turns left before a skill is usable again, keyed by cooldown_key().
 ## Combat-only, never saved.
 var cooldowns: Dictionary = {}
@@ -44,6 +51,8 @@ static func for_hero(h: Hero, idx: int) -> Battler:
 	# debuffs persist outside combat, so what combat applies/ticks/reads here IS
 	# the hero's persistent list. Enemies keep their own per-fight array.
 	b.statuses = h.statuses
+	if b.uses_energy():
+		b.energy = ENERGY_MAX
 	return b
 
 
@@ -128,6 +137,31 @@ func has_def_debuff() -> bool:
 	return false
 
 
+## True while a status stops single-target attacks from picking this battler
+## (Shadowstep).
+func is_untargetable() -> bool:
+	for st in statuses:
+		if st.untargetable:
+			return true
+	return false
+
+
+## Multiplier on every hit this battler takes: the product of its statuses'
+## damage_taken_mult (Mark for Death). 1.0 when none applies.
+func damage_taken_mult() -> float:
+	var mult := 1.0
+	for st in statuses:
+		mult *= st.damage_taken_mult
+	return mult
+
+
+## Ends the statuses that last "until this battler's next turn" (Shadowstep).
+func clear_until_next_turn() -> void:
+	for i in range(statuses.size() - 1, -1, -1):
+		if statuses[i].untargetable:
+			statuses.remove_at(i)
+
+
 func has_taunt() -> bool:
 	for st in statuses:
 		if st.taunt:
@@ -171,10 +205,36 @@ func uses_rage() -> bool:
 	)
 
 
+## True for a party hero whose class spends Energy instead of MP.
+func uses_energy() -> bool:
+	return (
+		side == Battler.Side.PARTY
+		and hero.class_data.resource_type == ClassData.ResourceType.ENERGY
+	)
+
+
 ## Adds Rage, clamped to 0..RAGE_MAX. No-op for anyone who doesn't use it.
 func gain_rage(amount: int) -> void:
 	if uses_rage():
 		rage = clampi(rage + amount, 0, RAGE_MAX)
+
+
+## Adds Energy, clamped to 0..ENERGY_MAX. No-op for anyone who doesn't use it.
+func gain_energy(amount: int) -> void:
+	if uses_energy():
+		energy = clampi(energy + amount, 0, ENERGY_MAX)
+
+
+## Gives back some of the hero's own combat resource: Rage or Energy. No-op for
+## a mana class (MP is refunded by items, not by skills).
+func refund_resource(amount: int) -> void:
+	gain_rage(amount)
+	gain_energy(amount)
+
+
+## Energy refills at the start of each of the hero's turns.
+func regen_energy() -> void:
+	gain_energy(ENERGY_REGEN)
 
 
 ## Rage gained from one hit taken: RAGE_PER_HIT_TAKEN times the strongest
@@ -195,6 +255,19 @@ func passive_damage_mult() -> float:
 	return passive.damage_mult(rage) if passive != null else 1.0
 
 
+## Extra crit chance from the hero's passive against `target` (Assassin's Focus:
+## more against a target below half HP). 0.0 for enemies and heroes without one.
+func passive_crit_bonus(target: Battler) -> float:
+	if side != Battler.Side.PARTY:
+		return 0.0
+	var passive := Party.get_passive(hero)
+	if passive == null or passive.crit_bonus_below_half_hp <= 0.0:
+		return 0.0
+	if target.hp_fraction() >= PassiveData.CRIT_BONUS_BELOW:
+		return 0.0
+	return passive.crit_bonus_below_half_hp
+
+
 ## The reaction this battler would use against a hit from `skill` resolving as
 ## `dmg_kind`, or null: it must be learned, switched on, apply to that hit, and
 ## be affordable. The chance roll is the caller's.
@@ -204,7 +277,7 @@ func reaction_for(skill: SkillData, dmg_kind: SkillData.SkillType) -> ReactionDa
 	var reaction := Party.get_active_reaction(hero)
 	if reaction == null or not reaction.applies(skill, dmg_kind):
 		return null
-	if resource_amount() < reaction.rage_cost:
+	if resource_amount() < reaction.cost:
 		return null
 	return reaction
 
@@ -213,13 +286,17 @@ func reaction_for(skill: SkillData, dmg_kind: SkillData.SkillType) -> ReactionDa
 func resource_amount() -> int:
 	if uses_rage():
 		return rage
+	if uses_energy():
+		return energy
 	return hero.mp if side == Battler.Side.PARTY else 0
 
 
-## Pays a skill cost from Rage or MP.
+## Pays a skill cost from Rage, Energy or MP.
 func spend_resource(amount: int) -> void:
 	if uses_rage():
 		rage = clampi(rage - amount, 0, RAGE_MAX)
+	elif uses_energy():
+		energy = clampi(energy - amount, 0, ENERGY_MAX)
 	elif side == Battler.Side.PARTY:
 		hero.mp -= amount
 

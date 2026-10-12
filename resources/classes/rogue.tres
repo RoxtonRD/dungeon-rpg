@@ -7,21 +7,28 @@
 [ext_resource type="Script" uid="uid://dx2v7dp0ppbo0" path="res://scripts/data/skill_data.gd" id="3_4gsvf"]
 [ext_resource type="Resource" path="res://resources/skills/rogue_relentless.tres" id="4"]
 [ext_resource type="Resource" path="res://resources/skills/rogue_assassinate.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/data/passive_data.gd" id="6_passive"]
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="7_reaction"]
+[ext_resource type="Resource" path="res://resources/passives/rogue_opportunist.tres" id="8_opportunist"]
+[ext_resource type="Resource" path="res://resources/passives/rogue_assassins_focus.tres" id="9_focus"]
+[ext_resource type="Resource" path="res://resources/reactions/rogue_dodge.tres" id="10_dodge"]
 
 [resource]
 script = ExtResource("1")
 id = "rogue"
 display_name = "CLASS_ROGUE"
+resource_type = 2
+uses_talents = true
 base_hp = 30
-base_mp = 12
 atk = 6
 def = 3
 mag = 2
 spd = 7
 hp_per_level = 7
-mp_per_level = 2
 atk_per_level = 2
 def_per_level = 1
 spd_per_level = 2
 skills = Array[ExtResource("3_4gsvf")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
+passives = Array[ExtResource("6_passive")]([ExtResource("8_opportunist"), ExtResource("9_focus")])
+reactions = Array[ExtResource("7_reaction")]([ExtResource("10_dodge")])
 portrait = ExtResource("1_v41cd")

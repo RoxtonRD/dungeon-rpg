@@ -1,13 +1,15 @@
-[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="SkillData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/rogue_relentless_flurry.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/rogue_relentless_focus.tres" id="3"]
 
 [resource]
 script = ExtResource("1")
 id = "relentless"
 display_name = "SKILL_ROGUE_RELENTLESS"
 description = "SKILLD_ROGUE_RELENTLESS"
-mp_cost = 9
+mp_cost = 50
 unlock_level = 3
 max_upgrade_level = 3
 skill_type = 5
@@ -15,3 +17,5 @@ target = 6
 power = 0.8
 hits = 3
 multi_hit_type = 0
+fork_a = ExtResource("2")
+fork_b = ExtResource("3")

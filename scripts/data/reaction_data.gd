@@ -23,10 +23,15 @@ enum AppliesTo { SINGLE_TARGET_PHYSICAL }
 @export_group("Effect")
 ## Chance, 0..1, that the reaction triggers on an eligible hit.
 @export var chance: float = 0.0
-## Rage needed to trigger, and spent when it does.
-@export var rage_cost: int = 0
-## Multiplies the damage of the hit that triggered it (0.5 = half damage).
+## Amount of the class's own resource (Rage, Energy) needed to trigger, and
+## spent when it does.
+@export var cost: int = 0
+## Multiplies the damage of the hit that triggered it (0.5 = half damage, 0.0 =
+## none at all).
 @export var damage_mult: float = 1.0
+## The popup tag the triggering hit carries ("parried", "dodged"); see
+## CombatState.damage_popup.
+@export var popup_tag: String = "parried"
 @export var applies_to: AppliesTo = AppliesTo.SINGLE_TARGET_PHYSICAL
 
 

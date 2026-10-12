@@ -25,7 +25,8 @@ enum DamageStat { AUTO, ATK, MAG }
 
 @export_group("Cost & Unlock")
 ## Cost in the caster's class resource (MP for mana classes, Rage for rage
-## classes; see ClassData.resource_type). Named mp_cost for history.
+## classes, Energy for the Rogue; see ClassData.resource_type). Named mp_cost
+## for history.
 @export var mp_cost: int = 0
 ## Caster turns before the skill can be used again (0 = no cooldown).
 ## Combat-only; enemy skills ignore it.
@@ -52,6 +53,11 @@ enum DamageStat { AUTO, ATK, MAG }
 @export var bonus_vs_def_debuff: float = 0.0
 ## Caster heals for 50% of the damage dealt (used by enemy skills).
 @export var drain: bool = false
+## Always crits a target that has not acted yet this round (Ambush).
+@export var ambush: bool = false
+## Amount of the caster's own resource (Rage, Energy) this action gives back
+## once it resolves (Quick Strike).
+@export var resource_refund: int = 0
 
 @export_group("Multi-hit")
 ## Number of separate hits. Only meaningful for MULTI skills.
@@ -67,6 +73,13 @@ enum DamageStat { AUTO, ATK, MAG }
 @export var mod_spd: int = 0
 ## Turns the modifier lasts. 99 means "until consumed" (used by barrier).
 @export var mod_duration: int = 0
+## Debuff rider only: while the status lasts (mod_duration), the target takes
+## this many times the damage from every source (Mark for Death: 1.25). 1.0 = no
+## effect.
+@export var damage_taken_mult: float = 1.0
+## Buff and damage skills alike: the caster cannot be picked by single-target
+## attacks until their next turn (Shadowstep). Area attacks still hit.
+@export var self_untargetable: bool = false
 ## Forces enemies to target the buffed ally.
 @export var taunt: bool = false
 ## Absorbs the next incoming hit entirely.

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "relentless_flurry"
+display_name = "SKILL_ROGUE_FLURRY"
+description = "SKILLD_ROGUE_FLURRY"
+mp_cost = 50
+unlock_level = 3
+max_upgrade_level = 3
+skill_type = 5
+target = 6
+power = 0.55
+hits = 5
+multi_hit_type = 0

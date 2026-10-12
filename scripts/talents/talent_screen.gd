@@ -223,8 +223,7 @@ func _make_card(spec: Dictionary, on_tap: Callable) -> Control:
 
 ## "50 Fúria · recarga 3" (cooldown only when the skill has one).
 func _cost_text(skill: SkillData) -> String:
-	var uses_rage := hero.class_data.resource_type == ClassData.ResourceType.RAGE
-	var text := "%d %s" % [skill.mp_cost, tr("RES_RAGE") if uses_rage else tr("RES_MP")]
+	var text := "%d %s" % [skill.mp_cost, tr(hero.class_data.resource_key())]
 	if skill.cooldown > 0:
 		text += "  ·  " + tr("UI_SKILL_COOLDOWN") % skill.cooldown
 	return text
@@ -359,7 +358,7 @@ func _make_reaction_card(reaction: ReactionData) -> Control:
 			"icon": null,
 			"title": tr(reaction.display_name),
 			"description": SkillText.describe_reaction(reaction),
-			"info": "%d %s" % [reaction.rage_cost, tr("RES_RAGE")],
+			"info": "%d %s" % [reaction.cost, tr(hero.class_data.resource_key())],
 			"unlock_level": reaction.unlock_level,
 			"chosen_key": "UI_TALENT_LEARNED",
 		},

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PassiveData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/passive_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "assassins_focus"
+display_name = "PASSIVE_ROGUE_ASSASSINS_FOCUS"
+description = "PASSIVED_ROGUE_ASSASSINS_FOCUS"
+unlock_level = 2
+crit_bonus_below_half_hp = 0.2
