@@ -428,8 +428,8 @@ func start_encounter(group_id: String) -> String:
 
 
 ## The members of `group`, scaled for `run`'s dungeon and current floor. An
-## elite group also gets the elite HP and power multipliers, as in a real elite
-## room.
+## elite group also gets the elite HP, power and reward multipliers, as in a real
+## elite room.
 func _encounter_enemies(run: DungeonRun, group: EncounterGroupData) -> Array[EnemyData]:
 	var encounter: Array[EnemyData] = []
 	for id in group.members:

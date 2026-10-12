@@ -1,11 +1,11 @@
 ## Encounters E6a (#95) / E6c (#104): per-dungeon difficulty tables.
 ## DUNGEON_MULT scales every enemy's stats by dungeon, REWARD_MULT its XP and
-## gold. For enemies rolled for an elite room, ELITE_HP_MULT (max HP, DEF and
-## rewards) and ELITE_POWER_MULT (ATK, MAG, SPD) stack on top. Bosses never get
-## the elite factors.
+## gold. For enemies rolled for an elite room, ELITE_HP_MULT (max HP, DEF),
+## ELITE_POWER_MULT (ATK, MAG, SPD) and ELITE_REWARD_MULT (XP, gold) stack on
+## top. Bosses never get the elite factors.
 ##
 ## The real tables hold equal values where E6c split one table in two
-## (REWARD_MULT = DUNGEON_MULT, ELITE_HP_MULT = ELITE_POWER_MULT), and every
+## (REWARD_MULT = DUNGEON_MULT; the three elite tables match), and every
 ## elite value is 1.0 in dungeon 1. So most scaling tests run on a FixedRun
 ## whose multipliers are forced to distinct values: otherwise "this table" and
 ## "that table" would look the same.
@@ -22,6 +22,7 @@ class FixedRun:
 	var reward := 1.0
 	var elite_hp := 1.0
 	var elite_power := 1.0
+	var elite_reward := 1.0
 
 	func _dungeon_mult() -> float:
 		return dungeon
@@ -35,9 +36,12 @@ class FixedRun:
 	func _elite_power_mult() -> float:
 		return elite_power
 
+	func _elite_reward_mult() -> float:
+		return elite_reward
+
 
 ## A FixedRun for `dungeon_level` with the real dungeon and reward multipliers
-## and distinct elite ones (HP 2.0, power 3.0).
+## and distinct elite ones (HP 2.0, power 3.0, reward 4.0).
 func _elite_run(dungeon_level: int) -> FixedRun:
 	var run := FixedRun.new()
 	run.level = dungeon_level
@@ -45,6 +49,7 @@ func _elite_run(dungeon_level: int) -> FixedRun:
 	run.reward = DungeonRun.reward_mult(dungeon_level)
 	run.elite_hp = 2.0
 	run.elite_power = 3.0
+	run.elite_reward = 4.0
 	for f in DungeonRun.NUM_FLOORS:
 		run.floors.append({})
 	return run
@@ -123,6 +128,15 @@ func test_elite_hp_mult_reads_the_table_and_holds_the_last_value() -> void:
 	assert_float(DungeonRun.elite_hp_mult(size + 10)).is_equal(last)
 
 
+func test_elite_reward_mult_reads_the_table_and_holds_the_last_value() -> void:
+	var size := DungeonRun.ELITE_REWARD_MULT.size()
+	for i in size:
+		assert_float(DungeonRun.elite_reward_mult(i + 1)).is_equal(DungeonRun.ELITE_REWARD_MULT[i])
+	var last: float = DungeonRun.ELITE_REWARD_MULT[size - 1]
+	assert_float(DungeonRun.elite_reward_mult(size + 1)).is_equal(last)
+	assert_float(DungeonRun.elite_reward_mult(size + 10)).is_equal(last)
+
+
 func test_elite_power_mult_reads_the_table_and_holds_the_last_value() -> void:
 	var size := DungeonRun.ELITE_POWER_MULT.size()
 	for i in size:
@@ -167,7 +181,8 @@ func test_mult_below_one_scales_down() -> void:
 	run.reward = 1.0
 	run.elite_hp = 0.5
 	run.elite_power = 0.8
-	assert_array(_stats(run._scale_enemy(base, 1, true))).is_equal(_expected(base, 0.5, 0.8, 0.5))
+	run.elite_reward = 0.25
+	assert_array(_stats(run._scale_enemy(base, 1, true))).is_equal(_expected(base, 0.5, 0.8, 0.25))
 
 
 func test_rewards_follow_reward_mult_not_dungeon_mult() -> void:
@@ -186,12 +201,26 @@ func test_elite_hp_and_power_scale_independently() -> void:
 	var base := _base("orc")
 	var run := FixedRun.new()
 	run.elite_hp = 2.0
-	assert_array(_stats(run._scale_enemy(base, 1, true))).is_equal(_expected(base, 2.0, 1.0, 2.0))
+	assert_array(_stats(run._scale_enemy(base, 1, true))).is_equal(_expected(base, 2.0, 1.0, 1.0))
 	run.elite_hp = 1.0
 	run.elite_power = 3.0
 	assert_array(_stats(run._scale_enemy(base, 1, true))).is_equal(_expected(base, 1.0, 3.0, 1.0))
-	# A non-elite enemy ignores both.
+	# A non-elite enemy ignores every elite factor.
+	run.elite_reward = 4.0
 	assert_object(run._scale_enemy(base, 1)).is_same(base)
+
+
+func test_elite_rewards_follow_elite_reward_mult_not_elite_hp_mult() -> void:
+	var base := _base("orc")
+	var run := FixedRun.new()
+	run.reward = 2.0
+	run.elite_hp = 3.0
+	run.elite_reward = 0.5
+	assert_array(_stats(run._scale_enemy(base, 1, true))).is_equal(_expected(base, 3.0, 1.0, 1.0))
+	# Elite rewards alone can scale while elite HP stays at 1.0.
+	run.elite_hp = 1.0
+	run.elite_reward = 1.5
+	assert_array(_stats(run._scale_enemy(base, 1, true))).is_equal(_expected(base, 1.0, 1.0, 3.0))
 
 
 # ── Elite multipliers ─────────────────────────────────────────────────────────
@@ -209,7 +238,7 @@ func test_elite_mults_apply_only_to_elite_rooms() -> void:
 				for e in run.roll_encounter(floor_index, true):
 					assert_array(_stats(e)).is_equal(
 						_expected(
-							_base(e.id), d * run.elite_hp, d * run.elite_power, r * run.elite_hp
+							_base(e.id), d * run.elite_hp, d * run.elite_power, r * run.elite_reward
 						)
 					)
 
@@ -233,7 +262,7 @@ func test_bosses_ignore_the_elite_mults() -> void:
 # ── Dev tools ─────────────────────────────────────────────────────────────────
 
 
-func test_dev_spawned_elite_groups_get_both_elite_mults() -> void:
+func test_dev_spawned_elite_groups_get_every_elite_mult() -> void:
 	# DevTools.start_encounter scales groups through _encounter_enemies: an
 	# elite group must match a real elite room, a normal group must not.
 	var run := _elite_run(2)
@@ -245,7 +274,7 @@ func test_dev_spawned_elite_groups_get_both_elite_mults() -> void:
 		run.current_floor = group.floor_min - 1
 		var hp := d * run.elite_hp if group.elite else d
 		var power := d * run.elite_power if group.elite else d
-		var reward := r * run.elite_hp if group.elite else r
+		var reward := r * run.elite_reward if group.elite else r
 		var fight: Array[EnemyData] = DevTools._encounter_enemies(run, group)
 		assert_int(fight.size()).is_equal(group.members.size())
 		for i in fight.size():
