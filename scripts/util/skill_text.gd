@@ -29,7 +29,8 @@ static func fill_skill(template: String, skill: SkillData) -> String:
 ## "-6"); {mod_turns} how long they last; {heal} / {heal_turns} heal over time
 ## per round and its rounds; {crit} crit chance ("50%"); {rage_gain} Rage the
 ## action gives; {kill_rage} Rage refunded on a kill; {bonus} the damage bonus
-## against a lowered-DEF target ("50%").
+## against a lowered-DEF target ("50%"); {refund} Energy (or Rage) the action
+## gives back; {taken} the extra damage a marked target takes ("25%").
 ## {cost} is the skill's own cost, which is what every class pays
 ## (Party.combat_cost).
 static func skill_values(skill: SkillData) -> Dictionary:
@@ -54,6 +55,8 @@ static func skill_values(skill: SkillData) -> Dictionary:
 		"rage_gain": str(rage_gain),
 		"kill_rage": str(skill.on_kill_rage),
 		"bonus": percent(skill.bonus_vs_def_debuff),
+		"refund": str(skill.resource_refund),
+		"taken": percent(skill.damage_taken_mult - 1.0),
 	}
 
 
@@ -69,12 +72,18 @@ static func fill_passive(template: String, passive: PassiveData) -> String:
 
 
 ## {pct} damage bonus per 10 Rage held ("2%"); {pct_max} the bonus at full
-## Rage ("20%").
+## Rage ("20%"); {energy_crit} / {energy_debuff} Energy gained when an ally
+## crits / an enemy is debuffed; {crit_bonus} extra crit chance ("20%") against a
+## target under {below} of its HP ("50%").
 static func passive_values(passive: PassiveData) -> Dictionary:
 	var steps := floori(Battler.RAGE_MAX / 10.0)
 	return {
 		"pct": percent(passive.damage_pct_per_10_rage / 100.0),
 		"pct_max": percent(passive.damage_pct_per_10_rage * steps / 100.0),
+		"energy_crit": str(passive.energy_on_ally_crit),
+		"energy_debuff": str(passive.energy_on_enemy_debuff),
+		"crit_bonus": percent(passive.crit_bonus_below_half_hp),
+		"below": percent(PassiveData.CRIT_BONUS_BELOW),
 	}
 
 
@@ -89,12 +98,12 @@ static func fill_reaction(template: String, reaction: ReactionData) -> String:
 	return template.format(reaction_values(reaction))
 
 
-## {chance} trigger chance ("20%"); {cost} Rage spent; {mult} the share of the
-## hit's damage still taken ("50%").
+## {chance} trigger chance ("20%"); {cost} Rage or Energy spent; {mult} the share
+## of the hit's damage still taken ("50%").
 static func reaction_values(reaction: ReactionData) -> Dictionary:
 	return {
 		"chance": percent(reaction.chance),
-		"cost": str(reaction.rage_cost),
+		"cost": str(reaction.cost),
 		"mult": percent(reaction.damage_mult),
 	}
 

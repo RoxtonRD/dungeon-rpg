@@ -10,6 +10,7 @@ signal tapped(battler: Battler)
 
 ## Rage bar fill: orange, so it never reads as the blue MP bar.
 const RAGE_FILL_COLOR := Color(0.95, 0.5, 0.1)
+const ENERGY_FILL_COLOR := Color(0.95, 0.85, 0.2)
 ## Floating-text outline: near-black and thick, so numbers read on any card.
 const POPUP_OUTLINE_COLOR := Color(0.02, 0.02, 0.03)
 const POPUP_OUTLINE_SIZE := 9
@@ -27,6 +28,7 @@ const POPUP_TAGS := {
 	"crit": ["UI_POPUP_CRIT", Color(1.0, 0.82, 0.25)],
 	"exposed": ["UI_POPUP_EXPOSED", Color(1.0, 0.45, 0.3)],
 	"parried": ["UI_POPUP_PARRIED", Color(0.7, 0.85, 1.0)],
+	"dodged": ["UI_POPUP_DODGED", Color(0.7, 1.0, 0.85)],
 }
 ## Vertical gap between stacked tag labels over one number.
 const POPUP_TAG_STEP := 24.0
@@ -48,8 +50,9 @@ var _hp_label: Label
 var _hp_bar: ProgressBar
 var _mp_label: Label
 var _mp_bar: ProgressBar
-## Fill style swapped onto _mp_bar when it shows Rage instead of MP.
+## Fill styles swapped onto _mp_bar when it shows Rage or Energy instead of MP.
 var _rage_fill: StyleBoxFlat
+var _energy_fill: StyleBoxFlat
 var _status_label: Label
 ## Transient border glow shown while this battler is acting. Its own modulate
 ## is animated independently, so panel refreshes don't interrupt the flash.
@@ -134,6 +137,10 @@ func _init() -> void:
 	_rage_fill.bg_color = RAGE_FILL_COLOR
 	_rage_fill.set_corner_radius_all(2)
 
+	_energy_fill = StyleBoxFlat.new()
+	_energy_fill.bg_color = ENERGY_FILL_COLOR
+	_energy_fill.set_corner_radius_all(2)
+
 	_status_label = Label.new()
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.add_theme_font_size_override("font_size", 11)
@@ -216,16 +223,14 @@ func refresh() -> void:
 	modulate = Color(0.4, 0.4, 0.4) if not battler.is_alive() else Color.WHITE
 
 
-## The bar under HP: Rage for a rage class, MP for everyone else, hidden when
-## the hero has no MP at all.
+## The bar under HP: Rage for a rage class, Energy for an energy class, MP for
+## everyone else, hidden when the hero has no MP at all.
 func _refresh_resource_bar() -> void:
 	if battler.uses_rage():
-		_mp_label.visible = true
-		_mp_bar.visible = true
-		_mp_label.text = "%s %d/%d" % [tr("RES_RAGE"), battler.rage, Battler.RAGE_MAX]
-		_mp_bar.max_value = Battler.RAGE_MAX
-		_mp_bar.value = battler.rage
-		_mp_bar.add_theme_stylebox_override("fill", _rage_fill)
+		_show_combat_resource("RES_RAGE", battler.rage, Battler.RAGE_MAX, _rage_fill)
+		return
+	if battler.uses_energy():
+		_show_combat_resource("RES_ENERGY", battler.energy, Battler.ENERGY_MAX, _energy_fill)
 		return
 	_mp_bar.remove_theme_stylebox_override("fill")
 	var mp_max := battler.hero.max_mp()
@@ -234,6 +239,16 @@ func _refresh_resource_bar() -> void:
 	_mp_label.text = "%s %d/%d" % [tr("RES_MP"), battler.hero.mp, mp_max]
 	_mp_bar.max_value = max(1, mp_max)
 	_mp_bar.value = battler.hero.mp
+
+
+## Shows a combat-only resource (Rage, Energy) on the bar under HP, in its colour.
+func _show_combat_resource(key: String, amount: int, maximum: int, fill: StyleBoxFlat) -> void:
+	_mp_label.visible = true
+	_mp_bar.visible = true
+	_mp_label.text = "%s %d/%d" % [tr(key), amount, maximum]
+	_mp_bar.max_value = maximum
+	_mp_bar.value = amount
+	_mp_bar.add_theme_stylebox_override("fill", fill)
 
 
 func set_active(active: bool) -> void:

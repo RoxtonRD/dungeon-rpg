@@ -27,7 +27,8 @@ signal log_appended(line: String, kind: LogKind)
 signal hp_changed(battler: Battler)
 ## Emitted alongside hp_changed when an amount should pop up on a battler.
 ## `tags` label what happened to a damage hit: "crit", "exposed" (a bonus
-## against a DEF debuff) and "parried" (the target's reaction). Usually empty.
+## against a DEF debuff) and the target's reaction ("parried", "dodged").
+## Usually empty.
 signal damage_popup(battler: Battler, amount: int, kind: PopupKind, tags: PackedStringArray)
 signal turn_started(battler: Battler)
 ## Presentation only: emitted once per action (hero or enemy, skill or item),
@@ -55,6 +56,9 @@ var enemies: Array[Battler] = []
 var initiative: Array[Battler] = []
 var current_actor: Battler = null
 var round_number: int = 0
+## Who has already taken a turn in the current round (Ambush crits a target that
+## has not). Cleared when the next round is rolled.
+var acted_this_round: Array[Battler] = []
 var ended: bool = false
 var result: Result = Result.NONE
 var log_lines: Array[String] = []
@@ -139,7 +143,10 @@ func player_action(skill: SkillData, target: Battler) -> void:
 	var actor := current_actor
 	var cost := Party.combat_cost(actor.hero, skill)
 	if not can_use(actor, skill):
-		if not actor.uses_rage() and actor.hero.mp < cost:
+		if (
+			actor.hero.class_data.resource_type == ClassData.ResourceType.MANA
+			and actor.hero.mp < cost
+		):
 			_log(tr("LOG_NO_MP"))
 		return
 	var effective := Party.get_effective_skill(actor.hero, skill)
@@ -147,6 +154,8 @@ func player_action(skill: SkillData, target: Battler) -> void:
 	actor.start_cooldown(skill, effective.cooldown)
 	var foes_before := _alive(_opposing_side(actor))
 	_apply_skill(actor, effective, target)
+	if effective.resource_refund > 0:
+		actor.refund_resource(effective.resource_refund)
 	for foe in foes_before:
 		if not foe.is_alive():
 			_on_kill(actor, skill, effective)
@@ -266,6 +275,9 @@ func _advance_to_next_actor() -> void:
 			continue
 		current_actor = next
 		next.tick_cooldowns()
+		next.clear_until_next_turn()
+		next.regen_energy()
+		acted_this_round.append(next)
 		turn_started.emit(next)
 		# Stop here. The caller drives the turn:
 		#   - player_action / player_flee for party turns
@@ -292,6 +304,9 @@ func _check_end_conditions() -> bool:
 func _end(r: Result) -> void:
 	ended = true
 	result = r
+	# "Until their next turn" cannot outlast the fight: party statuses are saved.
+	for b in party:
+		b.clear_until_next_turn()
 	rewards = _calculate_rewards(r)
 	combat_ended.emit(r, rewards)
 
@@ -321,6 +336,7 @@ func _roll_initiative() -> void:
 		pool.append({"battler": b, "score": spd + randf() * 2.0})
 	pool.sort_custom(func(a, b): return a["score"] > b["score"])
 	initiative.clear()
+	acted_this_round.clear()
 	for entry in pool:
 		initiative.append(entry["battler"])
 
@@ -413,6 +429,8 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 		if skill.rage_on_action >= 0:
 			rage_gain = skill.rage_on_action
 		caster.gain_rage(rage_gain)
+	if skill.self_untargetable:
+		_apply_untargetable(caster, skill)
 
 
 func _gather_targets(caster: Battler, skill: SkillData, picked: Battler) -> Array[Battler]:
@@ -453,6 +471,16 @@ func _apply_buff(target: Battler, skill: SkillData) -> void:
 
 
 func _apply_debuff(target: Battler, skill: SkillData) -> void:
+	var st := _debuff_from(skill)
+	target.statuses.append(st)
+	status_applied.emit(target, st)
+	_on_debuffed(target)
+
+
+## The DEBUFF status a skill puts on its target: stat mods and/or a damage-taken
+## multiplier, for mod_duration turns. Shared by DEBUFF skills and the rider on
+## damage skills.
+func _debuff_from(skill: SkillData) -> CombatStatus:
 	var st := CombatStatus.new()
 	st.kind = CombatStatus.Kind.DEBUFF
 	st.source_name = skill.display_name
@@ -460,9 +488,46 @@ func _apply_debuff(target: Battler, skill: SkillData) -> void:
 	st.mod_def = skill.mod_def
 	st.mod_mag = skill.mod_mag
 	st.mod_spd = skill.mod_spd
+	st.damage_taken_mult = skill.damage_taken_mult
 	st.duration = skill.mod_duration
-	target.statuses.append(st)
-	status_applied.emit(target, st)
+	return st
+
+
+## Shadowstep: the caster can't be picked by single-target attacks until their
+## next turn. Lasts 2 round ticks so it survives the end of this round; the
+## caster's next turn (or the end of the fight) removes it first.
+func _apply_untargetable(caster: Battler, skill: SkillData) -> void:
+	var st := CombatStatus.new()
+	st.kind = CombatStatus.Kind.BUFF
+	st.source_name = skill.display_name
+	st.untargetable = true
+	st.duration = 2
+	caster.statuses.append(st)
+	status_applied.emit(caster, st)
+
+
+## Opportunist: a hero's passive gives it Energy whenever an enemy receives a
+## debuff.
+func _on_debuffed(target: Battler) -> void:
+	if target.side != Battler.Side.ENEMY or not target.is_alive():
+		return
+	for b in _alive(party):
+		var passive := Party.get_passive(b.hero)
+		if passive != null:
+			b.gain_energy(passive.energy_on_enemy_debuff)
+
+
+## Opportunist: a crit by one hero gives every other living hero with the
+## passive Energy.
+func _on_crit(caster: Battler) -> void:
+	if caster.side != Battler.Side.PARTY:
+		return
+	for b in _alive(party):
+		if b == caster:
+			continue
+		var passive := Party.get_passive(b.hero)
+		if passive != null:
+			b.gain_energy(passive.energy_on_ally_crit)
 
 
 func _apply_heal(
@@ -530,9 +595,14 @@ func _apply_damage_hit(
 	if skill.finisher and target.get_hp() <= int(target.max_hp * 0.25):
 		raw *= 2.0
 	var tags := PackedStringArray()
-	if skill.crit_chance > 0.0 and randf() < skill.crit_chance:
+	# Ambush always crits a target that hasn't acted yet this round; otherwise
+	# the skill's chance, plus the caster's passive bonus (Assassin's Focus).
+	var crit_chance := skill.crit_chance + caster.passive_crit_bonus(target)
+	var ambushed := skill.ambush and not acted_this_round.has(target)
+	if ambushed or (crit_chance > 0.0 and randf() < crit_chance):
 		raw *= 1.8
 		tags.append("crit")
+		_on_crit(caster)
 	# Synergy: a bonus against a target whose DEF is debuffed (Backstab).
 	if skill.bonus_vs_def_debuff > 0.0 and target.has_def_debuff():
 		raw *= 1.0 + skill.bonus_vs_def_debuff
@@ -542,15 +612,21 @@ func _apply_damage_hit(
 	var t_stats := target.effective_stats()
 	# Magic damage uses 40% of DEF; physical uses full DEF.
 	var t_def := int(floor(float(t_stats["def"]) * 0.4)) if is_mag else int(t_stats["def"])
-	var dmg := maxi(1, int(floor(raw - t_def)))
-	# The target's reaction (Parry): by chance, pay its cost to cut the damage.
+	# A marked target (Mark for Death) takes more from every source.
+	var dmg := maxi(1, int(floor((raw - t_def) * target.damage_taken_mult())))
+	# The target's reaction (Parry, Dodge): by chance, pay its cost to cut the
+	# damage. A reaction that leaves some damage never cuts it below 1.
 	var reaction := target.reaction_for(skill, dmg_kind)
 	if reaction != null and randf() < reaction.chance:
-		target.spend_resource(reaction.rage_cost)
-		dmg = maxi(1, int(floor(dmg * reaction.damage_mult)))
-		tags.append("parried")
+		target.spend_resource(reaction.cost)
+		dmg = int(floor(dmg * reaction.damage_mult))
+		if reaction.damage_mult > 0.0:
+			dmg = maxi(1, dmg)
+		tags.append(reaction.popup_tag)
 	target.set_hp(target.get_hp() - dmg)
-	target.gain_rage(target.rage_per_hit_taken())
+	# Rage comes from hits that hurt; a dodged hit gives none.
+	if dmg > 0:
+		target.gain_rage(target.rage_per_hit_taken())
 	hp_changed.emit(target)
 	damage_popup.emit(target, dmg, PopupKind.MAG if is_mag else PopupKind.PHYS, tags)
 	var crit := tags.has("crit")
@@ -580,18 +656,18 @@ func _apply_damage_hit(
 	# Debuff rider on damage skills.
 	if (
 		skill.mod_duration > 0
-		and (skill.mod_atk != 0 or skill.mod_def != 0 or skill.mod_mag != 0 or skill.mod_spd != 0)
+		and (
+			skill.mod_atk != 0
+			or skill.mod_def != 0
+			or skill.mod_mag != 0
+			or skill.mod_spd != 0
+			or skill.damage_taken_mult != 1.0
+		)
 	):
-		var deb := CombatStatus.new()
-		deb.kind = CombatStatus.Kind.DEBUFF
-		deb.source_name = skill.display_name
-		deb.mod_atk = skill.mod_atk
-		deb.mod_def = skill.mod_def
-		deb.mod_mag = skill.mod_mag
-		deb.mod_spd = skill.mod_spd
-		deb.duration = skill.mod_duration
+		var deb := _debuff_from(skill)
 		target.statuses.append(deb)
 		status_applied.emit(target, deb)
+		_on_debuffed(target)
 	# Drain: caster heals for 50% of damage dealt.
 	if skill.drain:
 		var healed := int(floor(dmg * 0.5))
@@ -602,7 +678,7 @@ func _apply_damage_hit(
 
 
 ## The damage log line's ending for a hit's popup tags: " (CRITICAL)",
-## " (EXPOSED)", " (PARRIED)", or several of them.
+## " (EXPOSED)", " (PARRIED)", " (DODGED)", or several of them.
 func _log_suffix(tags: PackedStringArray) -> String:
 	var suffix := ""
 	if tags.has("crit"):
@@ -611,6 +687,8 @@ func _log_suffix(tags: PackedStringArray) -> String:
 		suffix += tr("LOG_EXPOSED_SUFFIX")
 	if tags.has("parried"):
 		suffix += tr("LOG_PARRIED_SUFFIX")
+	if tags.has("dodged"):
+		suffix += tr("LOG_DODGED_SUFFIX")
 	return suffix
 
 
@@ -782,9 +860,14 @@ func _pick_enemy_target(e: Battler, skill: SkillData) -> Battler:
 
 
 ## A hero to hit: a taunter if any, else the lowest-HP% hero for a SKIRMISHER,
-## else a random front-row hero (any hero if the front row is gone).
+## else a random front-row hero (any hero if the front row is gone). A hero a
+## single-target attack can't pick (Shadowstep) is left out; with nobody left to
+## hit the enemy has no target.
 func _pick_hero_target(e: Battler) -> Battler:
-	var alive_party: Array[Battler] = _alive(party)
+	var alive_party: Array[Battler] = []
+	for b in _alive(party):
+		if not b.is_untargetable():
+			alive_party.append(b)
 	if alive_party.is_empty():
 		return null
 	var taunters: Array[Battler] = []
@@ -879,7 +962,10 @@ func _continue_wind_up(e: Battler, st: CombatStatus) -> void:
 		and (picked == null or not picked.is_alive())
 	):
 		picked = _pick_enemy_target(e, skill)
-	elif skill.target == SkillData.TargetType.ONE and _taunter_overrides(picked):
+	elif (
+		skill.target == SkillData.TargetType.ONE
+		and (picked.is_untargetable() or _taunter_overrides(picked))
+	):
 		picked = _pick_enemy_target(e, skill)
 	_enemy_use(e, skill, picked)
 

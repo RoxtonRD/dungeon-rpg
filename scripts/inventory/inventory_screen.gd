@@ -323,8 +323,8 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		else:
 			tier_part = "  T%d" % Party.get_skill_tier(hero, skill)
 		var name_lbl := Label.new()
-		var uses_rage := hero.class_data.resource_type == ClassData.ResourceType.RAGE
-		var resource_name := tr("RES_RAGE") if uses_rage else tr("RES_MP")
+		var uses_mana := hero.class_data.resource_type == ClassData.ResourceType.MANA
+		var resource_name := tr(hero.class_data.resource_key())
 		name_lbl.text = (
 			"%s%s  ·  %d %s"
 			% [tr(shown.display_name), tier_part, Party.combat_cost(hero, skill), resource_name]
@@ -337,8 +337,8 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 
 		# Cast button — heals and buffs are usable outside combat, spending MP.
 		# Healers become the sustain engine; buffs enable pre-buffing a fight.
-		# Rage only exists in combat, so a rage class never casts out here.
-		if not uses_rage and _castable_out_of_combat(skill):
+		# Rage and Energy only exist in combat, so those classes never cast out here.
+		if uses_mana and _castable_out_of_combat(skill):
 			var cast_btn := Button.new()
 			cast_btn.text = tr("UI_USE")
 			cast_btn.custom_minimum_size = Vector2(80, 0)

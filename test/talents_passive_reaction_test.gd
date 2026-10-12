@@ -48,7 +48,7 @@ func test_warrior_has_bloodlust_and_parry() -> void:
 	assert_int(_bloodlust.unlock_level).is_equal(2)
 	assert_int(_parry.unlock_level).is_equal(3)
 	assert_float(_parry_chance).is_equal_approx(0.2, 0.001)
-	assert_int(_parry.rage_cost).is_equal(10)
+	assert_int(_parry.cost).is_equal(10)
 	assert_float(_parry.damage_mult).is_equal_approx(0.5, 0.001)
 
 

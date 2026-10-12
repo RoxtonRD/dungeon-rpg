@@ -33,6 +33,11 @@ var duration: int = 0
 var taunt: bool = false
 ## Multiplies the Rage the bearer gains from hits taken (Vengeance).
 var rage_taken_mult: float = 1.0
+## Multiplies every hit the bearer takes (Mark for Death).
+var damage_taken_mult: float = 1.0
+## Single-target attacks cannot pick the bearer; ends when the bearer's next
+## turn starts (Shadowstep).
+var untargetable: bool = false
 
 ## CHARGING only: the skill that lands on the bearer's next turn, and the hero a
 ## single-target one is aimed at. Enemy-only and combat-only, so neither is
@@ -101,6 +106,8 @@ func to_dict() -> Dictionary:
 		"dur": duration,
 		"taunt": taunt,
 		"rage_taken_mult": rage_taken_mult,
+		"damage_taken_mult": damage_taken_mult,
+		"untargetable": untargetable,
 		"dot_popup_key": dot_popup_key,
 	}
 
@@ -118,5 +125,7 @@ static func from_dict(d: Dictionary) -> CombatStatus:
 	st.duration = int(d.get("dur", 0))
 	st.taunt = bool(d.get("taunt", false))
 	st.rage_taken_mult = float(d.get("rage_taken_mult", 1.0))
+	st.damage_taken_mult = float(d.get("damage_taken_mult", 1.0))
+	st.untargetable = bool(d.get("untargetable", false))
 	st.dot_popup_key = str(d.get("dot_popup_key", "UI_POPUP_POISON"))
 	return st

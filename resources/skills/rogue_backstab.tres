@@ -1,13 +1,15 @@
-[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="SkillData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/rogue_backstab_exploit.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/skills/rogue_backstab_ambush.tres" id="3"]
 
 [resource]
 script = ExtResource("1")
 id = "backstab"
 display_name = "SKILL_ROGUE_BACKSTAB"
 description = "SKILLD_ROGUE_BACKSTAB"
-mp_cost = 5
+mp_cost = 35
 unlock_level = 1
 max_upgrade_level = 3
 skill_type = 0
@@ -15,3 +17,5 @@ target = 0
 power = 1.8
 crit_chance = 0.4
 bonus_vs_def_debuff = 0.5
+fork_a = ExtResource("2")
+fork_b = ExtResource("3")
