@@ -29,13 +29,16 @@ back after weeks away, this is the only thing you need to read.*
 - **Encounters v3** (D-038), briefed as E1–E4; art direction D-037.
 - **Feel gate 3 passed** (D-040): the Warrior prototype is complete.
 - **Encounters E1–E3 merged** (D-041, D-042); E4 (tuning) is running.
+- **Feel gate 4 (encounters) passed** (D-043): fewer, longer fights.
 - **Next up:**
-  1. qa-balance: **E4** bot policy + balance loop #80 (background, advisor
-     reviews)
-  2. Roxton: **encounters feel gate** after E4 merges
-  3. Then: the talent screen's long scroll (ui-assets); live numbers in
+  1. gameplay-engineer: **E5a** fight quota ~9–10 + Provoke vs telegraph
+     fix #89 (background, running)
+  2. qa-balance: **E5b** balance loop for longer fights #90 (background,
+     after E5a)
+  3. Roxton: a quick re-check of fight length after E5b
+  4. Then: the talent screen's long scroll (ui-assets); live numbers in
      skill descriptions; the **talent rollout to the other classes (1.3)**
-  4. Roxton: branch protection on `main` (require PR + both CI checks)
+  5. Roxton: branch protection on `main` (require PR + both CI checks)
 - **Blocked on:** nothing
 
 ---

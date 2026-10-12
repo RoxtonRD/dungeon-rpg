@@ -466,3 +466,28 @@ encounters (E1–E4) give fights room for skills to matter (D-028).
   it; #84's conflict was only the generated `.translation` binaries,
   which were rebuilt from the merged CSV.
 
+---
+
+## 2026-10-11 — E4 (#88) and the encounters feel gate
+
+**D-043 · Feel gate 4 (encounters) passed; direction: fewer, longer
+fights.**
+E4 (#88) tuned enemy numbers. Wipes per campaign went 3.05 → 1.26, and
+the D1/D4 bosses are on target (80% / 78% first-try wins). But it showed
+that ~15 fights per dungeon can't coexist with 3–5 round fights, and the
+extra fights over-level the party by ~2 levels (6/8/10/10 at the bosses).
+Roxton then played floors 1–3:
+- "let's try the longer fights";
+- roles readable and changing his targeting: yes;
+- telegraphs with a real answer: yes;
+- elites "tempting, as something different";
+- rests "feel good this way";
+- nothing confusing.
+
+Next round:
+- **E5a (#89):** fight quota cut to ~9–10 per dungeon; Provoke now
+  redirects single-target telegraphs (an E4-found bug).
+- **E5b (#90):** re-tune for normal fights of 4–5 rounds, elites the bot
+  wins only 80–90% (E4: 690/690), D1 wipes ≤ 0.3, and all bosses at
+  70–85%.
+
