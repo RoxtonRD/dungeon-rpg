@@ -19,8 +19,8 @@ enum ResourceType { MANA, RAGE, ENERGY }
 ## What SkillData.mp_cost is paid from for this class's skills.
 @export var resource_type: ResourceType = ResourceType.MANA
 ## True for classes that spend Skill Points on talents (a fork and a boost per
-## skill, see Party.get_effective_skill) instead of upgrade tiers. The Warrior
-## and the Rogue, for now.
+## skill, see Party.get_effective_skill) instead of upgrade tiers. The Warrior,
+## the Rogue and the Mage, for now.
 @export var uses_talents: bool = false
 
 @export_group("Base Stats (level 1)")

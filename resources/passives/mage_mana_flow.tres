@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PassiveData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/passive_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mana_flow"
+display_name = "PASSIVE_MAGE_MANA_FLOW"
+description = "PASSIVED_MAGE_MANA_FLOW"
+unlock_level = 2
+mp_regen_per_turn = 2

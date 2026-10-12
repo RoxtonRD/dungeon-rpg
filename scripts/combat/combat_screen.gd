@@ -244,8 +244,8 @@ func _on_damage_popup(
 			text = str(amount)
 			tint = Color(0.95, 0.1, 0.1, 0.7)  # red wash
 	var panel := _panel_for(b)
-	# A dodged hit does no damage: no red wash, no shake.
-	var dodged := tags.has("dodged")
+	# A dodged or shielded hit does no damage: no red wash, no shake.
+	var dodged := tags.has("dodged") or tags.has("shielded")
 	if not dodged:
 		panel.flash_hit(tint)
 	panel.show_popup(text, color, tags)
@@ -281,11 +281,14 @@ func _is_hostile(skill: SkillData) -> bool:
 	return true
 
 
-## RANDOM multi-hit skills pick targets per hit, so their outlines are added
+## RANDOM multi-hit skills and Chain pick targets per hit, so their outlines are added
 ## as the hits land (opposing side only, so a DoT tick is never mistaken for
 ## part of the action).
 func _mark_random_hit(b: Battler) -> void:
-	if _banner_skill == null or _banner_skill.target != SkillData.TargetType.RANDOM:
+	if _banner_skill == null:
+		return
+	# Chain's extra hits are rolled when they land, like a RANDOM skill's.
+	if _banner_skill.target != SkillData.TargetType.RANDOM and _banner_skill.chain_targets <= 0:
 		return
 	if b.side == _banner_caster.side:
 		return
@@ -395,13 +398,16 @@ func _on_combat_ended(r: CombatState.Result, rewards: Dictionary) -> void:
 
 func _process_turn() -> void:
 	await get_tree().create_timer(_delay(TURN_LEAD_DELAY)).timeout
-	while (
-		not state.ended
-		and state.current_actor != null
-		and state.current_actor.side == Battler.Side.ENEMY
-	):
+	while state.is_auto_turn():
+		if state.current_actor.side == Battler.Side.PARTY:
+			# A hero's wind-up lands on its own: show the buttons, disabled.
+			_show_auto_turn_ui()
+			await get_tree().create_timer(_delay(TURN_LEAD_DELAY)).timeout
+		var hero_turn := state.current_actor.side == Battler.Side.PARTY
 		_panel_for(state.current_actor).flash_active()
 		state.step()
+		if hero_turn:
+			_clear_skill_buttons()
 		_refresh_all_panels()
 		await get_tree().create_timer(_delay(ENEMY_TURN_DELAY)).timeout
 	if state.ended:
@@ -424,6 +430,21 @@ func _show_player_turn_ui() -> void:
 	flee_button.visible = true
 	flee_button.disabled = false
 	items_button.visible = _has_usable_items()
+	_populate_skill_buttons()
+
+
+## The buttons of a hero whose turn plays itself (Meteor landing): the skills are
+## shown but can't be pressed (CombatState.can_use refuses a charging hero).
+func _show_auto_turn_ui() -> void:
+	_end_action_feedback()
+	_picking_target = false
+	_pending_skill = null
+	_pending_item = ""
+	target_prompt.visible = false
+	cancel_button.visible = false
+	flee_button.visible = true
+	flee_button.disabled = true
+	items_button.visible = false
 	_populate_skill_buttons()
 
 
