@@ -121,3 +121,26 @@ func test_bosses_ignore_the_elite_mult() -> void:
 			assert_int(fight.size()).is_equal(files.size())
 			for i in fight.size():
 				assert_array(_stats(fight[i])).is_equal(_expected(_base(files[i]), dmult))
+
+
+# ── Dev tools ─────────────────────────────────────────────────────────────────
+
+
+func test_dev_spawned_elite_groups_get_the_elite_mult() -> void:
+	# DevTools.start_encounter scales groups through _encounter_enemies: an
+	# elite group must match a real elite room, a normal group must not.
+	var run := _elite_run(2)
+	var dmult := DungeonRun.dungeon_mult(2)
+	var saw_elite := false
+	var saw_normal := false
+	for group in EncounterGroupData.all():
+		run.current_floor = group.floor_min - 1
+		var mult := dmult * EliteRun.MULT if group.elite else dmult
+		var fight: Array[EnemyData] = DevTools._encounter_enemies(run, group)
+		assert_int(fight.size()).is_equal(group.members.size())
+		for i in fight.size():
+			assert_array(_stats(fight[i])).is_equal(_expected(_base(group.members[i]), mult))
+		saw_elite = saw_elite or group.elite
+		saw_normal = saw_normal or not group.elite
+	assert_bool(saw_elite).is_true()
+	assert_bool(saw_normal).is_true()

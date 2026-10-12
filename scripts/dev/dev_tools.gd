@@ -415,10 +415,7 @@ func start_encounter(group_id: String) -> String:
 	if group == null:
 		return "Error: unknown encounter group '%s'. Valid: %s." % [wanted, list_encounters()]
 	var run: DungeonRun = map.run
-	var encounter: Array[EnemyData] = []
-	for id in group.members:
-		encounter.append(run._scale_enemy(run._load_enemy(id), run.current_floor + 1))
-	map._start_combat(encounter, group.elite)
+	map._start_combat(_encounter_enemies(run, group), group.elite)
 	return (
 		"Encounter %s started on floor %d: %s%s."
 		% [
@@ -428,6 +425,15 @@ func start_encounter(group_id: String) -> String:
 			" (elite)" if group.elite else ""
 		]
 	)
+
+
+## The members of `group`, scaled for `run`'s dungeon and current floor. An
+## elite group also gets the elite multiplier, as in a real elite room.
+func _encounter_enemies(run: DungeonRun, group: EncounterGroupData) -> Array[EnemyData]:
+	var encounter: Array[EnemyData] = []
+	for id in group.members:
+		encounter.append(run._scale_enemy(run._load_enemy(id), run.current_floor + 1, group.elite))
+	return encounter
 
 
 # ── Lists (for the panel's pickers) ───────────────────────────────────────────
