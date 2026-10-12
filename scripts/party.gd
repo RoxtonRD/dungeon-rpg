@@ -528,8 +528,14 @@ func get_effective_skill(hero: Hero, base: SkillData) -> SkillData:
 		"b":
 			skill = base.fork_b if base.fork_b != null else base
 	if t.get("boost", false):
-		skill = _scaled_to_tier(skill, 2)
+		skill = boosted_skill(skill)
 	return skill
+
+
+## `skill` as a talent boost leaves it (the tier-2 scaling). The talent screen
+## compares it with the unboosted skill to say what a boost does.
+func boosted_skill(skill: SkillData) -> SkillData:
+	return _scaled_to_tier(skill, 2)
 
 
 ## What using `base` costs this hero in combat. Talent classes pay the effective

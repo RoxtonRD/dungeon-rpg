@@ -356,8 +356,10 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 			row.add_child(up_btn)
 
 		entry.add_child(row)
-		if not shown.description.is_empty():
-			entry.add_child(_make_desc_label(tr(shown.description)))
+		# The description's numbers are the effective skill's (tier or talents).
+		var described := Party.get_effective_skill(hero, skill)
+		if not described.description.is_empty():
+			entry.add_child(_make_desc_label(SkillText.describe(described)))
 		skill_rows.add_child(entry)
 
 

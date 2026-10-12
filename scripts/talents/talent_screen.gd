@@ -155,7 +155,7 @@ func _make_fork_card(base: SkillData, fork: String) -> Control:
 			"tappable": tappable,
 			"icon": base.icon_or_null(),
 			"title": tr(shown.display_name),
-			"description": tr(shown.description),
+			"description": SkillText.describe(shown),
 			"info": _cost_text(shown),
 			"unlock_level": base.unlock_level,
 			"chosen_key": "UI_TALENT_CHOSEN",
@@ -256,10 +256,21 @@ func _make_boost_button(base: SkillData) -> Button:
 		btn.add_theme_color_override("font_disabled_color", GOLD)
 		btn.disabled = true
 	else:
-		btn.text = tr("UI_TALENT_BOOST")
+		btn.text = _boost_text(base)
+		btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		btn.disabled = not Party.can_boost(hero, base)
 		btn.pressed.connect(_on_boost.bind(base))
 	return btn
+
+
+## "Boost: +30% power, -2 cost", from the skill before and after the boost
+## (the picked variant, or the base skill while no variant is picked).
+func _boost_text(base: SkillData) -> String:
+	var before := Party.get_effective_skill(hero, base)
+	var summary := SkillText.boost_summary(before, Party.boosted_skill(before))
+	if summary.is_empty():
+		return tr("UI_TALENT_BOOST")
+	return tr("UI_TALENT_BOOST_WITH") % summary
 
 
 # ── Passive section ───────────────────────────────────────────────────────────
@@ -295,7 +306,7 @@ func _make_passive_card(passive: PassiveData) -> Control:
 			"tappable": state == CardState.AVAILABLE and Party.can_pick_passive(hero, passive),
 			"icon": null,
 			"title": tr(passive.display_name),
-			"description": tr(passive.description),
+			"description": SkillText.describe_passive(passive),
 			"info": "",
 			"unlock_level": passive.unlock_level,
 			"chosen_key": "UI_TALENT_CHOSEN",
@@ -347,7 +358,7 @@ func _make_reaction_card(reaction: ReactionData) -> Control:
 			"tappable": state == CardState.AVAILABLE and Party.can_learn_reaction(hero, reaction),
 			"icon": null,
 			"title": tr(reaction.display_name),
-			"description": tr(reaction.description),
+			"description": SkillText.describe_reaction(reaction),
 			"info": "%d %s" % [reaction.rage_cost, tr("RES_RAGE")],
 			"unlock_level": reaction.unlock_level,
 			"chosen_key": "UI_TALENT_LEARNED",
