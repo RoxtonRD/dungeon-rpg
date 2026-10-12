@@ -567,3 +567,29 @@ class changes party power; tuning per class would be wasted work. Final
 balance comparisons use 300 bot runs (100 runs carry ±5–10 points of
 noise).
 
+---
+
+## 2026-10-12 — The Rogue (#106) and E6c (#107)
+
+**D-048 · Rogue rules settled during implementation (accepted).**
+- *Opportunist* counts **other** heroes' crits, and any stat DEBUFF landing
+  on an enemy (the Rogue's own Mark for Death included); poison doesn't
+  count.
+- A **dodged** hit deals 0 damage and gives no Rage. Reactions with
+  `damage_mult` > 0 still deal at least 1. Riders on the attacker's skill
+  still apply.
+- If the only living hero is in Shadowstep, a single-target enemy attack
+  finds no target (the 3-turn cooldown limits abuse).
+- **For the balance pass:** *Focus* currently strictly dominates the
+  random-target base (same hits and power); it needs a cost (e.g. lower
+  power). The bot has **no Rogue build**, so its Rogue's SP goes unspent.
+  **Before the next tuning pass, the bot needs builds for every talent
+  class.**
+
+**D-049 · The scaling engine is complete (E6c, #107).** Multipliers below 1
+work; elites have separate `ELITE_HP_MULT` / `ELITE_POWER_MULT` /
+`ELITE_REWARD_MULT` tables (DEF follows HP, SPD follows power); dungeon
+rewards follow `REWARD_MULT` (with `REWARD_GROWTH` for extrapolation). Bot
+output is byte-identical to before. The tuning that uses these waits until
+after more classes are rolled out (D-047).
+
