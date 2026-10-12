@@ -12,6 +12,7 @@ const WARRIOR := "res://resources/classes/warrior.tres"
 const MAGE := "res://resources/classes/mage.tres"
 const ROGUE := "res://resources/classes/rogue.tres"
 const SMASH := "res://resources/skills/enemy/e_smash.tres"
+const PROVOKE := "res://resources/skills/warrior_provoke.tres"
 const ENEMY_DIR := "res://resources/enemies/"
 const GROUP_DIR := "res://resources/encounters/"
 ## Runs generated to look for elite rooms.
@@ -273,6 +274,54 @@ func test_single_target_telegraph_keeps_its_target_or_repicks() -> void:
 	st2.party[1].set_hp(0)
 	_enemy_acts(st2)
 	assert_array(actions2[1]["targets"]).contains_exactly([st2.party[0]])
+
+
+## The Warrior casts Provoke for real (rage paid, taunt from the skill).
+func _warrior_provokes(st: CombatState) -> void:
+	var provoke: SkillData = load(PROVOKE)
+	var warrior := st.party[0]
+	warrior.hero.level = provoke.unlock_level
+	warrior.rage = Party.combat_cost(warrior.hero, provoke)
+	st.current_actor = warrior
+	st.player_action(provoke, null)
+	assert_bool(warrior.has_taunt()).is_true()
+
+
+## E5a: Provoke answers a single-target telegraph. The hit was wound up on the
+## mage, the Warrior provoked in between, so it lands on the Warrior.
+func test_provoke_during_a_wind_up_pulls_a_single_target_hit() -> void:
+	var slam := _skill("slam", SkillData.SkillType.PHYS, SkillData.TargetType.ONE, 1.0)
+	slam.telegraph_turns = 1
+	var foe := _enemy(EnemyData.AiRole.SKIRMISHER, _skills([slam]))
+	var st := _state([_hero(WARRIOR, 1.0, 0), _hero(MAGE, 0.4, 1)], [foe])
+	var actions := _record_actions(st)
+	_enemy_acts(st)
+	assert_array(actions[0]["targets"]).contains_exactly([st.party[1]])
+	var mage_hp := st.party[1].get_hp()
+
+	_warrior_provokes(st)
+	_enemy_acts(st)
+	var hit: Dictionary = actions[actions.size() - 1]
+	assert_bool(hit["caster"] == st.enemies[0]).is_true()
+	assert_bool(CombatState.is_wind_up(hit["skill"])).is_false()
+	assert_array(hit["targets"]).contains_exactly([st.party[0]])
+	assert_int(st.party[1].get_hp()).is_equal(mage_hp)
+
+
+## E5a: an area telegraph still hits everyone, taunt or not.
+func test_provoke_does_not_narrow_an_area_telegraph() -> void:
+	var st := _state([_hero(WARRIOR, 1.0, 0), _hero(MAGE, 1.0, 1)], [_smasher()])
+	var actions := _record_actions(st)
+	_enemy_acts(st)
+	assert_int(actions[0]["targets"].size()).is_equal(2)
+	var mage_hp := st.party[1].get_hp()
+
+	_warrior_provokes(st)
+	_enemy_acts(st)
+	var hit: Dictionary = actions[actions.size() - 1]
+	assert_str(hit["skill"].id).is_equal("e_smash")
+	assert_array(hit["targets"]).contains_exactly_in_any_order([st.party[0], st.party[1]])
+	assert_int(st.party[1].get_hp()).is_less(mage_hp)
 
 
 func test_charging_status_serializes_without_its_references() -> void:
