@@ -31,8 +31,13 @@ const BOSS_ENCOUNTERS := [
 ## `1 + (n-1)*s` ramp shrinks in ratio each step (D2->D3 is only 1.26x at
 ## s=0.35), so deeper dungeons kept getting *easier*. A constant growth factor
 ## keeps each dungeon a fixed step harder than the last.
-const FLOOR_SCALE := 0.15
-const DUNGEON_GROWTH := 1.4
+##
+## E5b (#90) set FLOOR_SCALE to 0: the authored groups already ramp from
+## floor 1 to floor 4 (goblins and bats to orcs, ogres and cultists), and the
+## extra stat ramp on top made dungeon 1's floor 4 and boss wipe a level-4
+## party. Floors still scale by group, dungeons by DUNGEON_GROWTH.
+const FLOOR_SCALE := 0.0
+const DUNGEON_GROWTH := 1.6
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.

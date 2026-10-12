@@ -11,8 +11,8 @@
 script = ExtResource("1")
 id = "ogre"
 display_name = "ENEMY_OGRE"
-max_hp = 68
-atk = 7
+max_hp = 136
+atk = 6
 def = 5
 spd = 3
 xp_reward = 18
