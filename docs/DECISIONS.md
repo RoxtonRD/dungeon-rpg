@@ -522,3 +522,29 @@ then Mage, Cleric, Conjurer, Alchemist. Each class gets a design pass with
 Roxton (forks, passive, reaction), then one build brief. Live numbers in
 descriptions (#97) go first, so the new content is written as templates.
 
+---
+
+## 2026-10-12 — The cost rule and the Rogue design
+
+**D-046 · What a description says is what you pay; the Rogue design is
+approved.**
+- **Costs (supersedes part of D-025):** every class pays its *effective*
+  (upgraded) skill cost in combat, the same cost the live description
+  shows (#100) and the out-of-combat cast charges. Before this, mana
+  classes paid the base cost in combat but the upgraded cost outside it.
+  Tiers go away in the talent rollout, so this is the consistent rule
+  going forward.
+- **The Rogue design** (approved by Roxton as proposed):
+  - **Energy:** 100 at the start of each fight, +25 per Rogue turn,
+    for burst play;
+  - **costs:** Stab 0 / Backstab 35 / Relentless 50 / Assassinate 70
+    (cooldown 3);
+  - **forks:** Poisoned Blade or Quick Strike; Exploit Weakness or
+    Ambush; Flurry or Focus; Mark for Death (+25% damage taken from
+    everyone) or Shadowstep (untargetable by single-target attacks);
+  - **passives (pick one):** Opportunist or Assassin's Focus;
+  - **reaction:** Dodge (25% for a full evade, 20 Energy);
+  - `ReactionData.rage_cost` becomes `cost`.
+
+  Build: #101.
+
