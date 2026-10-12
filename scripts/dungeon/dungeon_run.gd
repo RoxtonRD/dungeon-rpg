@@ -40,16 +40,22 @@ const FLOOR_SCALE := 0.0
 
 ## Per-dungeon multiplier (E6a, #95), index = dungeon level - 1. One growth
 ## rate couldn't make D1 gentle, D2/D3 tense and D4 beatable at once, so each
-## dungeon gets its own step. The values reproduce the old
-## pow(DUNGEON_GROWTH, level-1) exactly; E6b tunes them.
-const DUNGEON_MULT: Array[float] = [1.0, 1.6, 2.56, 4.096]
+## dungeon gets its own step. E6b (#96) tuned them from the old
+## pow(1.6, level-1) values [1.0, 1.6, 2.56, 4.096]: D1 -> D2 is the big step
+## (the party gains gear, spends its D1 SP and is ~2 levels up), D3 -> D4 a
+## small one (level cap 10). D1 stays 1.0: values below 1.0 have no effect
+## (see _scale_enemy).
+const DUNGEON_MULT: Array[float] = [1.0, 2.35, 3.5, 4.4]
 ## Past the end of DUNGEON_MULT (endless mode), each dungeon is this much
 ## harder than the one before.
 const DUNGEON_GROWTH := 1.6
 ## Per-dungeon elite multiplier, on top of DUNGEON_MULT and only for enemies
 ## rolled for an elite room, so elites can get harder without touching normal
 ## fights. Index = dungeon level - 1; past the end, the last value holds.
-const ELITE_MULT: Array[float] = [1.0, 1.0, 1.0, 1.0]
+## E6b (#96): D1 stays 1.0, because a lost D1 elite is a D1 wipe. D3/D4 sit
+## lower than D2: at 1.35 their four-enemy elites ran 12-16 rounds and ended
+## campaigns.
+const ELITE_MULT: Array[float] = [1.0, 1.35, 1.2, 1.2]
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.
