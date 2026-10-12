@@ -9,17 +9,34 @@ const WARRIOR := "res://resources/classes/warrior.tres"
 const EXECUTE := "res://resources/skills/warrior_execute.tres"
 const PROVOKE := "res://resources/skills/warrior_provoke.tres"
 const RELENTLESS := "res://resources/skills/rogue_relentless.tres"
+const CLERIC := "res://resources/classes/cleric.tres"
+const CLERIC_HEAL := "res://resources/skills/cleric_heal.tres"
 const LOCALES := ["pt_BR", "en"]
 
 var _locale: String
+var _heroes: Array
+var _save_dir: String
+## A throwaway save folder a test redirected GameState to, or "".
+var _test_save_dir := ""
 
 
 func before_test() -> void:
 	_locale = TranslationServer.get_locale()
+	_heroes = Party.heroes.duplicate()
+	_save_dir = GameState.save_dir
 
 
+## Runs even when the test failed, so no redirect or party change leaks.
 func after_test() -> void:
 	TranslationServer.set_locale(_locale)
+	Party.heroes.assign(_heroes)
+	GameState.save_dir = _save_dir
+	if not _test_save_dir.is_empty():
+		var abs_dir := ProjectSettings.globalize_path(_test_save_dir)
+		for file in DirAccess.get_files_at(_test_save_dir):
+			DirAccess.remove_absolute(abs_dir.path_join(file))
+		DirAccess.remove_absolute(abs_dir)
+		_test_save_dir = ""
 
 
 # ── Placeholders ──────────────────────────────────────────────────────────────
@@ -208,6 +225,63 @@ func test_talent_screen_shows_live_text() -> void:
 	)
 	assert_array(texts).contains(["Boost: -2 cost, +3 DEF, +1 turn"])
 	assert_array(texts).contains(["+2% damage for every 10 Rage held (up to +20%)."])
+
+
+## A mana-class skill at tier 2 costs the same in its description, in combat
+## and when cast outside combat (the Characters screen).
+func test_upgraded_mana_skill_costs_the_same_everywhere() -> void:
+	var heal: SkillData = load(CLERIC_HEAL)
+	var expected := Party.get_upgraded_skill(_cleric_tier_2(heal), heal).mp_cost
+	assert_int(expected).is_less(heal.mp_cost)  # the tier really changes the cost
+
+	# Description
+	var described := Party.get_effective_skill(_cleric_tier_2(heal), heal)
+	assert_str(SkillText.fill_skill("{cost}", described)).is_equal(str(expected))
+
+	# Combat
+	var fighter := _cleric_tier_2(heal)
+	var st := CombatState.build([fighter] as Array[Hero], [_dummy()] as Array[EnemyData])
+	st.current_actor = st.party[0]
+	var mp_before := fighter.mp
+	st.player_action(heal, st.party[0])
+	assert_int(mp_before - fighter.mp).is_equal(expected)
+
+	# Out-of-combat cast, with the save redirected so the real one is untouched.
+	var caster := _cleric_tier_2(heal)
+	caster.hp = caster.max_hp() - 10  # someone to heal
+	_test_save_dir = "user://test_saves/skill_text_%d" % Time.get_ticks_usec()
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_test_save_dir))
+	GameState.save_dir = _test_save_dir
+	Party.heroes.assign([caster])
+	var screen: Control = auto_free(
+		load("res://scripts/inventory/inventory_screen.tscn").instantiate()
+	)
+	add_child(screen)
+	mp_before = caster.mp
+	screen._on_cast(caster, heal)
+	assert_int(mp_before - caster.mp).is_equal(expected)
+
+
+func _cleric_tier_2(heal: SkillData) -> Hero:
+	var h := Hero.create(load(CLERIC))
+	h.sp_spent[heal.resource_path.get_file().get_basename()] = 1
+	h.mp = h.max_mp()
+	return h
+
+
+## A practice dummy with a harmless hit.
+func _dummy() -> EnemyData:
+	var hit := SkillData.new()
+	hit.id = "dummy_hit"
+	hit.display_name = "dummy_hit"
+	hit.power = 0.1
+	var e := EnemyData.new()
+	e.id = "dummy"
+	e.display_name = "dummy"
+	e.max_hp = 99999
+	e.atk = 1
+	e.skills = [hit] as Array[SkillData]
+	return e
 
 
 func _texts_under(node: Node) -> Array[String]:

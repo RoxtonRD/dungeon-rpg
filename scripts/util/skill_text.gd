@@ -30,8 +30,8 @@ static func fill_skill(template: String, skill: SkillData) -> String:
 ## per round and its rounds; {crit} crit chance ("50%"); {rage_gain} Rage the
 ## action gives; {kill_rage} Rage refunded on a kill; {bonus} the damage bonus
 ## against a lowered-DEF target ("50%").
-## Note: {cost} is the skill's own cost. Non-talent classes pay the base cost in
-## combat whatever the tier (Party.combat_cost), so no description uses it yet.
+## {cost} is the skill's own cost, which is what every class pays
+## (Party.combat_cost).
 static func skill_values(skill: SkillData) -> Dictionary:
 	var rage_gain := skill.rage_on_action
 	if rage_gain < 0:

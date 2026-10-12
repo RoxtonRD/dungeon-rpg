@@ -538,13 +538,12 @@ func boosted_skill(skill: SkillData) -> SkillData:
 	return _scaled_to_tier(skill, 2)
 
 
-## What using `base` costs this hero in combat. Talent classes pay the effective
-## skill's cost (a variant or a boost can change it). Other classes have always
-## paid the base cost in combat, whatever the tier, and still do.
+## What using `base` costs this hero, in combat and out of it: the effective
+## skill's cost, so a variant, a boost or an upgrade tier can change it. Every
+## class pays it, so the cost the player reads is the cost they pay (#97; mana
+## classes used to pay the base cost in combat whatever the tier, D-025).
 func combat_cost(hero: Hero, base: SkillData) -> int:
-	if hero.class_data.uses_talents:
-		return get_effective_skill(hero, base).mp_cost
-	return base.mp_cost
+	return get_effective_skill(hero, base).mp_cost
 
 
 # ── Persistence ───────────────────────────────────────────────────────────────
