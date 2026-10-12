@@ -31,7 +31,9 @@ description: Tune Dungeons of Praesidium's difficulty with the campaign bot. Mea
 
    **Don't touch hero-side numbers** (classes, skills, talents, XP)
    without the advisor's OK.
-4. **Re-measure with the same seed.** Keep a before → after table for each
+4. **Re-measure with the same seed.** Results swing ±5–10 points between
+   runs at 100 campaigns, so use `--runs 300` for the final before → after
+   table and for any decision that hinges on a few points. Keep a before → after table for each
    change.
 5. **Stop** when all metrics are in range, after 6 iterations, or when one
    lever fights another (e.g. longer fights push wipes out of range).

@@ -522,3 +522,22 @@ then Mage, Cleric, Conjurer, Alchemist. Each class gets a design pass with
 Roxton (forks, passive, reaction), then one build brief. Live numbers in
 descriptions (#97) go first, so the new content is written as templates.
 
+**D-047 · E6b results; the scaling engine gets three more levers; the
+final tuning waits for the rollout.**
+E6b (#103):
+- `DUNGEON_MULT` = [1, 2.35, 3.5, 4.4] and `ELITE_MULT` = [1, 1.35, 1.2, 1.2];
+- orcs 72 HP / 5 ATK (brute identity);
+- every boss at 75–89% first-try; wipes 1.31 per campaign;
+- the Warrior at ~3 skills per fight from D2 on.
+
+What's left is structural:
+- D1 can't get easier (`_scale_enemy` ignored multipliers ≤ 1);
+- elites got long, not dangerous (one multiplier for HP and power);
+- D2/D3 run ~1 level over (the difficulty multiplier also scaled XP).
+
+**E6c (#104)** adds the three levers with identical behaviour. The next
+real tuning pass happens **after more classes are rolled out**, since each
+class changes party power; tuning per class would be wasted work. Final
+balance comparisons use 300 bot runs (100 runs carry ±5–10 points of
+noise).
+
