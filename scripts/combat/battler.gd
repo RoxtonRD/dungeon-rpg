@@ -51,6 +51,9 @@ static func for_hero(h: Hero, idx: int) -> Battler:
 	# debuffs persist outside combat, so what combat applies/ticks/reads here IS
 	# the hero's persistent list. Enemies keep their own per-fight array.
 	b.statuses = h.statuses
+	# A wind-up never outlives its fight (it is lost with the fight, see
+	# CombatState._end); one left in a loaded save is inert, so drop it.
+	b.clear_charge()
 	if b.uses_energy():
 		b.energy = ENERGY_MAX
 	return b
@@ -76,9 +79,9 @@ func set_hp(value: int) -> void:
 		hero.hp = clamped
 	else:
 		enemy_hp = clamped
-		# A dead enemy's wind-up is lost with it.
-		if clamped == 0:
-			clear_charge()
+	# A downed battler's wind-up is lost with it (Meteor: the cost is not refunded).
+	if clamped == 0:
+		clear_charge()
 
 
 func is_alive() -> bool:
@@ -177,7 +180,13 @@ func charge_status() -> CombatStatus:
 	return null
 
 
-## Cancels any wind-up (the enemy died).
+## True while this battler is winding up a telegraphed skill. For a hero that
+## means its next turn resolves on its own (see CombatState.step).
+func is_charging() -> bool:
+	return charge_status() != null
+
+
+## Cancels any wind-up (the battler died, or the fight ended).
 func clear_charge() -> void:
 	for i in range(statuses.size() - 1, -1, -1):
 		if statuses[i].kind == CombatStatus.Kind.CHARGING:
@@ -225,16 +234,45 @@ func gain_energy(amount: int) -> void:
 		energy = clampi(energy + amount, 0, ENERGY_MAX)
 
 
-## Gives back some of the hero's own combat resource: Rage or Energy. No-op for
-## a mana class (MP is refunded by items, not by skills).
+## Gives back some of the hero's own combat resource: Rage, Energy or MP.
 func refund_resource(amount: int) -> void:
 	gain_rage(amount)
 	gain_energy(amount)
+	gain_mp(amount)
+
+
+## Adds MP, capped at the hero's max. No-op for anyone who doesn't use MP.
+func gain_mp(amount: int) -> void:
+	if side == Battler.Side.PARTY and not uses_rage() and not uses_energy():
+		hero.mp = clampi(hero.mp + amount, 0, hero.max_mp())
 
 
 ## Energy refills at the start of each of the hero's turns.
 func regen_energy() -> void:
 	gain_energy(ENERGY_REGEN)
+
+
+## MP the hero's passive gives at the start of each of its turns (Mana Flow).
+func regen_mp() -> void:
+	if side != Battler.Side.PARTY:
+		return
+	var passive := Party.get_passive(hero)
+	if passive != null:
+		gain_mp(passive.mp_regen_per_turn)
+
+
+## The damage per tick and the duration a DoT of `dot_damage` for `duration`
+## turns has once this battler's passive has had its say (Elemental Mastery).
+## Unchanged for enemies and heroes without one.
+func passive_dot(dot_damage: int, duration: int) -> Vector2i:
+	if side != Battler.Side.PARTY:
+		return Vector2i(dot_damage, duration)
+	var passive := Party.get_passive(hero)
+	if passive == null:
+		return Vector2i(dot_damage, duration)
+	return Vector2i(
+		roundi(dot_damage * passive.dot_damage_mult), duration + passive.dot_duration_bonus
+	)
 
 
 ## Rage gained from one hit taken: RAGE_PER_HIT_TAKEN times the strongest
@@ -270,14 +308,17 @@ func passive_crit_bonus(target: Battler) -> float:
 
 ## The reaction this battler would use against a hit from `skill` resolving as
 ## `dmg_kind`, or null: it must be learned, switched on, apply to that hit, and
-## be affordable. The chance roll is the caller's.
-func reaction_for(skill: SkillData, dmg_kind: SkillData.SkillType) -> ReactionData:
+## be affordable, and (Arcane Barrier) the hit of `dmg` must leave the hero under
+## the reaction's HP threshold, if it has one. The chance roll is the caller's.
+func reaction_for(skill: SkillData, dmg_kind: SkillData.SkillType, dmg: int = 0) -> ReactionData:
 	if side != Battler.Side.PARTY:
 		return null
 	var reaction := Party.get_active_reaction(hero)
 	if reaction == null or not reaction.applies(skill, dmg_kind):
 		return null
 	if resource_amount() < reaction.cost:
+		return null
+	if not reaction.passes_hp_threshold(get_hp(), max_hp, dmg):
 		return null
 	return reaction
 

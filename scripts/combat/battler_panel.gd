@@ -29,6 +29,7 @@ const POPUP_TAGS := {
 	"exposed": ["UI_POPUP_EXPOSED", Color(1.0, 0.45, 0.3)],
 	"parried": ["UI_POPUP_PARRIED", Color(0.7, 0.85, 1.0)],
 	"dodged": ["UI_POPUP_DODGED", Color(0.7, 1.0, 0.85)],
+	"shielded": ["UI_POPUP_SHIELDED", Color(0.62, 0.7, 1.0)],
 }
 ## Vertical gap between stacked tag labels over one number.
 const POPUP_TAG_STEP := 24.0

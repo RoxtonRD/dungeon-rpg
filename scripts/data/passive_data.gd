@@ -29,6 +29,13 @@ const CRIT_BONUS_BELOW := 0.5
 ## Extra crit chance, 0..1, against a target below CRIT_BONUS_BELOW of its max HP
 ## (Assassin's Focus). 0 = no effect.
 @export var crit_bonus_below_half_hp: float = 0.0
+## MP the hero gains at the start of each of its turns in combat (Mana Flow).
+@export var mp_regen_per_turn: int = 0
+## Multiplies the damage per tick of the DoTs the hero applies (Elemental
+## Mastery: 1.25). 1.0 = no effect.
+@export var dot_damage_mult: float = 1.0
+## Extra turns the DoTs the hero applies last (Elemental Mastery).
+@export var dot_duration_bonus: int = 0
 
 
 ## Multiplier on this hero's outgoing damage while holding `rage` Rage: every

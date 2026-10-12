@@ -55,9 +55,13 @@ enum DamageStat { AUTO, ATK, MAG }
 @export var drain: bool = false
 ## Always crits a target that has not acted yet this round (Ambush).
 @export var ambush: bool = false
-## Amount of the caster's own resource (Rage, Energy) this action gives back
-## once it resolves (Quick Strike).
+## Amount of the caster's own resource (Rage, Energy, MP) this action gives back
+## once it resolves with a hit (Quick Strike, Arcane Siphon).
 @export var resource_refund: int = 0
+## After the main hit, this many *other* random living foes take a hit at
+## chain_power_mult of the skill's power (Chain). 0 = no chain.
+@export var chain_targets: int = 0
+@export var chain_power_mult: float = 0.5
 
 @export_group("Multi-hit")
 ## Number of separate hits. Only meaningful for MULTI skills.
@@ -117,9 +121,10 @@ enum DamageStat { AUTO, ATK, MAG }
 
 @export_group("Enemy AI")
 @export var use_condition: UseCondition = UseCondition.NONE
-## Turns an enemy spends winding up before this skill lands. 0 = instant. The
-## wind-up turn shows a Charging status; the skill lands on the enemy's next
-## turn unless it dies first.
+## Turns the caster spends winding up before this skill lands. 0 = instant. The
+## wind-up turn shows a Charging status; the skill lands on the caster's next
+## turn unless it dies first. A hero can telegraph too (Meteor): the next turn
+## then resolves on its own, using up the hero's turn.
 @export var telegraph_turns: int = 0
 
 

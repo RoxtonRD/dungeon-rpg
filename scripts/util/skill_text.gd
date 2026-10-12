@@ -30,7 +30,9 @@ static func fill_skill(template: String, skill: SkillData) -> String:
 ## per round and its rounds; {crit} crit chance ("50%"); {rage_gain} Rage the
 ## action gives; {kill_rage} Rage refunded on a kill; {bonus} the damage bonus
 ## against a lowered-DEF target ("50%"); {refund} Energy (or Rage) the action
-## gives back; {taken} the extra damage a marked target takes ("25%").
+## gives back; {taken} the extra damage a marked target takes ("25%"); {chain}
+## how many other foes a Chain hits and {chain_power} the share of the power
+## those hits deal ("50%").
 ## {cost} is the skill's own cost, which is what every class pays
 ## (Party.combat_cost).
 static func skill_values(skill: SkillData) -> Dictionary:
@@ -57,6 +59,8 @@ static func skill_values(skill: SkillData) -> Dictionary:
 		"bonus": percent(skill.bonus_vs_def_debuff),
 		"refund": str(skill.resource_refund),
 		"taken": percent(skill.damage_taken_mult - 1.0),
+		"chain": str(skill.chain_targets),
+		"chain_power": percent(skill.chain_power_mult),
 	}
 
 
@@ -74,7 +78,9 @@ static func fill_passive(template: String, passive: PassiveData) -> String:
 ## {pct} damage bonus per 10 Rage held ("2%"); {pct_max} the bonus at full
 ## Rage ("20%"); {energy_crit} / {energy_debuff} Energy gained when an ally
 ## crits / an enemy is debuffed; {crit_bonus} extra crit chance ("20%") against a
-## target under {below} of its HP ("50%").
+## target under {below} of its HP ("50%"); {mp_regen} MP gained each turn;
+## {dot_bonus} extra damage ("25%") and {dot_turns_bonus} extra turns for the
+## hero's damage over time.
 static func passive_values(passive: PassiveData) -> Dictionary:
 	var steps := floori(Battler.RAGE_MAX / 10.0)
 	return {
@@ -84,6 +90,9 @@ static func passive_values(passive: PassiveData) -> Dictionary:
 		"energy_debuff": str(passive.energy_on_enemy_debuff),
 		"crit_bonus": percent(passive.crit_bonus_below_half_hp),
 		"below": percent(PassiveData.CRIT_BONUS_BELOW),
+		"mp_regen": str(passive.mp_regen_per_turn),
+		"dot_bonus": percent(passive.dot_damage_mult - 1.0),
+		"dot_turns_bonus": str(passive.dot_duration_bonus),
 	}
 
 
@@ -98,13 +107,15 @@ static func fill_reaction(template: String, reaction: ReactionData) -> String:
 	return template.format(reaction_values(reaction))
 
 
-## {chance} trigger chance ("20%"); {cost} Rage or Energy spent; {mult} the share
-## of the hit's damage still taken ("50%").
+## {chance} trigger chance ("20%"); {cost} Rage, Energy or MP spent; {mult} the
+## share of the hit's damage still taken ("50%"); {below} the share of max HP a hit
+## must take the hero under to trigger it ("30%").
 static func reaction_values(reaction: ReactionData) -> Dictionary:
 	return {
 		"chance": percent(reaction.chance),
 		"cost": str(reaction.cost),
 		"mult": percent(reaction.damage_mult),
+		"below": percent(reaction.trigger_below_hp_pct),
 	}
 
 

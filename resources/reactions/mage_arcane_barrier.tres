@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ReactionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/reaction_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arcane_barrier"
+display_name = "REACTION_MAGE_ARCANE_BARRIER"
+description = "REACTIOND_MAGE_ARCANE_BARRIER"
+unlock_level = 3
+chance = 0.3
+cost = 8
+damage_mult = 0.0
+popup_tag = "shielded"
+applies_to = 1
+trigger_below_hp_pct = 0.3

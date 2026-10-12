@@ -128,6 +128,8 @@ func can_use(actor: Battler, skill: SkillData) -> bool:
 		return true  # enemies don't pay costs or track cooldowns
 	if actor.hero.level < skill.unlock_level:
 		return false
+	if actor.is_charging():
+		return false  # a wind-up resolves on its own, using the turn
 	if actor.resource_amount() < Party.combat_cost(actor.hero, skill):
 		return false
 	return actor.cooldown_left(skill) == 0
@@ -152,15 +154,28 @@ func player_action(skill: SkillData, target: Battler) -> void:
 	var effective := Party.get_effective_skill(actor.hero, skill)
 	actor.spend_resource(cost)
 	actor.start_cooldown(skill, effective.cooldown)
+	if effective.telegraph_turns > 0:
+		# Meteor: pay now, wind up this turn, land on the hero's next one.
+		_begin_wind_up(actor, effective, target)
+	else:
+		_resolve_hero_skill(actor, skill, effective, target)
+	_after_action()
+
+
+## A hero's skill lands: its effects, then the refund and on-kill talents. `base`
+## is the class's skill (the cooldown key), `effective` the one that resolves.
+func _resolve_hero_skill(
+	actor: Battler, base: SkillData, effective: SkillData, target: Battler
+) -> void:
 	var foes_before := _alive(_opposing_side(actor))
-	_apply_skill(actor, effective, target)
-	if effective.resource_refund > 0:
+	var dealt := _apply_skill(actor, effective, target)
+	# The refund (Quick Strike, Arcane Siphon) is paid for a hit that landed.
+	if effective.resource_refund > 0 and dealt > 0:
 		actor.refund_resource(effective.resource_refund)
 	for foe in foes_before:
 		if not foe.is_alive():
-			_on_kill(actor, skill, effective)
+			_on_kill(actor, base, effective)
 			break
-	_after_action()
 
 
 ## On-kill talent effects (Reaper): refund Rage and reset the skill's cooldown.
@@ -184,6 +199,8 @@ func player_item(item_id: String, target: Battler) -> void:
 	if ended or current_actor == null or current_actor.side != Battler.Side.PARTY:
 		return
 	var item := load("res://resources/items/%s.tres" % item_id) as ItemData
+	if current_actor.is_charging():
+		return
 	if item == null or not GameState.remove_item(item_id):
 		return
 	_apply_item(current_actor, item, target)
@@ -233,6 +250,8 @@ func _emit_item_action(user: Battler, item: ItemData, target: Battler) -> void:
 func player_flee() -> void:
 	if ended or current_actor == null or current_actor.side != Battler.Side.PARTY:
 		return
+	if current_actor.is_charging():
+		return
 	if randf() < 0.6:
 		_log(tr("LOG_FLED"))
 		_end(Result.FLEE)
@@ -241,16 +260,27 @@ func player_flee() -> void:
 		_after_action()
 
 
-## Resolves the current enemy's turn and advances to the next actor.
-## No-op when it's a party turn (caller should use player_action /
-## player_flee) or when combat has ended.
+## Resolves the current enemy's turn, or a hero's wind-up landing (Meteor), and
+## advances to the next actor. No-op on any other party turn (caller should use
+## player_action / player_flee) or when combat has ended.
 func step() -> void:
 	if ended or current_actor == null:
 		return
-	if current_actor.side != Battler.Side.ENEMY:
+	if current_actor.side == Battler.Side.ENEMY:
+		_enemy_take_turn()
+	elif current_actor.is_charging():
+		_continue_hero_wind_up(current_actor, current_actor.charge_status())
+	else:
 		return
-	_enemy_take_turn()
 	_after_action()
+
+
+## True when the current turn plays itself: an enemy's, or a hero's wind-up
+## landing. The UI steps these instead of waiting for input.
+func is_auto_turn() -> bool:
+	if ended or current_actor == null:
+		return false
+	return current_actor.side == Battler.Side.ENEMY or current_actor.is_charging()
 
 
 # ── Turn-order machinery ──────────────────────────────────────────────────────
@@ -277,6 +307,7 @@ func _advance_to_next_actor() -> void:
 		next.tick_cooldowns()
 		next.clear_until_next_turn()
 		next.regen_energy()
+		next.regen_mp()
 		acted_this_round.append(next)
 		turn_started.emit(next)
 		# Stop here. The caller drives the turn:
@@ -307,6 +338,7 @@ func _end(r: Result) -> void:
 	# "Until their next turn" cannot outlast the fight: party statuses are saved.
 	for b in party:
 		b.clear_until_next_turn()
+		b.clear_charge()  # a wind-up is lost with the fight
 	rewards = _calculate_rewards(r)
 	combat_ended.emit(r, rewards)
 
@@ -379,7 +411,8 @@ func _tick_statuses() -> void:
 # ── Skill resolution ──────────────────────────────────────────────────────────
 
 
-func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
+## Resolves `skill` and returns the total damage it dealt.
+func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> int:
 	var caster_stats := caster.effective_stats()
 	# Total damage this action dealt, for the caster's Rage.
 	var dealt := 0
@@ -422,6 +455,7 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 		SkillData.SkillType.PHYS, SkillData.SkillType.MAG:
 			for t in targets:
 				dealt += _apply_damage_hit(caster, caster_stats, skill, t, skill.skill_type)
+			dealt += _apply_chain(caster, caster_stats, skill, targets)
 	# Once per damaging action, however many targets or hits it had.
 	# A skill may override the amount (Momentum).
 	if dealt > 0:
@@ -431,6 +465,28 @@ func _apply_skill(caster: Battler, skill: SkillData, picked: Battler) -> void:
 		caster.gain_rage(rage_gain)
 	if skill.self_untargetable:
 		_apply_untargetable(caster, skill)
+	return dealt
+
+
+## Chain: after the main hit, `chain_targets` other random living foes take a hit
+## at `chain_power_mult` of the skill's power. Fewer foes left means fewer hits.
+## Returns the damage dealt.
+func _apply_chain(
+	caster: Battler, caster_stats: Dictionary, skill: SkillData, main_targets: Array[Battler]
+) -> int:
+	if skill.chain_targets <= 0:
+		return 0
+	var others: Array[Battler] = []
+	for b in _alive(_opposing_side(caster)):
+		if not main_targets.has(b):
+			others.append(b)
+	others.shuffle()
+	var dealt := 0
+	for i in mini(skill.chain_targets, others.size()):
+		dealt += _apply_damage_hit(
+			caster, caster_stats, skill, others[i], skill.skill_type, skill.chain_power_mult
+		)
+	return dealt
 
 
 func _gather_targets(caster: Battler, skill: SkillData, picked: Battler) -> Array[Battler]:
@@ -573,7 +629,8 @@ func _apply_damage_hit(
 	caster_stats: Dictionary,
 	skill: SkillData,
 	target: Battler,
-	dmg_kind: SkillData.SkillType
+	dmg_kind: SkillData.SkillType,
+	power_mult: float = 1.0
 ) -> int:
 	# Barrier eats the hit before damage is rolled (and gives no Rage).
 	if target.consume_barrier():
@@ -590,7 +647,7 @@ func _apply_damage_hit(
 		SkillData.DamageStat.MAG:
 			use_mag = true
 	var raw_attack := float(caster_stats["mag"] if use_mag else caster_stats["atk"])
-	var raw := raw_attack * skill.power + randf_range(0.0, 3.0)
+	var raw := raw_attack * skill.power * power_mult + randf_range(0.0, 3.0)
 	# Finisher: double power when target is under 25% HP.
 	if skill.finisher and target.get_hp() <= int(target.max_hp * 0.25):
 		raw *= 2.0
@@ -614,9 +671,9 @@ func _apply_damage_hit(
 	var t_def := int(floor(float(t_stats["def"]) * 0.4)) if is_mag else int(t_stats["def"])
 	# A marked target (Mark for Death) takes more from every source.
 	var dmg := maxi(1, int(floor((raw - t_def) * target.damage_taken_mult())))
-	# The target's reaction (Parry, Dodge): by chance, pay its cost to cut the
-	# damage. A reaction that leaves some damage never cuts it below 1.
-	var reaction := target.reaction_for(skill, dmg_kind)
+	# The target's reaction (Parry, Dodge, Arcane Barrier): by chance, pay its cost
+	# to cut the damage. A reaction that leaves some damage never cuts it below 1.
+	var reaction := target.reaction_for(skill, dmg_kind, dmg)
 	if reaction != null and randf() < reaction.chance:
 		target.spend_resource(reaction.cost)
 		dmg = int(floor(dmg * reaction.damage_mult))
@@ -648,9 +705,11 @@ func _apply_damage_hit(
 		var dot := CombatStatus.new()
 		dot.kind = CombatStatus.Kind.DOT
 		dot.source_name = skill.display_name
-		dot.dot_damage = skill.dot_damage
 		dot.dot_popup_key = skill.dot_popup_key
-		dot.duration = skill.dot_duration
+		# The caster's passive may strengthen it (Elemental Mastery).
+		var dot_stats := caster.passive_dot(skill.dot_damage, skill.dot_duration)
+		dot.dot_damage = dot_stats.x
+		dot.duration = dot_stats.y
 		target.statuses.append(dot)
 		status_applied.emit(target, dot)
 	# Debuff rider on damage skills.
@@ -678,7 +737,7 @@ func _apply_damage_hit(
 
 
 ## The damage log line's ending for a hit's popup tags: " (CRITICAL)",
-## " (EXPOSED)", " (PARRIED)", " (DODGED)", or several of them.
+## " (EXPOSED)", " (PARRIED)", " (DODGED)", " (SHIELDED)", or several of them.
 func _log_suffix(tags: PackedStringArray) -> String:
 	var suffix := ""
 	if tags.has("crit"):
@@ -689,6 +748,8 @@ func _log_suffix(tags: PackedStringArray) -> String:
 		suffix += tr("LOG_PARRIED_SUFFIX")
 	if tags.has("dodged"):
 		suffix += tr("LOG_DODGED_SUFFIX")
+	if tags.has("shielded"):
+		suffix += tr("LOG_SHIELDED_SUFFIX")
 	return suffix
 
 
@@ -968,6 +1029,27 @@ func _continue_wind_up(e: Battler, st: CombatStatus) -> void:
 	):
 		picked = _pick_enemy_target(e, skill)
 	_enemy_use(e, skill, picked)
+
+
+## A hero's turn while Charging (Meteor): the skill lands now, on its own, using
+## the turn. A single-target one hits the same target if still standing, else a
+## random valid one. (The status is erased first so a downed hero's wind-up, or
+## one that cannot resolve, never lingers.)
+func _continue_hero_wind_up(h: Battler, st: CombatStatus) -> void:
+	var skill := st.charge_skill
+	if skill == null:
+		h.statuses.erase(st)
+		return
+	st.duration -= 1
+	if st.duration > 0:
+		_announce_wind_up(h, skill, st.charge_target)
+		return
+	h.statuses.erase(st)
+	var picked := st.charge_target
+	if skill.target == SkillData.TargetType.ONE and (picked == null or not picked.is_alive()):
+		var pool := valid_targets_for(h, skill)
+		picked = pool[randi() % pool.size()] if not pool.is_empty() else null
+	_resolve_hero_skill(h, skill, skill, picked)
 
 
 ## True when some living hero taunts and `picked` isn't one of them, so a

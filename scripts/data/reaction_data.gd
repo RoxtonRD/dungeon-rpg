@@ -8,7 +8,7 @@ class_name ReactionData
 extends Resource
 
 ## Which incoming hits the reaction can trigger on.
-enum AppliesTo { SINGLE_TARGET_PHYSICAL }
+enum AppliesTo { SINGLE_TARGET_PHYSICAL, SINGLE_TARGET_ANY }
 
 ## Stable internal key, e.g. "parry". Stored in saves (Hero.talents
 ## "_reaction") — never translate.
@@ -33,6 +33,9 @@ enum AppliesTo { SINGLE_TARGET_PHYSICAL }
 ## CombatState.damage_popup.
 @export var popup_tag: String = "parried"
 @export var applies_to: AppliesTo = AppliesTo.SINGLE_TARGET_PHYSICAL
+## Only triggers on a hit that would leave the hero under this share of max HP
+## (Arcane Barrier: 0.3). 0 = any hit.
+@export var trigger_below_hp_pct: float = 0.0
 
 
 ## True when a hit from `skill`, resolving as `dmg_kind`, is one this reaction
@@ -41,4 +44,14 @@ func applies(skill: SkillData, dmg_kind: SkillData.SkillType) -> bool:
 	match applies_to:
 		AppliesTo.SINGLE_TARGET_PHYSICAL:
 			return skill.target == SkillData.TargetType.ONE and dmg_kind == SkillData.SkillType.PHYS
+		AppliesTo.SINGLE_TARGET_ANY:
+			return skill.target == SkillData.TargetType.ONE
 	return false
+
+
+## True when a hit of `dmg` on a hero at `hp` of `max_hp` is one the HP
+## threshold lets this reaction trigger on.
+func passes_hp_threshold(hp: int, max_hp: int, dmg: int) -> bool:
+	if trigger_below_hp_pct <= 0.0:
+		return true
+	return float(hp - dmg) < trigger_below_hp_pct * max_hp

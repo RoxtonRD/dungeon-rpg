@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arcane_blast_chain"
+display_name = "SKILL_MAGE_CHAIN"
+description = "SKILLD_MAGE_CHAIN"
+mp_cost = 15
+unlock_level = 5
+max_upgrade_level = 4
+skill_type = 1
+target = 0
+power = 2.4
+chain_targets = 2
+chain_power_mult = 0.5
