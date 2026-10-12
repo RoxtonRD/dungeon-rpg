@@ -134,8 +134,9 @@ fi
 run git worktree prune
 
 # 4. Restart hint.
-if [ "$before" != "$after" ] && git diff --name-only "$before" "$after" | grep -qE '^(project\.godot|addons/)'; then
-	say "== RESTART GODOT: project.godot or addons/ changed in this update."
+if [ "$before" != "$after" ] && git diff --name-only "$before" "$after" | grep -qE '^(project\.godot|export_presets\.cfg|addons/)'; then
+	say "== RESTART GODOT: project.godot, export_presets.cfg or addons/ changed in this update."
+	say "   (Otherwise the editor may write its stale in-memory copy back to disk.)"
 fi
 
 # 5. Where we are.
