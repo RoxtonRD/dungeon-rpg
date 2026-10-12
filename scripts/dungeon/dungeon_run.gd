@@ -23,21 +23,33 @@ const BOSS_ENCOUNTERS := [
 ]
 
 ## Difficulty scaling per step. Enemy stats and rewards are multiplied by
-##   pow(DUNGEON_GROWTH, dungeon_level-1) * (1 + (floor-1)*FLOOR_SCALE)
-## Floor 1 of dungeon 1 is the 1.0 baseline.
+##   dungeon_mult(dungeon_level) * (1 + (floor-1)*FLOOR_SCALE)
+## and, for enemies rolled for an elite room, also by elite_mult(dungeon_level).
+## Floor 1 of dungeon 1 is the 1.0 baseline. Bosses never get the elite factor.
 ##
 ## Dungeon scaling is exponential, not linear, because hero power compounds:
 ## levels stack stat growth AND unlock ultimates at level 5. A linear
 ## `1 + (n-1)*s` ramp shrinks in ratio each step (D2->D3 is only 1.26x at
-## s=0.35), so deeper dungeons kept getting *easier*. A constant growth factor
-## keeps each dungeon a fixed step harder than the last.
+## s=0.35), so deeper dungeons kept getting *easier*.
 ##
 ## E5b (#90) set FLOOR_SCALE to 0: the authored groups already ramp from
 ## floor 1 to floor 4 (goblins and bats to orcs, ogres and cultists), and the
 ## extra stat ramp on top made dungeon 1's floor 4 and boss wipe a level-4
-## party. Floors still scale by group, dungeons by DUNGEON_GROWTH.
+## party. Floors still scale by group, dungeons by DUNGEON_MULT.
 const FLOOR_SCALE := 0.0
+
+## Per-dungeon multiplier (E6a, #95), index = dungeon level - 1. One growth
+## rate couldn't make D1 gentle, D2/D3 tense and D4 beatable at once, so each
+## dungeon gets its own step. The values reproduce the old
+## pow(DUNGEON_GROWTH, level-1) exactly; E6b tunes them.
+const DUNGEON_MULT: Array[float] = [1.0, 1.6, 2.56, 4.096]
+## Past the end of DUNGEON_MULT (endless mode), each dungeon is this much
+## harder than the one before.
 const DUNGEON_GROWTH := 1.6
+## Per-dungeon elite multiplier, on top of DUNGEON_MULT and only for enemies
+## rolled for an elite room, so elites can get harder without touching normal
+## fights. Index = dungeon level - 1; past the end, the last value holds.
+const ELITE_MULT: Array[float] = [1.0, 1.0, 1.0, 1.0]
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.
@@ -488,8 +500,10 @@ func roll_encounter(floor_index: int, elite: bool = false) -> Array[EnemyData]:
 	if group == null:
 		push_error("No encounter group for floor %d" % (floor_index + 1))
 		return out
+	# The elite factor follows the room, so an elite room that fell back to a
+	# normal group still gets it.
 	for id in group.members:
-		out.append(_scale_enemy(_load_enemy(id), floor_index + 1))
+		out.append(_scale_enemy(_load_enemy(id), floor_index + 1, elite))
 	return out
 
 
@@ -505,13 +519,37 @@ func _load_enemy(id: String) -> EnemyData:
 	return load(ENEMY_DIR + id + ".tres") as EnemyData
 
 
-## Returns the enemy with stats and rewards scaled for the current step.
-## multiplier = 1 + (floor_num-1)*FLOOR_SCALE + (level-1)*DUNGEON_SCALE,
+## DUNGEON_MULT for the 1-based `dungeon_level`. Past the table's end it keeps
+## growing by DUNGEON_GROWTH per level.
+static func dungeon_mult(dungeon_level: int) -> float:
+	var i := maxi(dungeon_level, 1) - 1
+	var last := DUNGEON_MULT.size() - 1
+	if i <= last:
+		return DUNGEON_MULT[i]
+	return DUNGEON_MULT[last] * pow(DUNGEON_GROWTH, i - last)
+
+
+## ELITE_MULT for the 1-based `dungeon_level`. Past the table's end, the last
+## value.
+static func elite_mult(dungeon_level: int) -> float:
+	return ELITE_MULT[clampi(dungeon_level - 1, 0, ELITE_MULT.size() - 1)]
+
+
+## The elite multiplier for this run's dungeon.
+func _elite_mult() -> float:
+	return elite_mult(level)
+
+
+## Returns the enemy with stats and rewards scaled for the current step:
+##   dungeon_mult(level) * (1 + (floor_num-1)*FLOOR_SCALE), times
+##   elite_mult(level) when `elite` (an enemy rolled for an elite room),
 ## where floor_num is the 1-based floor and `level` is the dungeon number.
 ## The baseline (floor 1, dungeon 1) returns the base resource unchanged;
 ## any higher step duplicates it so the original .tres asset is never mutated.
-func _scale_enemy(base: EnemyData, floor_num: int) -> EnemyData:
-	var mult := pow(DUNGEON_GROWTH, level - 1) * (1.0 + (floor_num - 1) * FLOOR_SCALE)
+func _scale_enemy(base: EnemyData, floor_num: int, elite: bool = false) -> EnemyData:
+	var mult := dungeon_mult(level) * (1.0 + (floor_num - 1) * FLOOR_SCALE)
+	if elite:
+		mult *= _elite_mult()
 	if mult <= 1.0:
 		return base
 	var scaled := base.duplicate() as EnemyData
