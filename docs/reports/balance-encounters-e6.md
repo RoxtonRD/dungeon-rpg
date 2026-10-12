@@ -64,9 +64,9 @@ and the quota are unchanged.
 
 ## Read the numbers with their noise
 
-D1 never changed after iteration 4 (and its table entry never changed at
-all). Even so, D1's boss first-try ranged **72–92%** and its wipes
-**0.37–0.59** across iterations. The campaigns share one random stream, so
+Iterations 1–3 didn't touch D1, yet D1's boss first-try ranged
+**72–92%** and its wipes **0.43–0.59**. Iterations 5–7 changed D1 only
+through the necromancer, yet its boss ranged 75–86%. The campaigns share one random stream, so
 a change in D2–D4 reshuffles D1's rolls. At 100 campaigns, a per-dungeon
 rate moves ±5–10 points on noise alone. For example, the D4 boss went 83 → 96%
 in iteration 2, which changed only D2. Treat single-point misses (D3 boss 89%) as
