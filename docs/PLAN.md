@@ -31,15 +31,16 @@ back after weeks away, this is the only thing you need to read.*
 - **Encounters E1–E3 merged** (D-041, D-042); E4 (tuning) is running.
 - **Feel gate 4 (encounters) passed** (D-043): fewer, longer fights.
 - **E5 merged** (#92, #94); a dungeon runs ~23 min, accepted (D-044).
+- **Merged:** E6a difficulty tables (#99), live skill descriptions with
+  the unified cost rule (#100, D-046).
 - **Next up:**
-  1. Background (advisor): **E6a** difficulty tables #95 → **E6b**
-     tuning #96; **live skill descriptions** #97 (in parallel)
-  2. Roxton + advisor: **design the Rogue's talents** (Energy, forks,
-     passive, reaction), the first class of the rollout (D-045)
-  3. Then the Rogue build brief, and the other classes in order: Mage,
-     Cleric, Conjurer, Alchemist
-  4. ui-assets (when convenient): the talent screen's long scroll
-  5. Roxton: branch protection on `main` (require PR + both CI checks)
+  1. gameplay-engineer: **Rogue talents** #101 (editor, Roxton's session)
+  2. qa-balance: **E6b** tuning #96 (background, running)
+  3. Roxton: **feel gate 5** (Rogue) after #101
+  4. Then the rollout continues: Mage → Cleric → Conjurer → Alchemist,
+     each with a design pass first
+  5. ui-assets (when convenient): the talent screen's long scroll
+  6. Roxton: branch protection on `main`
 - **Blocked on:** nothing
 
 ---

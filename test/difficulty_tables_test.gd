@@ -2,9 +2,9 @@
 ## every enemy by dungeon, ELITE_MULT stacks on top only for enemies rolled for
 ## an elite room, and bosses use DUNGEON_MULT alone.
 ##
-## ELITE_MULT is all 1.0 for now, so the elite tests run on a DungeonRun whose
+## ELITE_MULT is 1.0 in dungeon 1, so the elite tests run on a DungeonRun whose
 ## elite multiplier is forced to EliteRun.MULT: otherwise "applied" and "not
-## applied" would look the same.
+## applied" would look the same there.
 extends GdUnitTestSuite
 
 const ENEMY_DIR := "res://resources/enemies/"
@@ -52,11 +52,14 @@ func test_dungeon_mult_reads_the_table() -> void:
 		assert_float(DungeonRun.dungeon_mult(i + 1)).is_equal(DungeonRun.DUNGEON_MULT[i])
 
 
-func test_dungeon_mult_matches_the_old_growth_formula() -> void:
-	# E6a must not change any value: the table equals pow(1.6, level-1).
-	for dungeon_level in range(1, 9):
-		assert_float(DungeonRun.dungeon_mult(dungeon_level)).is_equal_approx(
-			pow(DungeonRun.DUNGEON_GROWTH, dungeon_level - 1), 1e-9
+func test_dungeon_mult_starts_at_the_baseline_and_rises() -> void:
+	# E6b (#96) tuned the table away from pow(1.6, level-1). D1 is the 1.0
+	# baseline (_scale_enemy ignores anything at or below 1.0), and every
+	# dungeon must be harder than the one before, past the table's end too.
+	assert_float(DungeonRun.dungeon_mult(1)).is_equal(1.0)
+	for dungeon_level in range(2, 9):
+		assert_float(DungeonRun.dungeon_mult(dungeon_level)).is_greater(
+			DungeonRun.dungeon_mult(dungeon_level - 1)
 		)
 
 
