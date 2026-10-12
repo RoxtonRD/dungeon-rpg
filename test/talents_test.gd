@@ -181,7 +181,7 @@ func test_other_classes_resolve_to_the_tier_upgrade() -> void:
 	var eff := Party.get_effective_skill(cleric, heal)
 	var upgraded := Party.get_upgraded_skill(cleric, heal)
 	assert_float(eff.power).is_equal(upgraded.power)
-	assert_int(Party.combat_cost(cleric, heal)).is_equal(heal.mp_cost)
+	assert_int(Party.combat_cost(cleric, heal)).is_equal(upgraded.mp_cost)
 
 
 func test_variant_cost_is_checked_and_paid() -> void:

@@ -326,7 +326,8 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 		var uses_rage := hero.class_data.resource_type == ClassData.ResourceType.RAGE
 		var resource_name := tr("RES_RAGE") if uses_rage else tr("RES_MP")
 		name_lbl.text = (
-			"%s%s  ·  %d %s" % [tr(shown.display_name), tier_part, shown.mp_cost, resource_name]
+			"%s%s  ·  %d %s"
+			% [tr(shown.display_name), tier_part, Party.combat_cost(hero, skill), resource_name]
 		)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_lbl.add_theme_font_size_override("font_size", 15)
@@ -356,8 +357,10 @@ func _rebuild_skill_rows(hero: Hero) -> void:
 			row.add_child(up_btn)
 
 		entry.add_child(row)
-		if not shown.description.is_empty():
-			entry.add_child(_make_desc_label(tr(shown.description)))
+		# The description's numbers are the effective skill's (tier or talents).
+		var described := Party.get_effective_skill(hero, skill)
+		if not described.description.is_empty():
+			entry.add_child(_make_desc_label(SkillText.describe(described)))
 		skill_rows.add_child(entry)
 
 
@@ -433,7 +436,7 @@ func _castable_out_of_combat(skill: SkillData) -> bool:
 
 
 func _can_cast(hero: Hero, skill: SkillData) -> bool:
-	if not hero.is_alive() or hero.mp < skill.mp_cost:
+	if not hero.is_alive() or hero.mp < Party.combat_cost(hero, skill):
 		return false
 	if skill.skill_type == SkillData.SkillType.HEAL:
 		return not _heal_targets().is_empty()
@@ -448,7 +451,7 @@ func _on_cast(hero: Hero, skill: SkillData) -> void:
 	if not _can_cast(hero, skill):
 		return
 	var scaled := Party.get_upgraded_skill(hero, skill)
-	hero.mp -= scaled.mp_cost
+	hero.mp -= Party.combat_cost(hero, skill)
 	if skill.skill_type == SkillData.SkillType.HEAL:
 		var targets := _heal_targets()
 		if skill.target != SkillData.TargetType.ALLIES:
