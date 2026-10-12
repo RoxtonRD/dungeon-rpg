@@ -22,10 +22,12 @@ const BOSS_ENCOUNTERS := [
 	["boss_dragon_hatchling"],  # draconico: Dragao Jovem (sozinho)
 ]
 
-## Difficulty scaling per step. Enemy stats and rewards are multiplied by
+## Difficulty scaling per step. Enemy stats are multiplied by
 ##   dungeon_mult(dungeon_level) * (1 + (floor-1)*FLOOR_SCALE)
-## and, for enemies rolled for an elite room, also by elite_mult(dungeon_level).
-## Floor 1 of dungeon 1 is the 1.0 baseline. Bosses never get the elite factor.
+## and XP/gold by reward_mult(dungeon_level) times the same floor factor. For
+## enemies rolled for an elite room, elite_hp_mult / elite_power_mult /
+## elite_reward_mult stack on top (see _scale_enemy). Floor 1 of dungeon 1 is the 1.0 baseline. Bosses
+## never get the elite factors.
 ##
 ## Dungeon scaling is exponential, not linear, because hero power compounds:
 ## levels stack stat growth AND unlock ultimates at level 5. A linear
@@ -43,19 +45,35 @@ const FLOOR_SCALE := 0.0
 ## dungeon gets its own step. E6b (#96) tuned them from the old
 ## pow(1.6, level-1) values [1.0, 1.6, 2.56, 4.096]: D1 -> D2 is the big step
 ## (the party gains gear, spends its D1 SP and is ~2 levels up), D3 -> D4 a
-## small one (level cap 10). D1 stays 1.0: values below 1.0 have no effect
-## (see _scale_enemy).
+## small one (level cap 10). Scales enemy stats only; rewards follow
+## REWARD_MULT. Since E6c (#104) values below 1.0 make enemies weaker than
+## their base stats.
 const DUNGEON_MULT: Array[float] = [1.0, 2.35, 3.5, 4.4]
 ## Past the end of DUNGEON_MULT (endless mode), each dungeon is this much
 ## harder than the one before.
 const DUNGEON_GROWTH := 1.6
-## Per-dungeon elite multiplier, on top of DUNGEON_MULT and only for enemies
+## Per-dungeon elite multipliers, on top of DUNGEON_MULT and only for enemies
 ## rolled for an elite room, so elites can get harder without touching normal
 ## fights. Index = dungeon level - 1; past the end, the last value holds.
+## E6c (#104) split the old single ELITE_MULT in two, so elites can be made
+## dangerous rather than just long:
+##   ELITE_HP_MULT     - max HP and DEF (how long the fight lasts);
+##   ELITE_POWER_MULT  - ATK, MAG and SPD (how hard and how often it hits);
+##   ELITE_REWARD_MULT - the elite's XP and gold, so tuning elite difficulty
+##                       never changes what an elite pays.
 ## E6b (#96): D1 stays 1.0, because a lost D1 elite is a D1 wipe. D3/D4 sit
 ## lower than D2: at 1.35 their four-enemy elites ran 12-16 rounds and ended
 ## campaigns.
-const ELITE_MULT: Array[float] = [1.0, 1.35, 1.2, 1.2]
+const ELITE_HP_MULT: Array[float] = [1.0, 1.35, 1.2, 1.2]
+const ELITE_POWER_MULT: Array[float] = [1.0, 1.35, 1.2, 1.2]
+const ELITE_REWARD_MULT: Array[float] = [1.0, 1.35, 1.2, 1.2]
+## Per-dungeon multiplier for enemy XP and gold (E6c, #104), index = dungeon
+## level - 1, so rewards can be tuned apart from difficulty. It starts equal
+## to DUNGEON_MULT, which scaled rewards before E6c.
+const REWARD_MULT: Array[float] = [1.0, 2.35, 3.5, 4.4]
+## Past the end of REWARD_MULT (endless mode), each dungeon pays this much
+## more than the one before.
+const REWARD_GROWTH := 1.6
 
 ## Rooms per floor before the ±1 jitter; floor 4 additionally gets the
 ## boss room appended after generation.
@@ -528,45 +546,104 @@ func _load_enemy(id: String) -> EnemyData:
 ## DUNGEON_MULT for the 1-based `dungeon_level`. Past the table's end it keeps
 ## growing by DUNGEON_GROWTH per level.
 static func dungeon_mult(dungeon_level: int) -> float:
+	return _grow(DUNGEON_MULT, DUNGEON_GROWTH, dungeon_level)
+
+
+## REWARD_MULT for the 1-based `dungeon_level`. Past the table's end it keeps
+## growing by REWARD_GROWTH per level.
+static func reward_mult(dungeon_level: int) -> float:
+	return _grow(REWARD_MULT, REWARD_GROWTH, dungeon_level)
+
+
+## ELITE_HP_MULT for the 1-based `dungeon_level`. Past the table's end, the
+## last value.
+static func elite_hp_mult(dungeon_level: int) -> float:
+	return _hold(ELITE_HP_MULT, dungeon_level)
+
+
+## ELITE_POWER_MULT for the 1-based `dungeon_level`. Past the table's end, the
+## last value.
+static func elite_power_mult(dungeon_level: int) -> float:
+	return _hold(ELITE_POWER_MULT, dungeon_level)
+
+
+## ELITE_REWARD_MULT for the 1-based `dungeon_level`. Past the table's end, the
+## last value.
+static func elite_reward_mult(dungeon_level: int) -> float:
+	return _hold(ELITE_REWARD_MULT, dungeon_level)
+
+
+## `table` for the 1-based `dungeon_level`; past its end, the last value times
+## `growth` per extra level.
+static func _grow(table: Array[float], growth: float, dungeon_level: int) -> float:
 	var i := maxi(dungeon_level, 1) - 1
-	var last := DUNGEON_MULT.size() - 1
+	var last := table.size() - 1
 	if i <= last:
-		return DUNGEON_MULT[i]
-	return DUNGEON_MULT[last] * pow(DUNGEON_GROWTH, i - last)
+		return table[i]
+	return table[last] * pow(growth, i - last)
 
 
-## ELITE_MULT for the 1-based `dungeon_level`. Past the table's end, the last
-## value.
-static func elite_mult(dungeon_level: int) -> float:
-	return ELITE_MULT[clampi(dungeon_level - 1, 0, ELITE_MULT.size() - 1)]
+## `table` for the 1-based `dungeon_level`; past its end, the last value.
+static func _hold(table: Array[float], dungeon_level: int) -> float:
+	return table[clampi(dungeon_level - 1, 0, table.size() - 1)]
 
 
-## The elite multiplier for this run's dungeon.
-func _elite_mult() -> float:
-	return elite_mult(level)
+## The dungeon multiplier for this run's dungeon. Instance wrappers like this
+## one let tests swap in values the tables don't hold.
+func _dungeon_mult() -> float:
+	return dungeon_mult(level)
 
 
-## Returns the enemy with stats and rewards scaled for the current step:
-##   dungeon_mult(level) * (1 + (floor_num-1)*FLOOR_SCALE), times
-##   elite_mult(level) when `elite` (an enemy rolled for an elite room),
-## where floor_num is the 1-based floor and `level` is the dungeon number.
-## The baseline (floor 1, dungeon 1) returns the base resource unchanged;
-## any higher step duplicates it so the original .tres asset is never mutated.
+## The reward multiplier for this run's dungeon.
+func _reward_mult() -> float:
+	return reward_mult(level)
+
+
+## The elite HP multiplier for this run's dungeon.
+func _elite_hp_mult() -> float:
+	return elite_hp_mult(level)
+
+
+## The elite power multiplier for this run's dungeon.
+func _elite_power_mult() -> float:
+	return elite_power_mult(level)
+
+
+## The elite reward multiplier for this run's dungeon.
+func _elite_reward_mult() -> float:
+	return elite_reward_mult(level)
+
+
+## Returns the enemy with stats and rewards scaled for the current step. With
+## floor = 1 + (floor_num-1)*FLOOR_SCALE (floor_num is 1-based):
+##   max HP, DEF:   dungeon_mult(level) * floor [* elite_hp_mult]
+##   ATK, MAG, SPD: dungeon_mult(level) * floor [* elite_power_mult]
+##   XP, gold:      reward_mult(level)  * floor [* elite_reward_mult]
+## where the elite factors apply when `elite` (an enemy rolled for an elite
+## room) and `level` is the dungeon number. Any multiplier, including one
+## below 1.0, is applied. When every multiplier is exactly 1.0 the base
+## resource is returned unchanged; otherwise it is duplicated, so the original
+## .tres asset is never mutated.
 func _scale_enemy(base: EnemyData, floor_num: int, elite: bool = false) -> EnemyData:
-	var mult := dungeon_mult(level) * (1.0 + (floor_num - 1) * FLOOR_SCALE)
+	var floor_mult := 1.0 + (floor_num - 1) * FLOOR_SCALE
+	var hp_mult := _dungeon_mult() * floor_mult
+	var power_mult := hp_mult
+	var reward := _reward_mult() * floor_mult
 	if elite:
-		mult *= _elite_mult()
-	if mult <= 1.0:
+		hp_mult *= _elite_hp_mult()
+		power_mult *= _elite_power_mult()
+		reward *= _elite_reward_mult()
+	if hp_mult == 1.0 and power_mult == 1.0 and reward == 1.0:
 		return base
 	var scaled := base.duplicate() as EnemyData
-	scaled.max_hp = roundi(base.max_hp * mult)
-	scaled.atk = roundi(base.atk * mult)
-	scaled.def = roundi(base.def * mult)
-	scaled.mag = roundi(base.mag * mult)
-	scaled.spd = roundi(base.spd * mult)
-	scaled.xp_reward = roundi(base.xp_reward * mult)
-	scaled.gold_min = roundi(base.gold_min * mult)
-	scaled.gold_max = roundi(base.gold_max * mult)
+	scaled.max_hp = roundi(base.max_hp * hp_mult)
+	scaled.def = roundi(base.def * hp_mult)
+	scaled.atk = roundi(base.atk * power_mult)
+	scaled.mag = roundi(base.mag * power_mult)
+	scaled.spd = roundi(base.spd * power_mult)
+	scaled.xp_reward = roundi(base.xp_reward * reward)
+	scaled.gold_min = roundi(base.gold_min * reward)
+	scaled.gold_max = roundi(base.gold_max * reward)
 	return scaled
 
 
