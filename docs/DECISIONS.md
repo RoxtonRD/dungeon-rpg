@@ -593,3 +593,22 @@ rewards follow `REWARD_MULT` (with `REWARD_GROWTH` for extrapolation). Bot
 output is byte-identical to before. The tuning that uses these waits until
 after more classes are rolled out (D-047).
 
+---
+
+## 2026-10-12 — Feel gate 5 and the Mage design
+
+**D-050 · Feel gate 5 (Rogue) passed; the Mage design is approved.**
+Roxton: "the rogue feels good". The Mage design (approved as proposed):
+- **Mana stays** (the run-long resource);
+- **forks:** Kindle (Burn) or Arcane Siphon (+3 MP on hit); Inferno or
+  **Meteor** (the first *hero* telegraph: charge one turn, then 2× power
+  on all enemies); Frostbite (SPD −3) or Shatter (+50% vs DEF debuff);
+  Overload (2× cost, ×1.6 power) or Chain (+2 random enemies at 50%);
+- **passives (pick one):** Mana Flow (+2 MP per turn) or Elemental
+  Mastery (DoTs +25%, +1 turn);
+- **reaction:** Arcane Barrier (below 30% HP, a 30% chance to block a
+  single-target hit, physical or magic, for 8 MP).
+
+The trio is now complete: Warrior parries, Rogue dodges, Mage shields.
+Build: #109.
+

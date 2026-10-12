@@ -35,14 +35,15 @@ back after weeks away, this is the only thing you need to read.*
   the unified cost rule (#100, D-046).
 - **Rollout 1/5 done:** the Rogue (#106); the encounter scaling engine is
   complete (#107, D-049).
+- **Feel gate 5 (Rogue) passed** (D-050).
 - **Next up:**
-  1. Roxton: **feel gate 5** (the Rogue: Assassin vs Survivor builds)
-  2. advisor + Roxton: **design the Mage** (rollout 2/5)
-  3. qa-balance (before the next tuning pass): bot builds for every talent
-     class; then a **300-run balance pass** with the new levers (D-047,
-     D-048)
-  4. ui-assets (when convenient): the talent screen's long scroll
-  5. Roxton: branch protection on `main`
+  1. gameplay-engineer: **Mage talents** #109 (editor, Roxton's session)
+  2. Roxton: **feel gate 6** (Mage builds) after #109
+  3. advisor + Roxton: design the **Cleric** (rollout 3/5)
+  4. qa-balance (before the next tuning pass): bot builds for every talent
+     class; then a 300-run balance pass (D-047, D-048)
+  5. ui-assets (when convenient): the talent screen's long scroll
+  6. Roxton: branch protection on `main`
 - **Blocked on:** nothing
 
 ---
